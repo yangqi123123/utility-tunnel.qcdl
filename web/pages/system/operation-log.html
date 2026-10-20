@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>操作日志</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/tob-ui.css">
+</head>
+<body class="log-page operation-log-page" data-menu-key="system.operation-log" data-page-section="系统管理" data-page-title="操作日志">
+  <div class="app-shell">
+    <aside id="app-sidebar" class="sidebar"></aside>
+    <header id="app-header" class="header"></header>
+    <main class="main">
+      <div class="screen-frame stack">
+        <section class="card filters">
+          <div class="filter-actions log-filter-row">
+            <label class="form-field"><span class="form-label">系统模块</span><input class="form-control" data-filter="module" placeholder="请输入"></label>
+            <label class="form-field"><span class="form-label">操作人员</span><input class="form-control" data-filter="operator" placeholder="请输入"></label>
+            <label class="form-field"><span class="form-label">操作类型</span><select class="form-control" data-filter="type"><option value="">请选择</option><option>新增</option><option>编辑</option><option>删除</option><option>导出</option></select></label>
+            <label class="form-field"><span class="form-label">操作 IP</span><input class="form-control" data-filter="ip" placeholder="请输入"></label>
+            <label class="form-field"><span class="form-label">状态</span><select class="form-control" data-filter="status"><option value="">请选择</option><option>成功</option><option>失败</option></select></label>
+            <label class="form-field"><span class="form-label">操作时间</span><input class="form-control" data-filter="date" placeholder="开始日期　→　结束日期"></label>
+            <button class="btn btn-secondary" data-action="reset">重置</button>
+            <button class="btn btn-primary" data-action="search">搜索</button>
+          </div>
+        </section>
+
+        <section class="card log-list-card">
+          <div class="card-title-row log-toolbar">
+            <h2 class="card-title">操作日志列表</h2>
+            <div class="btn-row">
+              <button class="btn btn-secondary" data-action="clear">清空</button>
+              <button class="btn btn-secondary" data-action="export">导出</button>
+              <button class="btn btn-danger-outline" data-action="delete-selected" disabled>删除</button>
+              <button class="btn btn-secondary" data-action="refresh">刷新</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="table table-actions-sticky log-table" aria-label="操作日志列表">
+              <thead><tr><th class="check-cell"><input type="checkbox" data-select-all></th><th>系统模块</th><th>操作类型</th><th>操作人员</th><th>IP 地址</th><th>IP 信息</th><th>操作状态</th><th>操作日期</th><th>操作耗时</th><th>操作</th></tr></thead>
+              <tbody id="operationLogTable"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="../../../app/config/menu.js?v=nav-hide-1"></script>
+  <script src="../../../app/components/sidebar.js?v=nav-home-1"></script>
+  <script src="../../../app/components/header.js?v=nav-home-1"></script>
+  <script src="../../../app/components/drawer.js"></script>
+  <script src="../../../app/components/requirement.js"></script>
+  <script>
+    const operationLogs = [
+      { id: "208701", module: "流程定义", type: "导出", operator: "admin", ip: "183.***", location: "中国重庆|重庆******", status: "成功", time: "2026-08-11 15:09:59", duration: "3 ms", detail: "导出流程定义", request: "POST /workflow/definition/exportDef/2080180174795976705", method: "org.dromara.workflow.controller.FlwDefinitionController.exportDef()", params: "2080180174795976705" },
+      { id: "208700", module: "流程定义", type: "新增", operator: "admin", ip: "220.***", location: "中国云南省|昆明******", status: "成功", time: "2026-08-11 13:59:51", duration: "3 ms", detail: "新增流程定义", request: "POST /workflow/definition", method: "org.dromara.workflow.controller.FlwDefinitionController.save()", params: "{\"name\":\"请假审批\"}" },
+      { id: "208699", module: "流程定义", type: "新增", operator: "admin", ip: "220.***", location: "中国云南省|昆明******", status: "成功", time: "2026-08-11 13:59:13", duration: "4 ms", detail: "新增流程定义", request: "POST /workflow/definition", method: "org.dromara.workflow.controller.FlwDefinitionController.save()", params: "{\"name\":\"采购审批\"}" },
+      { id: "208698", module: "流程定义", type: "新增", operator: "admin", ip: "218.***", location: "中国广东省|深圳******", status: "成功", time: "2026-08-11 12:48:10", duration: "4 ms", detail: "新增流程定义", request: "POST /workflow/definition", method: "org.dromara.workflow.controller.FlwDefinitionController.save()", params: "{\"name\":\"用印审批\"}" },
+      { id: "208697", module: "流程定义", type: "新增", operator: "admin", ip: "38.***", location: "United States|California|Los ...", status: "成功", time: "2026-08-11 11:27:35", duration: "3 ms", detail: "新增流程定义", request: "POST /workflow/definition", method: "org.dromara.workflow.controller.FlwDefinitionController.save()", params: "{\"name\":\"出差审批\"}" },
+      { id: "208696", module: "流程分类", type: "新增", operator: "admin", ip: "38.***", location: "United States|California|Los ...", status: "成功", time: "2026-08-11 11:21:16", duration: "5 ms", detail: "新增流程分类", request: "POST /workflow/category", method: "org.dromara.workflow.controller.FlwCategoryController.save()", params: "{\"name\":\"行政流程\"}" },
+      { id: "208695", module: "OSS对象存储", type: "新增", operator: "admin", ip: "121.***", location: "中国广东省|深圳******", status: "失败", time: "2026-08-11 10:48:53", duration: "0 ms", detail: "新增对象存储配置失败", request: "POST /system/oss", method: "org.dromara.system.controller.SysOssController.save()", params: "{\"configKey\":\"oss-prod\"}" },
+      { id: "208694", module: "用户管理", type: "新增", operator: "admin", ip: "121.***", location: "中国广东省|深圳******", status: "成功", time: "2026-08-11 10:45:45", duration: "3 ms", detail: "新增用户 admin-test", request: "POST /system/user", method: "org.dromara.system.controller.SysUserController.insert()", params: "{\"userName\":\"admin-test\"}" },
+      { id: "208693", module: "OSS对象存储", type: "新增", operator: "admin", ip: "121.***", location: "中国广东省|深圳******", status: "成功", time: "2026-08-11 10:44:59", duration: "155 ms", detail: "新增对象存储配置", request: "POST /system/oss", method: "org.dromara.system.controller.SysOssController.save()", params: "{\"configKey\":\"oss-test\"}" },
+      { id: "208692", module: "菜单管理", type: "新增", operator: "admin", ip: "183.***", location: "中国广东省|深圳******", status: "失败", time: "2026-08-11 10:37:24", duration: "1 ms", detail: "新增菜单失败", request: "POST /system/menu", method: "org.dromara.system.controller.SysMenuController.insert()", params: "{\"menuName\":\"日志管理\"}" },
+    ];
+    const table = document.getElementById("operationLogTable");
+    const esc = (value) => String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
+    const typeClass = { 新增: "log-type-create", 导出: "log-type-export", 编辑: "log-type-update", 删除: "log-type-delete" };
+
+    function render(list = operationLogs) {
+      table.innerHTML = list.map((item) => `<tr><td class="check-cell"><input type="checkbox" data-check data-id="${item.id}"></td><td>${esc(item.module)}</td><td><span class="log-type ${typeClass[item.type] || "log-type-update"}">${esc(item.type)}</span></td><td>${esc(item.operator)}</td><td>${esc(item.ip)}</td><td>${esc(item.location)}</td><td><span class="tag ${item.status === "成功" ? "primary" : "danger"}">${esc(item.status)}</span></td><td>${esc(item.time)}</td><td>${esc(item.duration)}</td><td><button class="table-action" data-preview="${item.id}">预览</button></td></tr>`).join("");
+      document.querySelector('[data-action="delete-selected"]').disabled = !document.querySelector("[data-check]:checked");
+      document.querySelector("[data-select-all]").checked = list.length > 0 && list.every((item) => document.querySelector(`[data-check][data-id="${item.id}"]`)?.checked);
+    }
+
+    function detailRow(label, value) { return `<tr><th>${label}</th><td>${value}</td></tr>`; }
+    function openDetail(item) {
+      const body = `<table class="log-detail-table"><tbody>${detailRow("日志编号", esc(item.id))}${detailRow("操作结果", `<span class="tag ${item.status === "成功" ? "primary" : "danger"}">${esc(item.status)}</span>`)}${detailRow("操作模块", `${esc(item.module)} <span class="log-type ${typeClass[item.type] || "log-type-update"}">${esc(item.type)}</span>`)}${detailRow("操作信息", esc(item.detail))}${detailRow("请求信息", `<span class="tag primary">POST请求</span>　${esc(item.request)}`)}${detailRow("方法", esc(item.method))}${detailRow("请求参数", esc(item.params))}${detailRow("请求耗时", esc(item.duration))}${detailRow("操作时间", esc(item.time))}</tbody></table>`;
+      window.openAppDrawer({ title: "查看日志", subtitle: "系统管理 · 操作日志", body, footer: '<button class="btn btn-secondary" data-drawer-close>关闭</button>' });
+    }
+
+    function filtered() {
+      const filters = Object.fromEntries([...document.querySelectorAll("[data-filter]")].map((input) => [input.dataset.filter, input.value.trim()]));
+      return operationLogs.filter((item) => (!filters.module || item.module.includes(filters.module)) && (!filters.operator || item.operator.includes(filters.operator)) && (!filters.type || item.type === filters.type) && (!filters.ip || item.ip.includes(filters.ip)) && (!filters.status || item.status === filters.status) && (!filters.date || item.time.includes(filters.date)));
+    }
+
+    render();
+    document.addEventListener("click", (event) => {
+      const action = event.target.closest("[data-action]")?.dataset.action;
+      if (action === "search") render(filtered());
+      if (action === "reset") { document.querySelectorAll("[data-filter]").forEach((input) => { input.value = ""; }); render(); }
+      if (action === "refresh") render(filtered());
+      if (action === "export") window.openAppConfirm({ title: "提示", message: "导出功能为原型演示，当前不会生成真实文件。", confirmText: "知道了" });
+      if (action === "clear") window.openAppConfirm({ title: "提示", message: "确认清空全部操作日志吗？", onConfirm: () => { operationLogs.splice(0, operationLogs.length); render(); } });
+      if (action === "delete-selected") {
+        const selected = [...document.querySelectorAll("[data-check]:checked")].map((input) => input.dataset.id);
+        if (selected.length) window.openAppConfirm({ title: "提示", message: `确认删除选中的【${selected.length}】条操作日志吗？`, onConfirm: () => { selected.forEach((id) => { const index = operationLogs.findIndex((item) => item.id === id); if (index >= 0) operationLogs.splice(index, 1); }); render(filtered()); } });
+      }
+      const preview = event.target.closest("[data-preview]");
+      if (preview) openDetail(operationLogs.find((item) => item.id === preview.dataset.preview));
+      if (event.target.matches("[data-check]")) render(filtered());
+    });
+    document.addEventListener("change", (event) => { if (event.target.matches("[data-select-all]")) { document.querySelectorAll("[data-check]").forEach((input) => { input.checked = event.target.checked; }); render(filtered()); } });
+  </script>
+</body>
+</html>
+
+
+
+
+

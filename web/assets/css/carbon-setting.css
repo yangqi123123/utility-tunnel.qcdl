@@ -1,0 +1,166 @@
+.setting-filter-card,
+.setting-list-card {
+  border: 1px solid var(--border);
+}
+
+.setting-filter-card {
+  padding: 20px 24px;
+}
+
+.setting-filter-fields {
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) minmax(240px, 1fr) auto;
+  align-items: end;
+  gap: 16px;
+}
+
+.setting-filter-actions {
+  display: flex;
+  gap: 8px;
+  padding-bottom: 0;
+}
+
+.setting-list-card {
+  overflow: hidden;
+}
+
+.setting-list-head {
+  min-height: 64px;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--divider);
+}
+
+.setting-list-head .card-title {
+  margin: 0;
+}
+
+.setting-table-wrap {
+  overflow-x: auto;
+}
+
+.setting-table {
+  min-width: 1120px;
+}
+
+.setting-table th,
+.setting-table td {
+  height: 52px;
+  padding: 0 16px;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.setting-table th {
+  background: var(--primary-bg);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.setting-table td {
+  border-bottom: 1px solid var(--divider);
+}
+
+.setting-table tbody tr:hover td {
+  background: #f7f9ff;
+}
+
+.setting-default-tag {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  margin-left: 8px;
+  padding: 0 6px;
+  border: 1px solid #d8e4fb;
+  border-radius: 2px;
+  color: var(--primary);
+  background: var(--primary-bg);
+  font-size: 12px;
+}
+
+.setting-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.setting-actions .table-action {
+  margin: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  color: var(--primary);
+}
+
+.setting-actions .table-action.is-disabled,
+.setting-default-hint {
+  color: var(--text-disabled);
+  cursor: not-allowed;
+}
+
+.setting-default-hint {
+  font-size: 13px;
+}
+
+.setting-empty {
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--text-secondary);
+}
+
+.setting-empty i {
+  color: var(--primary);
+  font-size: 28px;
+}
+
+.setting-pagination {
+  padding: 12px 24px;
+}
+
+.setting-page-size {
+  margin-left: auto;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+}
+
+.setting-form .form-item {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.setting-form textarea[data-setting-field="sourceInfo"] {
+  padding-bottom: 28px;
+}
+
+.setting-char-count {
+  position: absolute;
+  right: 12px;
+  bottom: 8px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 20px;
+  pointer-events: none;
+}
+
+@media (max-width: 760px) {
+  .setting-filter-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .setting-filter-actions {
+    justify-content: flex-end;
+  }
+
+  .setting-list-head {
+    padding: 0 12px;
+  }
+
+  .setting-pagination {
+    padding-right: 12px;
+    padding-left: 12px;
+  }
+}

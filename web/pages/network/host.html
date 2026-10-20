@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>服务主机 - 科学岛管廊监控中心</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/tob-ui.css">
+  <link rel="stylesheet" href="../../assets/css/service-center.css?v=3">
+  <link rel="stylesheet" href="../../assets/css/network.css">
+</head>
+<body class="service-center-page" data-menu-key="network.host" data-page-section="网络管理" data-page-title="服务主机">
+  <div class="app-shell">
+    <aside id="app-sidebar" class="sidebar"></aside>
+    <header id="app-header" class="header"></header>
+    <main class="main">
+      <div class="screen-frame service-dashboard">
+        <div class="alert-summary warning" id="hostAlarmBar" hidden>
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          <div><strong>主机存在超阈值项</strong><p id="hostAlarmText"></p></div>
+          <a class="btn btn-secondary btn-sm" href="./alarms.html">查看网络告警</a>
+        </div>
+
+        <section class="service-overview-grid">
+          <article class="service-card">
+            <header class="service-card-header"><h2>CPU</h2></header>
+            <div class="service-card-body">
+              <table class="service-kv-table"><thead><tr><th>属性</th><th>值</th></tr></thead><tbody>
+                <tr><td>核心数</td><td data-cpu-cores>—</td></tr>
+                <tr><td>总 CPU 数</td><td data-cpu-total>—</td></tr>
+                <tr><td>系统使用率</td><td data-cpu-usage>—</td></tr>
+                <tr><td>当前空闲率</td><td data-cpu-idle>—</td></tr>
+              </tbody></table>
+            </div>
+          </article>
+          <article class="service-card">
+            <header class="service-card-header"><h2>内存</h2></header>
+            <div class="service-card-body">
+              <table class="service-kv-table"><thead><tr><th>属性</th><th>内存</th></tr></thead><tbody>
+                <tr><td>总内存</td><td data-mem-total>—</td></tr>
+                <tr><td>已用内存</td><td data-mem-used>—</td></tr>
+                <tr><td>剩余内存</td><td data-mem-free>—</td></tr>
+                <tr><td>使用率</td><td data-mem-usage>—</td></tr>
+              </tbody></table>
+            </div>
+          </article>
+        </section>
+
+        <article class="service-card service-wide-card">
+          <header class="service-card-header"><h2>服务器信息</h2></header>
+          <div class="service-card-body">
+            <table class="service-kv-table service-wide-table"><tbody>
+              <tr><th>服务器名称</th><td data-server-name>—</td><th>操作系统</th><td data-server-os>—</td></tr>
+              <tr><th>服务器 IP</th><td data-server-ip>—</td><th>系统架构</th><td data-server-arch>—</td></tr>
+            </tbody></table>
+          </div>
+        </article>
+
+        <article class="service-card service-wide-card">
+          <header class="service-card-header"><h2>应用信息</h2></header>
+          <div class="service-card-body">
+            <table class="service-kv-table service-wide-table"><tbody>
+              <tr><th>应用环境</th><td data-app-env>—</td><th>应用版本</th><td data-app-version>—</td></tr>
+              <tr><th>启动时间</th><td data-app-started>—</td><th>运行时长</th><td data-app-uptime>—</td></tr>
+              <tr><th>安装路径</th><td colspan="3" class="service-muted" data-app-install>—</td></tr>
+              <tr><th>项目路径</th><td colspan="3" class="service-muted" data-app-project>—</td></tr>
+              <tr><th>运行参数</th><td colspan="3" data-app-args>—</td></tr>
+            </tbody></table>
+          </div>
+        </article>
+
+        <article class="service-card service-wide-card">
+          <header class="service-card-header"><h2>磁盘状态</h2></header>
+          <div class="service-card-body">
+            <table class="service-kv-table service-disk-table"><thead><tr><th>盘符路径</th><th>盘符类型</th><th>总大小</th><th>可用大小</th><th>已用大小</th><th>已用百分比</th></tr></thead><tbody id="diskTableBody"></tbody></table>
+          </div>
+        </article>
+      </div>
+    </main>
+  </div>
+  <script src="../../../app/config/menu.js?v=nav-hide-1"></script>
+  <script src="../../../app/components/sidebar.js?v=nav-home-1"></script>
+  <script src="../../../app/components/header.js?v=nav-home-1"></script>
+  <script src="../../../app/components/drawer.js"></script>
+  <script src="../../../app/components/requirement.js"></script>
+  <script src="../../../app/data/network-data.js"></script>
+  <script>
+    function diskMeterHtml(usage) {
+      const warnCls = usage >= 90 ? " warn" : "";
+      return `<span class="service-meter${warnCls}"><span class="service-meter-track"><span class="service-meter-value" style="width:${usage}%"></span></span>${usage}%</span>`;
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const h = NETWORK_STORE.getHost();
+
+      document.querySelector("[data-cpu-cores]").textContent = h.cpu.cores;
+      document.querySelector("[data-cpu-total]").textContent = h.cpu.total;
+      document.querySelector("[data-cpu-usage]").textContent = h.cpu.usage + "%";
+      document.querySelector("[data-cpu-idle]").textContent = h.cpu.idle + "%";
+
+      document.querySelector("[data-mem-total]").textContent = h.memory.total;
+      document.querySelector("[data-mem-used]").textContent = h.memory.used;
+      document.querySelector("[data-mem-free]").textContent = h.memory.free;
+      document.querySelector("[data-mem-usage]").textContent = h.memory.usage + "%";
+
+      document.querySelector("[data-server-name]").textContent = h.server.name;
+      document.querySelector("[data-server-os]").textContent = h.server.os;
+      document.querySelector("[data-server-ip]").textContent = h.server.ip;
+      document.querySelector("[data-server-arch]").textContent = h.server.arch;
+
+      document.querySelector("[data-app-env]").textContent = h.app.env;
+      document.querySelector("[data-app-version]").textContent = h.app.version;
+      document.querySelector("[data-app-started]").textContent = h.app.startedAt;
+      document.querySelector("[data-app-uptime]").textContent = h.app.uptime;
+      document.querySelector("[data-app-install]").textContent = h.app.installPath;
+      document.querySelector("[data-app-project]").textContent = h.app.projectPath;
+      document.querySelector("[data-app-args]").textContent = h.app.args;
+
+      document.getElementById("diskTableBody").innerHTML = h.disks.map((d) =>
+        `<tr><td>${d.path}</td><td>${d.type}</td><td>${d.total}</td><td>${d.free}</td><td>${d.used}</td><td>${diskMeterHtml(d.usage)}</td></tr>`
+      ).join("");
+
+      const diskMax = Math.max(...h.disks.map((d) => d.usage));
+      if (h.cpu.usage >= 85 || h.memory.usage >= 80 || diskMax >= 90) {
+        const bar = document.getElementById("hostAlarmBar");
+        bar.hidden = false;
+        document.getElementById("hostAlarmText").textContent =
+          `CPU ${h.cpu.usage}% · 内存 ${h.memory.usage}% · 磁盘峰值 ${diskMax}%`;
+      }
+    });
+  </script>
+</body>
+</html>

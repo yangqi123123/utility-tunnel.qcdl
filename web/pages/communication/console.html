@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>广播控制台 - 科学岛管廊监控中心</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/tob-ui.css">
+  <link rel="stylesheet" href="../../assets/css/communication.css">
+</head>
+<body class="communication-page communication-console-page" data-menu-key="communication.console" data-page-section="通信系统" data-page-title="广播控制台">
+  <div class="app-shell">
+    <aside id="app-sidebar" class="sidebar"></aside>
+    <header id="app-header" class="header"></header>
+    <main class="main">
+      <div class="screen-frame stack">
+        <section class="card">
+          <div class="broadcast-tabs">
+            <button class="broadcast-tab active" type="button" data-tab="music">服务器音乐</button>
+            <button class="broadcast-tab" type="button" data-tab="stream">HTTP流媒体</button>
+            <button class="broadcast-tab" type="button" data-tab="tts">TTS文本</button>
+          </div>
+
+          <div class="broadcast-panel active" data-panel="music">
+            <div class="broadcast-grid">
+              <div class="broadcast-choice">
+                <h3>选择音频</h3>
+                <label class="form-field form-item"><span class="form-label form-required">广播任务名称</span><input class="form-control" placeholder="请输入任务名称"></label>
+                <label class="form-field form-item"><span class="form-label form-required">服务器音乐</span>
+                  <select class="form-control">
+                    <option>消防宣传.mp3 · 03:20</option>
+                    <option>物业通知.mp3 · 02:18</option>
+                    <option>国歌.mp3 · 04:12</option>
+                  </select>
+                </label>
+                <label class="form-field"><span class="form-label">播放模式</span>
+                  <select class="form-control"><option>单曲播放</option><option>列表循环</option><option>随机播放</option></select>
+                </label>
+              </div>
+              <div class="broadcast-choice">
+                <h3>播放配置</h3>
+                <label class="form-field form-item"><span class="form-label">音量：<strong data-volume-label>60</strong></span><input type="range" min="0" max="100" value="60" data-volume></label>
+                <label class="form-field form-item"><span class="form-label form-required">目标终端</span><div data-terminal-select-host></div></label>
+              </div>
+            </div>
+            <div class="console-actions">
+              <button class="btn btn-secondary" type="button" data-action="preview">试听</button>
+              <button class="btn btn-primary" type="button" data-action="start" data-task-type="服务器音乐"><i class="fa-solid fa-play"></i> 开始播放</button>
+            </div>
+          </div>
+
+          <div class="broadcast-panel" data-panel="stream">
+            <div class="broadcast-grid">
+              <div class="broadcast-choice">
+                <h3>流媒体配置</h3>
+                <label class="form-field form-item"><span class="form-label form-required">广播任务名称</span><input class="form-control" placeholder="请输入任务名称"></label>
+                <label class="form-field form-item"><span class="form-label form-required">HTTP流媒体地址</span><input class="form-control" value="https://example.com/notice.mp3" placeholder="请输入音频地址"></label>
+                <button class="btn btn-secondary" type="button" data-action="check-stream">检测地址</button>
+              </div>
+              <div class="broadcast-choice">
+                <h3>目标终端</h3>
+                <label class="form-field form-item"><span class="form-label form-required">目标终端</span><div data-terminal-select-host></div></label>
+                <label class="form-field form-item"><span class="form-label">音量</span><input type="range" min="0" max="100" value="60"></label>
+                <label class="form-field"><span class="form-label">播放模式</span><select class="form-control"><option>单次播放</option><option>循环播放</option></select></label>
+              </div>
+            </div>
+            <div class="console-actions">
+              <button class="btn btn-primary" type="button" data-action="start" data-task-type="HTTP流媒体"><i class="fa-solid fa-play"></i> 开始播放</button>
+            </div>
+          </div>
+
+          <div class="broadcast-panel" data-panel="tts">
+            <div class="broadcast-grid">
+              <div class="broadcast-choice">
+                <h3>文本内容</h3>
+                <label class="form-field form-item"><span class="form-label form-required">任务名称</span><input class="form-control" placeholder="请输入任务名称"></label>
+                <label class="form-field"><span class="form-label form-required">播报文本</span><textarea class="form-control textarea" rows="6" placeholder="请输入需要播报的内容"></textarea></label>
+              </div>
+              <div class="broadcast-choice">
+                <h3>语音配置</h3>
+                <label class="form-field form-item"><span class="form-label">TTS引擎</span><select class="form-control"><option>普通话女声</option><option>普通话男声</option></select></label>
+                <label class="form-field form-item"><span class="form-label">语速</span><input class="form-control" type="number" value="5" min="1" max="10"></label>
+                <label class="form-field form-item"><span class="form-label">重复次数</span><input class="form-control" type="number" value="1" min="1"></label>
+                <label class="form-field form-item"><span class="form-label form-required">目标终端</span><div data-terminal-select-host></div></label>
+              </div>
+            </div>
+            <div class="console-actions">
+              <button class="btn btn-primary" type="button" data-action="start" data-task-type="TTS文本"><i class="fa-solid fa-volume-high"></i> 发起播报</button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+  <script src="../../../app/config/menu.js?v=comm-c2-2"></script>
+  <script src="../../../app/data/mock-data.js"></script>
+  <script src="../../../app/components/sidebar.js?v=nav-home-1"></script>
+  <script src="../../../app/components/header.js?v=nav-home-1"></script>
+  <script src="../../../app/components/drawer.js"></script>
+  <script src="../../../app/components/communication-terminal-select.js"></script>
+  <script src="../../../app/components/requirement.js"></script>
+  <script>
+    document.addEventListener("click", (e) => {
+      const tab = e.target.closest("[data-tab]");
+      if (tab) {
+        document.querySelectorAll("[data-tab]").forEach((x) => x.classList.toggle("active", x === tab));
+        document.querySelectorAll("[data-panel]").forEach((x) => x.classList.toggle("active", x.dataset.panel === tab.dataset.tab));
+      }
+      const action = e.target.closest("[data-action]")?.dataset.action;
+      if (action === "start") {
+        window.openAppConfirm?.({ title: "任务已提交", message: `${e.target.closest("[data-action]").dataset.taskType}任务已提交，任务正在排队执行。`, confirmText: "知道了" });
+      }
+      if (action === "preview") window.openAppConfirm?.({ title: "试听", message: "试听任务已发送到当前选中的终端。", confirmText: "知道了" });
+      if (action === "check-stream") window.openAppConfirm?.({ title: "地址检测", message: "流媒体地址可访问，音频格式符合要求。", confirmText: "知道了" });
+    });
+    document.addEventListener("input", (e) => {
+      if (e.target.matches("[data-volume]")) document.querySelector("[data-volume-label]").textContent = e.target.value;
+    });
+  </script>
+</body>
+</html>

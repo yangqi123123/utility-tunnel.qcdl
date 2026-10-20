@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>监控总览 - 科学岛管廊监控中心</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/tob-ui.css">
+  <link rel="stylesheet" href="../../assets/css/service-center.css?v=3">
+  <link rel="stylesheet" href="../../assets/css/network.css">
+</head>
+<body class="service-center-page" data-menu-key="network.overview" data-page-section="网络管理" data-page-title="监控总览">
+  <div class="app-shell">
+    <aside id="app-sidebar" class="sidebar"></aside>
+    <header id="app-header" class="header"></header>
+    <main class="main">
+      <div class="screen-frame service-dashboard">
+        <section class="analysis-kpi-grid network-overview-kpis" id="overviewKpis"></section>
+
+        <a class="network-host-summary" href="./host.html">
+          <div>
+            <strong>服务主机摘要</strong>
+            <small id="hostSummaryName">—</small>
+          </div>
+          <div class="metrics">
+            <span>CPU<strong id="hostSummaryCpu">—</strong></span>
+            <span>内存<strong id="hostSummaryMem">—</strong></span>
+            <span>磁盘峰值<strong id="hostSummaryDisk">—</strong></span>
+          </div>
+          <i class="fa-solid fa-chevron-right"></i>
+        </a>
+
+        <section class="performance-grid">
+          <article class="service-card performance-chart-card"><header class="service-card-header performance-card-head"><div><h2>带宽使用趋势</h2></div><button class="chart-period">24小时</button></header><div class="chart-wrap"><div class="chart-y-axis"><span>100%</span><span>75%</span><span>50%</span><span>25%</span><span>0%</span></div><div class="line-chart"><div class="chart-grid-lines"><i></i><i></i><i></i><i></i><i></i></div><div class="chart-area"></div><div class="chart-line"></div><div class="chart-point p1"></div><div class="chart-point p2"></div><div class="chart-point p3"></div><div class="chart-point p4"></div><div class="chart-point p5"></div><div class="chart-point p6"></div><div class="chart-labels"><span>00:00</span><span>04:00</span><span>08:00</span><span>12:00</span><span>16:00</span><span>20:00</span><span>24:00</span></div></div></div><div class="chart-legend"><span><i class="legend-blue"></i>入站流量</span><span><i class="legend-green"></i>出站流量</span><b>峰值 82.6%</b></div></article>
+          <article class="service-card performance-health-card"><header class="service-card-header performance-card-head"><div><h2>设备健康度</h2></div><span>按设备类型统计</span></header><div class="health-list"><div class="health-row"><span><i class="fa-solid fa-route"></i>路由器</span><b>98%</b><div><i style="width:98%"></i></div></div><div class="health-row"><span><i class="fa-solid fa-server"></i>服务器</span><b>96%</b><div><i style="width:96%"></i></div></div><div class="health-row"><span><i class="fa-solid fa-network-wired"></i>交换机</span><b>91%</b><div><i style="width:91%"></i></div></div><div class="health-row"><span><i class="fa-solid fa-wifi"></i>无线接入点</span><b>87%</b><div><i style="width:87%"></i></div></div></div><div class="health-footer"><span><i class="status-dot good"></i>正常 34</span><span><i class="status-dot warn"></i>告警 1</span><span><i class="status-dot off"></i>离线 2</span></div></article>
+        </section>
+
+        <article class="service-card performance-wide-card">
+          <header class="service-card-header performance-card-head">
+            <div><h2>设备性能分析</h2></div>
+            <button class="btn btn-secondary btn-sm" id="exportBtn" type="button"><i class="fa-solid fa-file-excel"></i> 导出 Excel</button>
+          </header>
+          <div class="table-wrap">
+            <table class="performance-table">
+              <thead>
+                <tr>
+                  <th>设备名称</th>
+                  <th>设备类型</th>
+                  <th>状态</th>
+                  <th>流量</th>
+                  <th>延迟</th>
+                  <th>丢包率</th>
+                </tr>
+              </thead>
+              <tbody id="deviceTableBody"></tbody>
+            </table>
+          </div>
+          <div class="pagination" id="devicePagination"></div>
+        </article>
+      </div>
+    </main>
+  </div>
+  <script src="../../../app/config/menu.js?v=nav-hide-1"></script>
+  <script src="../../../app/components/sidebar.js?v=nav-home-1"></script>
+  <script src="../../../app/components/header.js?v=nav-home-1"></script>
+  <script src="../../../app/components/drawer.js"></script>
+  <script src="../../../app/components/requirement.js"></script>
+  <script src="../../assets/vendor/xlsx.full.min.js"></script>
+  <script src="../../../app/data/network-data.js"></script>
+  <script>
+    const PAGE_SIZE = 10;
+    let page = 1;
+    let devices = [];
+    const STATUS_MAP = {
+      normal: { cls: "good", label: "正常" },
+      warn: { cls: "warn", label: "高负载" },
+      offline: { cls: "warn", label: "离线" },
+    };
+
+    function renderKpis() {
+      const list = NETWORK_STORE.listDevices();
+      const online = list.filter((d) => d.status !== "offline").length;
+      const offline = list.length - online;
+      const openAlarms = NETWORK_STORE.listAlarmEvents().filter((e) => e.status === "未处理").length;
+      const items = [
+        { tone: "is-blue", icon: "fa-solid fa-network-wired", label: "受监控设备", value: `${list.length} 台`, sub: `在线 ${online} · 离线 ${offline}`, href: "./devices.html" },
+        { tone: "is-green", icon: "fa-solid fa-arrow-right-arrow-left", label: "当前网络流量", value: "68.4 Gbps" },
+        { tone: "is-amber", icon: "fa-solid fa-stopwatch", label: "平均链路延迟", value: "12.8 ms" },
+        { tone: "is-red", icon: "fa-solid fa-triangle-exclamation", label: "未处理告警", value: `${openAlarms} 条`, href: "./alarms.html" },
+      ];
+      document.getElementById("overviewKpis").innerHTML = items.map((item) => {
+        const inner = `<article class="analysis-kpi ${item.tone}">
+          <div class="analysis-kpi-icon"><i class="${item.icon}"></i></div>
+          <div class="analysis-kpi-body">
+            <span class="analysis-kpi-label">${item.label}</span>
+            <strong class="analysis-kpi-value">${item.value}</strong>
+            ${item.sub ? `<em class="analysis-kpi-sub">${item.sub}</em>` : ""}
+          </div>
+        </article>`;
+        return item.href ? `<a class="network-kpi-link" href="${item.href}">${inner}</a>` : inner;
+      }).join("");
+    }
+
+    function renderPager(total) {
+      const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+      if (page > pages) page = pages;
+      const items = [];
+      items.push(`<span>共 <strong>${total}</strong> 条，每页显示 ${PAGE_SIZE} 条</span>`);
+      items.push(`<span class="page-item ${page <= 1 ? "disabled" : ""}" data-page="${page - 1}">‹</span>`);
+      for (let i = 1; i <= pages; i += 1) {
+        items.push(`<span class="page-item ${i === page ? "active" : ""}" data-page="${i}">${i}</span>`);
+      }
+      items.push(`<span class="page-item ${page >= pages ? "disabled" : ""}" data-page="${page + 1}">›</span>`);
+      document.getElementById("devicePagination").innerHTML = items.join("");
+    }
+
+    function renderDevices() {
+      const total = devices.length;
+      const start = (page - 1) * PAGE_SIZE;
+      const rows = devices.slice(start, start + PAGE_SIZE);
+      document.getElementById("deviceTableBody").innerHTML = rows.map((d) => {
+        const st = STATUS_MAP[d.status] || STATUS_MAP.normal;
+        const latency = d.status === "offline" ? "—" : d.latencyMs + " ms";
+        return `<tr>
+          <td><strong>${d.name}</strong><small>${d.ip}</small></td>
+          <td>${d.type}</td>
+          <td><span class="device-status ${st.cls}">${st.label}</span></td>
+          <td>${d.traffic}</td>
+          <td>${latency}</td>
+          <td>${d.loss}</td>
+        </tr>`;
+      }).join("") || '<tr><td colspan="6" class="service-muted" style="text-align:center">暂无设备</td></tr>';
+      renderPager(total);
+    }
+
+    function ensureXlsx() {
+      if (window.XLSX) return true;
+      window.openAppConfirm?.({ title: "提示", message: "Excel 组件加载失败，请刷新页面后重试。", confirmText: "知道了" });
+      return false;
+    }
+
+    function downloadWorkbook(book, name) {
+      const content = XLSX.write(book, { bookType: "xlsx", type: "array" });
+      const blob = new Blob([content], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = name;
+      document.body.append(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    function exportDevices() {
+      if (!ensureXlsx()) return;
+      const rows = devices.map((d) => ({
+        设备名称: d.name,
+        IP: d.ip,
+        设备类型: d.type,
+        状态: (STATUS_MAP[d.status] || STATUS_MAP.normal).label,
+        流量: d.traffic,
+        延迟: d.status === "offline" ? "—" : d.latencyMs + " ms",
+        丢包率: d.loss,
+      }));
+      const sheet = XLSX.utils.json_to_sheet(rows.length ? rows : [{ 设备名称: "" }]);
+      const book = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(book, sheet, "设备性能");
+      downloadWorkbook(book, "监控总览-设备性能.xlsx");
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const s = NETWORK_STORE.getHostSummary();
+      document.getElementById("hostSummaryName").textContent = s.serverName;
+      document.getElementById("hostSummaryCpu").textContent = s.cpuUsage + "%";
+      document.getElementById("hostSummaryMem").textContent = s.memUsage + "%";
+      document.getElementById("hostSummaryDisk").textContent = s.diskMax + "%";
+      devices = NETWORK_STORE.listDevices();
+      renderKpis();
+      renderDevices();
+      document.getElementById("exportBtn").addEventListener("click", exportDevices);
+      document.getElementById("devicePagination").addEventListener("click", (event) => {
+        const item = event.target.closest("[data-page]");
+        if (!item || item.classList.contains("disabled")) return;
+        const next = Number(item.dataset.page);
+        if (!Number.isFinite(next) || next < 1) return;
+        page = next;
+        renderDevices();
+      });
+    });
+  </script>
+</body>
+</html>

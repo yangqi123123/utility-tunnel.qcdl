@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>服务中心看板 - 科学岛管廊监控中心</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/tob-ui.css">
+  <link rel="stylesheet" href="../../assets/css/service-center.css?v=3">
+</head>
+<body class="service-center-page" data-menu-key="service-center" data-page-section="服务中心" data-page-title="服务中心看板">
+  <div class="app-shell">
+    <aside id="app-sidebar" class="sidebar"></aside>
+    <header id="app-header" class="header"></header>
+    <main class="main">
+      <div class="screen-frame service-dashboard">
+        <section class="service-overview-grid">
+          <article class="service-card">
+            <header class="service-card-header"><h2>CPU</h2></header>
+            <div class="service-card-body">
+              <table class="service-kv-table"><thead><tr><th>属性</th><th>值</th></tr></thead><tbody>
+                <tr><td>核心数</td><td>20</td></tr>
+                <tr><td>总 CPU 数</td><td>20</td></tr>
+                <tr><td>系统使用率</td><td>35%</td></tr>
+                <tr><td>当前空闲率</td><td>65%</td></tr>
+              </tbody></table>
+            </div>
+          </article>
+          <article class="service-card">
+            <header class="service-card-header"><h2>内存</h2></header>
+            <div class="service-card-body">
+              <table class="service-kv-table"><thead><tr><th>属性</th><th>内存</th></tr></thead><tbody>
+                <tr><td>总内存</td><td>31.84GB</td></tr>
+                <tr><td>已用内存</td><td>23.71GB</td></tr>
+                <tr><td>剩余内存</td><td>8.13GB</td></tr>
+                <tr><td>使用率</td><td>75%</td></tr>
+              </tbody></table>
+            </div>
+          </article>
+        </section>
+
+        <article class="service-card service-wide-card">
+          <header class="service-card-header"><h2>服务器信息</h2></header>
+          <div class="service-card-body">
+            <table class="service-kv-table service-wide-table"><tbody>
+              <tr><th>服务器名称</th><td>SC-202507241642</td><th>操作系统</th><td>Microsoft Windows 10.0.19045</td></tr>
+              <tr><th>服务器 IP</th><td>192.168.110.18:29001</td><th>系统架构</th><td>X64</td></tr>
+            </tbody></table>
+          </div>
+        </article>
+
+        <article class="service-card service-wide-card">
+          <header class="service-card-header"><h2>应用信息</h2></header>
+          <div class="service-card-body">
+            <table class="service-kv-table service-wide-table"><tbody>
+              <tr><th>应用环境</th><td>Development</td><th>应用版本</th><td>.NET 8.0.30</td></tr>
+              <tr><th>启动时间</th><td>2026-09-02 14:53:18</td><th>运行时长</th><td>00 天 01 小时 04 分 29 秒</td></tr>
+              <tr><th>安装路径</th><td colspan="3" class="service-muted">E:\project\kcpt\rg.cscec4.cfibms.business.rearend\Rg.Abp.Net8\src\Rg.Abp.Web</td></tr>
+              <tr><th>项目路径</th><td colspan="3" class="service-muted">E:\project\kcpt\rg.cscec4.cfibms.business.rearend\Rg.Abp.Net8\src\Rg.Abp.Web\wwwroot</td></tr>
+              <tr><th>运行参数</th><td colspan="3">Development</td></tr>
+            </tbody></table>
+          </div>
+        </article>
+
+        <article class="service-card service-wide-card">
+          <header class="service-card-header"><h2>磁盘状态</h2></header>
+          <div class="service-card-body">
+            <table class="service-kv-table service-disk-table"><thead><tr><th>盘符路径</th><th>盘符类型</th><th>总大小</th><th>可用大小</th><th>已用大小</th><th>已用百分比</th></tr></thead><tbody>
+              <tr><td>C:\</td><td>Fixed</td><td>341 GB</td><td>32 GB</td><td>309 GB</td><td><span class="service-meter"><span class="service-meter-track"><span class="service-meter-value" style="width:91%"></span></span>91%</span></td></tr>
+              <tr><td>D:\</td><td>Fixed</td><td>199 GB</td><td>121 GB</td><td>78 GB</td><td><span class="service-meter"><span class="service-meter-track"><span class="service-meter-value" style="width:40%"></span></span>40%</span></td></tr>
+              <tr><td>E:\</td><td>Fixed</td><td>390 GB</td><td>27 GB</td><td>363 GB</td><td><span class="service-meter"><span class="service-meter-track"><span class="service-meter-value" style="width:94%"></span></span>94%</span></td></tr>
+            </tbody></table>
+          </div>
+        </article>
+      </div>
+    </main>
+  </div>
+  <script src="../../../app/config/menu.js?v=nav-hide-1"></script>
+  <script src="../../../app/components/sidebar.js?v=nav-home-1"></script>
+  <script src="../../../app/components/header.js?v=nav-home-1"></script>
+  <script src="../../../app/components/requirement.js"></script>
+</body>
+</html>
+
+

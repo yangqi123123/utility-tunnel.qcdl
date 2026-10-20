@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>实时视频 - 科学岛管廊监控中心</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/tob-ui.css">
+  <link rel="stylesheet" href="../../assets/css/monitoring.css">
+  <script>
+    (function () {
+      const mode = new URLSearchParams(location.search).get("embedded");
+      if (mode === "1" || mode === "panel") {
+        document.documentElement.classList.add("video-monitor-embedded");
+      }
+      if (mode === "panel") {
+        document.documentElement.classList.add("video-monitor-panel");
+      }
+    })();
+  </script>
+  <style>
+    .video-monitor-embedded,
+    .video-monitor-embedded body { height: 100%; overflow: hidden; background: #f5f7fc; }
+    .video-monitor-embedded .app-shell { display: block; height: 100%; min-height: 0; }
+    .video-monitor-embedded #app-sidebar,
+    .video-monitor-embedded #app-header { display: none !important; }
+    .video-monitor-embedded .main { height: 100%; min-height: 0; padding: 12px; overflow: hidden; }
+    .video-monitor-embedded .screen-frame { width: 100%; height: 100%; margin: 0; }
+    .video-monitor-embedded .video-workspace { height: 100%; min-height: 0; grid-template-columns: 220px minmax(0, 1fr); gap: 12px; }
+    .video-monitor-embedded .video-list { max-height: none; }
+    .video-monitor-panel .video-workspace { grid-template-columns: minmax(0, 1fr); }
+    .video-monitor-panel .video-sidebar,
+    .video-monitor-panel #videoStats,
+    .video-monitor-panel #videoPtz { display: none !important; }
+    .video-monitor-panel .main { padding: 0; }
+    .video-monitor-panel .video-panel { height: 100%; min-height: 420px; }
+  </style>
+</head>
+<body class="monitoring-page" data-menu-key="video-monitoring.live" data-page-section="视频监控系统" data-page-title="实时视频">
+  <div class="app-shell">
+    <aside id="app-sidebar" class="sidebar"></aside>
+    <header id="app-header" class="header"></header>
+    <main class="main">
+      <div class="screen-frame stack">
+        <section class="video-workspace">
+          <aside class="video-sidebar">
+            <div class="video-sidebar-head"><span>监控设备</span><span class="status-muted" id="cameraListTotal">12</span></div>
+            <div class="video-floor-filter space-filter"><span class="form-label">空间选择</span><div class="space-picker" id="spacePicker"><button type="button" class="space-picker-trigger" id="spacePickerTrigger">请选择 <i class="fa-solid fa-chevron-down"></i></button><div class="space-picker-menu" id="spacePickerMenu"><div class="space-picker-columns"><div data-space-column="project"></div><div data-space-column="corridor"></div><div data-space-column="cabin"></div><div data-space-column="section"></div></div></div><div class="space-native-selects" aria-hidden="true"><select id="spaceProject"></select><select id="spaceCorridor"></select><select id="spaceCabin"></select><select id="spaceSection"></select></div></div></div>
+            <div class="video-list" id="cameraList"></div>
+          </aside>
+          <section class="video-content">
+            <div class="video-stats" id="videoStats">
+              <div class="video-stat"><span class="video-stat-icon"><i class="fa-solid fa-video"></i></span><span class="video-stat-label">摄像机总数</span><span class="video-stat-value">433</span></div>
+              <div class="video-stat"><span class="video-stat-icon"><i class="fa-solid fa-camera"></i></span><span class="video-stat-label">枪式摄像机</span><span class="video-stat-value">132</span></div>
+              <div class="video-stat"><span class="video-stat-icon"><i class="fa-solid fa-camera-retro"></i></span><span class="video-stat-label">半球摄像机</span><span class="video-stat-value">290</span></div>
+              <div class="video-stat"><span class="video-stat-icon"><i class="fa-solid fa-bullseye"></i></span><span class="video-stat-label">球型摄像机</span><span class="video-stat-value">11</span></div>
+              </div>
+              <div class="video-ptz" id="videoPtz" hidden>
+                <div class="video-ptz-head"><span>云台控制</span></div><button type="button" class="video-ptz-close" id="ptzClose" aria-label="关闭云台控制"><i class="fa-solid fa-xmark"></i></button>
+                <div class="video-ptz-camera" id="ptzCameraName">未选择摄像机</div>
+                <div class="ptz-pad" aria-label="云台方向控制">
+                  <button type="button" data-ptz="up-left" aria-label="向左上"><i class="fa-solid fa-arrow-up-left"></i></button><button type="button" data-ptz="up" aria-label="向上"><i class="fa-solid fa-arrow-up"></i></button><button type="button" data-ptz="up-right" aria-label="向右上"><i class="fa-solid fa-arrow-up-right"></i></button>
+                  <button type="button" data-ptz="left" aria-label="向左"><i class="fa-solid fa-arrow-left"></i></button><button type="button" class="stop" data-ptz="stop" aria-label="停止"><i class="fa-solid fa-stop"></i></button><button type="button" data-ptz="right" aria-label="向右"><i class="fa-solid fa-arrow-right"></i></button>
+                  <button type="button" data-ptz="down-left" aria-label="向左下"><i class="fa-solid fa-arrow-down-left"></i></button><button type="button" data-ptz="down" aria-label="向下"><i class="fa-solid fa-arrow-down"></i></button><button type="button" data-ptz="down-right" aria-label="向右下"><i class="fa-solid fa-arrow-down-right"></i></button>
+                </div>
+              </div>
+            <article class="video-panel">
+              <div class="video-panel-head"><span>视频监控</span><div class="video-grid-switch" role="group" aria-label="宫格切换"><button type="button" data-grid="1" aria-label="单画面" title="单画面"><i class="grid-icon grid-1"></i></button><button type="button" class="active" data-grid="2" aria-label="四宫格" title="四宫格"><i class="grid-icon grid-4"><span></span><span></span><span></span><span></span></i></button><button type="button" data-grid="3" aria-label="九宫格" title="九宫格"><i class="grid-icon grid-9"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></i></button><button type="button" data-grid="4" aria-label="十二宫格" title="十二宫格"><i class="grid-icon grid-12"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></i></button></div></div>
+              <div class="video-grid" id="videoGrid"></div>
+              <div class="pagination video-pagination"><span>共 <strong id="cameraCount">0</strong> 条，每页显示 <strong id="pageSizeLabel">4</strong> 条</span><span class="page-item" data-page="prev">‹</span><span class="page-item active" data-page-number>1</span><span class="page-item" data-page="next">›</span></div>
+            </article>
+          </section>
+        </section>
+      </div>
+    </main>
+  </div>
+  <script src="../../../app/config/menu.js?v=nav-hide-1"></script>
+  <script src="../../../app/components/sidebar.js?v=nav-home-1"></script>
+  <script src="../../../app/components/header.js?v=nav-home-1"></script>
+  <script src="../../../app/components/drawer.js"></script>
+  <script src="../../../app/components/requirement.js"></script>
+  <script>
+    const cameras = [
+      { name: "管廊枪式摄像机 01", project: "光谷科学岛综合开发项目", corridor: "高新大道综合管廊", cabin: "综合舱", section: "出入口", ptz: true },
+      { name: "综合舱球型摄像机 02", project: "光谷科学岛综合开发项目", corridor: "高新大道综合管廊", cabin: "综合舱", section: "防火分区", ptz: true },
+      { name: "电力舱半球摄像机 03", project: "光谷科学岛综合开发项目", corridor: "高新大道综合管廊", cabin: "电力舱", section: "通风口" },
+      { name: "投料口枪式摄像机 04", project: "光谷科学岛综合开发项目", corridor: "科学岛大道综合管廊", cabin: "综合舱", section: "出入口", ptz: true },
+      { name: "电力舱枪式摄像机 05", project: "光谷科学岛综合开发项目", corridor: "高新大道综合管廊", cabin: "电力舱", section: "防火分区", ptz: true },
+      { name: "燃气舱防爆球型摄像机 06", project: "光谷科学岛综合开发项目", corridor: "科学岛东区综合管廊", cabin: "燃气舱", section: "通风口", ptz: true },
+      { name: "综合舱 F0102 半球摄像机 07", project: "光谷科学岛综合开发项目", corridor: "高新大道综合管廊", cabin: "综合舱", section: "防火分区" },
+      { name: "电力舱 F0103 枪式摄像机 08", project: "光谷科学岛综合开发项目", corridor: "高新大道综合管廊", cabin: "电力舱", section: "防火分区", ptz: true },
+      { name: "水信舱 F0301 半球摄像机 09", project: "光谷科学岛综合开发项目", corridor: "科学岛大道综合管廊", cabin: "水信舱", section: "防火分区" },
+      { name: "出入口 K1+280 枪式摄像机 10", project: "光谷科学岛综合开发项目", corridor: "高新大道综合管廊", cabin: "综合舱", section: "出入口", ptz: true },
+      { name: "电力舱出入口枪式摄像机 11", project: "光谷科学岛综合开发项目", corridor: "高新大道综合管廊", cabin: "电力舱", section: "出入口", ptz: true },
+      { name: "综合舱A区球型摄像机 12", project: "光谷科学岛综合开发项目", corridor: "科学岛大道综合管廊", cabin: "综合舱", section: "防火分区", ptz: true }
+    ];
+    const image = "../../assets/images/access-gate.jpg";
+    let pageSize = 4;
+    let currentPage = 1;
+    let currentGrid = 2;
+    let selectedIndex = 0;
+    let focusSingle = false;
+    let visibleCameras = [...cameras];
+    function syncGridSwitch() {
+      document.querySelectorAll("[data-grid]").forEach((button) => button.classList.toggle("active", Number(button.dataset.grid) === currentGrid));
+    }
+    function renderCameraList() {
+      document.getElementById("cameraListTotal").textContent = visibleCameras.length;
+      document.getElementById("cameraList").innerHTML = visibleCameras.map((camera, index) => `<button class="video-list-item ${index === selectedIndex ? "active" : ""}" data-camera="${index}"><i class="fa-solid fa-video"></i><span>${camera.name}</span></button>`).join("");
+    }
+    function renderFeeds() {
+      const feedCameras = focusSingle && visibleCameras[selectedIndex]
+        ? [visibleCameras[selectedIndex]]
+        : visibleCameras.slice((currentPage - 1) * pageSize, (currentPage - 1) * pageSize + pageSize);
+      const start = focusSingle ? selectedIndex : (currentPage - 1) * pageSize;
+      const columns = currentGrid === 1 ? 1 : currentGrid === 2 ? 2 : currentGrid === 3 ? 3 : 4;
+      document.getElementById("videoGrid").style.gridTemplateColumns = `repeat(${columns}, minmax(0, 1fr))`;
+      document.getElementById("videoGrid").innerHTML = feedCameras.map((camera, index) => `<div class="video-feed" data-feed-index="${start + index}"><div class="video-feed-title"><span>${camera.name}</span><span>在线</span></div><div class="video-screen"><img src="${image}" alt="${camera.name}监控画面">${camera.ptz ? `<button type="button" class="video-ptz-trigger" data-ptz-camera="${start + index}" aria-label="${camera.name}云台控制" title="云台控制"><i class="fa-solid fa-arrows-up-down-left-right"></i></button>` : ""}<button type="button" class="video-fullscreen" data-fullscreen="${start + index}" aria-label="全屏查看${camera.name}" title="全屏查看"><i class="fa-solid fa-expand"></i></button></div></div>`).join("");
+      document.getElementById("cameraCount").textContent = visibleCameras.length;
+      document.getElementById("pageSizeLabel").textContent = focusSingle ? 1 : pageSize;
+      document.querySelector("[data-page-number]").textContent = focusSingle ? 1 : currentPage;
+      document.querySelector('[data-page="prev"]').classList.toggle("disabled", focusSingle || currentPage === 1);
+      document.querySelector('[data-page="next"]').classList.toggle("disabled", focusSingle || currentPage >= Math.max(1, Math.ceil(visibleCameras.length / pageSize)));
+    }
+    const spaceKeys = ["project", "corridor", "cabin", "section"];
+    function fillSpaceSelects() { spaceKeys.forEach((key, index) => { const select = document.getElementById(`space${key[0].toUpperCase()}${key.slice(1)}`); const current = select.value; const parentKey = spaceKeys[index - 1]; const parent = index ? document.getElementById(`space${parentKey[0].toUpperCase()}${parentKey.slice(1)}`).value : "all"; const values = [...new Set(cameras.filter(camera => parent === "all" || camera[parentKey] === parent).map(camera => camera[key]))]; select.innerHTML = `<option value="all">全部${key === "project" ? "项目" : key === "corridor" ? "管廊" : key === "cabin" ? "舱室" : "区段"}</option>${values.map(value => `<option value="${value}">${value}</option>`).join("")}`; if (values.includes(current)) select.value = current; }); }
+    function filterSpace() { const values = Object.fromEntries(spaceKeys.map(key => [key, document.getElementById(`space${key[0].toUpperCase()}${key.slice(1)}`).value])); visibleCameras = cameras.filter(camera => spaceKeys.every(key => values[key] === "all" || camera[key] === values[key])); currentPage = 1; selectedIndex = 0; focusSingle = false; renderCameraList(); renderFeeds(); fillSpaceSelects(); }
+    spaceKeys.forEach(key => document.getElementById(`space${key[0].toUpperCase()}${key.slice(1)}`).addEventListener("change", filterSpace));
+    fillSpaceSelects();
+    function renderSpacePicker(){ const values=Object.fromEntries(spaceKeys.map(key=>[key,document.getElementById(`space${key[0].toUpperCase()}${key.slice(1)}`).value])); const labels={project:'项目',corridor:'管廊',cabin:'舱室',section:'区段'}; spaceKeys.forEach((key,index)=>{const parentKey=spaceKeys[index-1],parent=index?values[parentKey]:'all',items=[...new Set(cameras.filter(camera=>parent==='all'||camera[parentKey]===parent).map(camera=>camera[key]))],column=document.querySelector(`[data-space-column="${key}"]`); column.innerHTML=`<button type="button" class="space-option ${values[key]==='all'?'active':''}" data-space-value="all" data-space-key="${key}">全部${labels[key]}</button>${items.map(item=>`<button type="button" class="space-option ${values[key]===item?'active':''}" data-space-value="${item}" data-space-key="${key}">${item}<i class="fa-solid fa-chevron-right"></i></button>`).join('')}`;}); const selected=spaceKeys.filter(key=>values[key]!=='all').map(key=>values[key]); document.getElementById('spacePickerTrigger').firstChild.textContent=selected.length?selected.join(' / '):'请选择'; }
+    document.getElementById('spacePickerTrigger').addEventListener('click',()=>document.getElementById('spacePicker').classList.toggle('open'));
+    document.addEventListener('click',event=>{const option=event.target.closest('[data-space-key]');if(option){const key=option.dataset.spaceKey,index=spaceKeys.indexOf(key);spaceKeys.slice(index).forEach(child=>{document.getElementById(`space${child[0].toUpperCase()}${child.slice(1)}`).value='all';});document.getElementById(`space${key[0].toUpperCase()}${key.slice(1)}`).value=option.dataset.spaceValue;filterSpace();renderSpacePicker();}if(!event.target.closest('#spacePicker'))document.getElementById('spacePicker').classList.remove('open');});
+    renderSpacePicker();
+    function openPtz(index) { const camera = visibleCameras[index]; if (!camera || !camera.ptz) return; document.getElementById("videoPtz").hidden = false; document.getElementById("ptzCameraName").textContent = `${camera.name} · 在线`; document.querySelectorAll(".video-feed").forEach((feed) => feed.classList.toggle("ptz-selected", Number(feed.dataset.feedIndex) === index)); }
+    function closePtz() { document.getElementById("videoPtz").hidden = true; document.querySelectorAll(".video-feed").forEach((feed) => feed.classList.remove("ptz-selected")); }
+    async function toggleFullscreen(feed) { if (document.fullscreenElement) { await document.exitFullscreen?.(); return; } if (feed.requestFullscreen) await feed.requestFullscreen(); else feed.classList.add("is-fullscreen"); }
+    document.getElementById("ptzClose").addEventListener("click", closePtz);
+    document.addEventListener("click", (event) => {
+      const gridButton = event.target.closest("[data-grid]");
+      if (gridButton) {
+        currentGrid = Number(gridButton.dataset.grid);
+        pageSize = currentGrid === 1 ? 1 : currentGrid === 2 ? 4 : currentGrid === 3 ? 9 : 12;
+        currentPage = 1;
+        focusSingle = false;
+        closePtz();
+        syncGridSwitch();
+        renderFeeds();
+      }
+      const pageButton = event.target.closest("[data-page]");
+      if (pageButton && !focusSingle) {
+        const totalPages = Math.max(1, Math.ceil(visibleCameras.length / pageSize));
+        currentPage = pageButton.dataset.page === "prev" ? Math.max(1, currentPage - 1) : Math.min(totalPages, currentPage + 1);
+        closePtz();
+        renderFeeds();
+      }
+      const camera = event.target.closest("[data-camera]");
+      if (camera) {
+        selectedIndex = Number(camera.dataset.camera);
+        focusSingle = true;
+        currentGrid = 1;
+        pageSize = 1;
+        currentPage = 1;
+        closePtz();
+        syncGridSwitch();
+        renderCameraList();
+        renderFeeds();
+      }
+      const ptzTrigger = event.target.closest("[data-ptz-camera]");
+      if (ptzTrigger) openPtz(Number(ptzTrigger.dataset.ptzCamera));
+      const fullscreen = event.target.closest("[data-fullscreen]");
+      if (fullscreen) toggleFullscreen(fullscreen.closest(".video-feed"));
+      const ptzButton = event.target.closest("[data-ptz]");
+      if (ptzButton) {
+        document.querySelectorAll("[data-ptz]").forEach((button) => button.classList.remove("active"));
+        ptzButton.classList.add("active");
+      }
+    });
+    renderCameraList();
+    renderFeeds();
+  </script>
+</body>
+</html>

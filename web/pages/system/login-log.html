@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>登录日志</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/tob-ui.css">
+</head>
+<body class="log-page login-log-page" data-menu-key="system.login-log" data-page-section="系统管理" data-page-title="登录日志">
+  <div class="app-shell">
+    <aside id="app-sidebar" class="sidebar"></aside>
+    <header id="app-header" class="header"></header>
+    <main class="main">
+      <div class="screen-frame stack">
+        <section class="card filters">
+          <div class="filter-actions log-filter-row">
+            <label class="form-field"><span class="form-label">IP 地址</span><input class="form-control" data-filter="ip" placeholder="请输入"></label>
+            <label class="form-field"><span class="form-label">用户账号</span><input class="form-control" data-filter="account" placeholder="请输入"></label>
+            <label class="form-field"><span class="form-label">登录状态</span><select class="form-control" data-filter="status"><option value="">请选择</option><option>成功</option><option>失败</option></select></label>
+            <label class="form-field"><span class="form-label">登录日期</span><input class="form-control" data-filter="date" placeholder="开始日期　→　结束日期"></label>
+            <button class="btn btn-secondary" data-action="reset">重置</button>
+            <button class="btn btn-primary" data-action="search">搜索</button>
+          </div>
+        </section>
+
+        <section class="card log-list-card">
+          <div class="card-title-row log-toolbar">
+            <h2 class="card-title">登录日志列表</h2>
+            <div class="btn-row">
+              <button class="btn btn-secondary" data-action="clear">清空</button>
+              <button class="btn btn-secondary" data-action="export">导出</button>
+              <button class="btn btn-danger-outline" data-action="delete-selected" disabled>删除</button>
+              <button class="btn btn-secondary" data-action="refresh">刷新</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="table table-actions-sticky log-table" aria-label="登录日志列表">
+              <thead><tr><th class="check-cell"><input type="checkbox" data-select-all></th><th>用户账号</th><th>登录平台</th><th>IP 地址</th><th>IP 地点</th><th>浏览器</th><th>系统</th><th>登录结果</th><th>信息</th><th>日期</th><th>操作</th></tr></thead>
+              <tbody id="loginLogTable"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="../../../app/config/menu.js?v=nav-hide-1"></script>
+  <script src="../../../app/components/sidebar.js?v=nav-home-1"></script>
+  <script src="../../../app/components/header.js?v=nav-home-1"></script>
+  <script src="../../../app/components/drawer.js"></script>
+  <script src="../../../app/components/requirement.js"></script>
+  <script>
+    const loginLogs = [
+      { id: "L-1001", account: "admin", platform: "pc", ip: "66.***", location: "Singapore|Singapore|Singapore|FDCserver********", browser: "MSEdge", os: "Windows 10", status: "成功", message: "登录成功", time: "2026-08-11 15:21:31", device: "Windows 10" },
+      { id: "L-1002", account: "admin", platform: "pc", ip: "112.***", location: "中国陕西省|********", browser: "Chrome", os: "Windows 10", status: "成功", message: "登录成功", time: "2026-08-11 15:19:03", device: "Windows 10" },
+      { id: "L-1003", account: "admin", platform: "pc", ip: "121.***", location: "中国广东省|深********", browser: "Chrome", os: "OSX", status: "成功", message: "登录成功", time: "2026-08-11 15:12:20", device: "OSX" },
+      { id: "L-1004", account: "admin", platform: "pc", ip: "219.***", location: "中国山东省|青********", browser: "Chrome", os: "Windows 10", status: "成功", message: "登录成功", time: "2026-08-11 15:07:22", device: "Windows 10" },
+      { id: "L-1005", account: "admin", platform: "pc", ip: "111.***", location: "中国贵州省|贵********", browser: "Chrome", os: "Windows 10", status: "成功", message: "登录成功", time: "2026-08-11 15:06:47", device: "Windows 10" },
+      { id: "L-1006", account: "admin", platform: "pc", ip: "111.***", location: "中国贵州省|贵********", browser: "Chrome", os: "Windows 10", status: "失败", message: "验证码错误", time: "2026-08-11 15:06:44", device: "Windows 10" },
+      { id: "L-1007", account: "admin", platform: "pc", ip: "219.***", location: "中国山东省|青********", browser: "Chrome", os: "Windows 10", status: "成功", message: "登录成功", time: "2026-08-11 15:05:06", device: "Windows 10" },
+      { id: "L-1008", account: "admin", platform: "pc", ip: "117.***", location: "中国江苏省|********", browser: "QQBrowser", os: "Windows 10", status: "成功", message: "登录成功", time: "2026-08-11 15:04:29", device: "Windows 10" },
+      { id: "L-1009", account: "admin", platform: "pc", ip: "183.***", location: "中国重庆|重庆********", browser: "Chrome", os: "Windows 10", status: "成功", message: "登录成功", time: "2026-08-11 15:04:20", device: "Windows 10" },
+      { id: "L-1010", account: "admin", platform: "pc", ip: "61.***", location: "中国河南省|郑********", browser: "MSEdge", os: "Windows 10", status: "成功", message: "登录成功", time: "2026-08-11 14:52:50", device: "Windows 10" },
+    ];
+    const table = document.getElementById("loginLogTable");
+    const esc = (value) => String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
+
+    function browserIcon(browser) { return `<span class="info-value">${esc(browser)}</span>`; }
+    function render(list = loginLogs) {
+      table.innerHTML = list.map((item) => `<tr><td class="check-cell"><input type="checkbox" data-check data-id="${item.id}"></td><td>${esc(item.account)}</td><td>${esc(item.platform)}</td><td>${esc(item.ip)}</td><td>${esc(item.location)}</td><td>${browserIcon(item.browser)}</td><td>${esc(item.os)}</td><td><span class="tag ${item.status === "成功" ? "primary" : "danger"}">${esc(item.status)}</span></td><td>${esc(item.message)}</td><td>${esc(item.time)}</td><td><button class="table-action" data-detail="${item.id}">详情</button><button class="table-action status-danger" data-delete="${item.id}">删除</button></td></tr>`).join("");
+      document.querySelector('[data-action="delete-selected"]').disabled = !document.querySelector("[data-check]:checked");
+    }
+
+    function detailRow(label, value) { return `<tr><th>${label}</th><td>${value}</td></tr>`; }
+    function openDetail(item) {
+      const body = `<table class="log-detail-table"><tbody>${detailRow("登录状态", `<span class="tag ${item.status === "成功" ? "primary" : "danger"}">${esc(item.status)}</span>`)}${detailRow("登录平台", esc(item.platform))}${detailRow("账号信息", `<strong>账号: ${esc(item.account)}</strong> / ${esc(item.ip)} / ${esc(item.location)}`)}${detailRow("登录时间", esc(item.time))}${detailRow("登录信息", `<strong>${esc(item.message)}</strong>`)}${detailRow("登录设备", esc(item.device))}${detailRow("浏览器", esc(item.browser))}</tbody></table>`;
+      window.openAppDrawer({ title: "登录日志", subtitle: "系统管理 · 登录日志", body, footer: '<button class="btn btn-secondary" data-drawer-close>关闭</button>' });
+    }
+
+    function filtered() {
+      const filters = Object.fromEntries([...document.querySelectorAll("[data-filter]")].map((input) => [input.dataset.filter, input.value.trim()]));
+      return loginLogs.filter((item) => (!filters.ip || item.ip.includes(filters.ip)) && (!filters.account || item.account.includes(filters.account)) && (!filters.status || item.status === filters.status) && (!filters.date || item.time.includes(filters.date)));
+    }
+
+    function removeLogs(ids) { ids.forEach((id) => { const index = loginLogs.findIndex((item) => item.id === id); if (index >= 0) loginLogs.splice(index, 1); }); render(filtered()); }
+    render();
+    document.addEventListener("click", (event) => {
+      const action = event.target.closest("[data-action]")?.dataset.action;
+      if (action === "search") render(filtered());
+      if (action === "reset") { document.querySelectorAll("[data-filter]").forEach((input) => { input.value = ""; }); render(); }
+      if (action === "refresh") render(filtered());
+      if (action === "export") window.openAppConfirm({ title: "提示", message: "导出功能为原型演示，当前不会生成真实文件。", confirmText: "知道了" });
+      if (action === "clear") window.openAppConfirm({ title: "提示", message: "确认清空全部登录日志吗？", onConfirm: () => { loginLogs.splice(0, loginLogs.length); render(); } });
+      if (action === "delete-selected") {
+        const selected = [...document.querySelectorAll("[data-check]:checked")].map((input) => input.dataset.id);
+        if (selected.length) window.openAppConfirm({ title: "提示", message: `确认删除选中的【${selected.length}】条登录日志吗？`, onConfirm: () => removeLogs(selected) });
+      }
+      const detail = event.target.closest("[data-detail]");
+      if (detail) openDetail(loginLogs.find((item) => item.id === detail.dataset.detail));
+      const del = event.target.closest("[data-delete]");
+      if (del) { const item = loginLogs.find((entry) => entry.id === del.dataset.delete); window.openAppConfirm({ title: "提示", message: `确认删除登录日志「${item.account} ${item.time}」吗？`, onConfirm: () => removeLogs([item.id]) }); }
+      if (event.target.matches("[data-check]")) render(filtered());
+    });
+    document.addEventListener("change", (event) => { if (event.target.matches("[data-select-all]")) { document.querySelectorAll("[data-check]").forEach((input) => { input.checked = event.target.checked; }); render(filtered()); } });
+  </script>
+</body>
+</html>
+
+
+
+
+

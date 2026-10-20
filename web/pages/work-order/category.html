@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>分类维护 - 科学岛管廊监控中心</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/tob-ui.css">
+  <link rel="stylesheet" href="../../assets/css/inspection.css">
+  <link rel="stylesheet" href="../../assets/css/work-order.css">
+</head>
+<body class="work-order-page inspection-page" data-menu-key="work-order.category" data-page-section="工单管理" data-page-title="分类维护" data-work-order-page="category">
+  <div class="app-shell">
+    <aside id="app-sidebar" class="sidebar"></aside>
+    <header id="app-header" class="header"></header>
+    <main class="main"><div class="screen-frame stack">
+      <section class="card inspection-list-card">
+        <div class="wo-tabs" role="tablist">
+          <button class="wo-tab active" type="button" data-wo-cat-tab="报事报修">报事报修</button>
+          <button class="wo-tab" type="button" data-wo-cat-tab="设备异常">设备异常</button>
+        </div>
+        <div class="inspection-toolbar">
+          <div class="toolbar-left"><h1 class="toolbar-title">分类维护</h1></div>
+          <div class="toolbar-right">
+            <button class="btn btn-secondary" type="button" data-wo-action="collapse-all">折叠</button>
+            <button class="btn btn-secondary" type="button" data-wo-action="expand-all">展开</button>
+            <button class="btn btn-primary" type="button" data-wo-action="cat-create">新增</button>
+          </div>
+        </div>
+        <div class="inspection-table-wrap">
+          <table class="table inspection-table table-actions-sticky">
+            <thead><tr>
+              <th>分类名称</th><th>分类编码</th><th>层级</th><th>上级分类</th><th>排序</th><th>状态</th><th>操作</th>
+            </tr></thead>
+            <tbody id="categoryBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </div></main>
+  </div>
+  <script src="../../../app/config/menu.js"></script>
+  <script src="../../../app/data/work-order-data.js"></script>
+  <script src="../../../app/components/sidebar.js"></script>
+  <script src="../../../app/components/header.js"></script>
+  <script src="../../../app/components/drawer.js"></script>
+  <script src="../../../app/components/work-order.js"></script>
+  <script src="../../../app/components/requirement.js"></script>
+</body>
+</html>

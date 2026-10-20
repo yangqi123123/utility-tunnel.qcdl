@@ -1,0 +1,124 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>保养监控统计 - 科学岛管廊监控中心</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/tob-ui.css">
+  <link rel="stylesheet" href="../../assets/css/inspection.css">
+  <link rel="stylesheet" href="../../assets/css/emergency.css">
+</head>
+<body class="inspection-page emergency-page" data-menu-key="maintenance.stats" data-page-section="设备维保管理" data-page-title="保养监控统计">
+  <div class="app-shell"><aside id="app-sidebar" class="sidebar"></aside><header id="app-header" class="header"></header>
+    <main class="main"><div class="screen-frame emergency-stack inspection-stats-stack">
+      <section class="page-head emergency-page-head">
+        <div>
+          <h1 class="page-title">保养监控统计</h1>
+          <p class="page-desc">基于保养计划与保养任务的人员质量与执行核查（只读）。</p>
+        </div>
+      </section>
+
+      <section class="emergency-panel analysis-filter-panel">
+        <div class="analysis-filter-row" id="statsFilters">
+          <label class="form-field"><span class="form-label">时间范围</span>
+            <select class="form-control" id="statsRange">
+              <option value="7">近7天</option>
+              <option value="30" selected>近30天</option>
+              <option value="90">近90天</option>
+              <option value="custom">自定义</option>
+            </select>
+          </label>
+          <label class="form-field custom-range"><span class="form-label">开始日期</span><input class="form-control" id="statsStart" type="date"></label>
+          <label class="form-field custom-range"><span class="form-label">结束日期</span><input class="form-control" id="statsEnd" type="date"></label>
+          <label class="form-field"><span class="form-label">所属项目</span>
+            <select class="form-control" id="statsProject"><option value="">全部项目</option></select>
+          </label>
+          <label class="form-field"><span class="form-label">保养人员</span>
+            <select class="form-control" id="statsInspector"><option value="">全部人员</option></select>
+          </label>
+          <label class="form-field"><span class="form-label">关联计划</span>
+            <select class="form-control" id="statsPlan"><option value="">全部计划</option></select>
+          </label>
+          <label class="form-field"><span class="form-label">逾期状态</span>
+            <select class="form-control" id="statsOverdue">
+              <option value="">全部</option>
+              <option>已逾期</option>
+              <option>未逾期</option>
+            </select>
+          </label>
+          <div class="filter-actions">
+            <button class="btn btn-primary" type="button" data-stats-action="query">查询</button>
+            <button class="btn btn-secondary" type="button" data-stats-action="reset">重置</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="emergency-metric-grid analysis-kpi-grid" id="maintenanceStatsKpis"></section>
+
+      <section class="analysis-chart-grid">
+        <article class="analysis-chart-panel">
+          <div class="emergency-panel-head"><h2 class="emergency-panel-title">人员质量对比</h2></div>
+          <div class="analysis-chart-body single">
+            <div class="analysis-chart-canvas-wrap" id="wrapPersonQuality"><canvas id="chartPersonQuality"></canvas></div>
+          </div>
+          <div class="analysis-mini-metrics" id="miniPerson" style="padding:0 20px 16px"></div>
+        </article>
+        <article class="analysis-chart-panel">
+          <div class="emergency-panel-head"><h2 class="emergency-panel-title">任务执行趋势</h2></div>
+          <div class="analysis-chart-body single">
+            <div class="analysis-chart-canvas-wrap" id="wrapExecTrend"><canvas id="chartExecTrend"></canvas></div>
+          </div>
+          <div class="analysis-mini-metrics" id="miniTrend" style="padding:0 20px 16px"></div>
+        </article>
+        <article class="analysis-chart-panel">
+          <div class="emergency-panel-head"><h2 class="emergency-panel-title">计划执行统计</h2></div>
+          <div class="analysis-chart-body single">
+            <div class="analysis-chart-canvas-wrap" id="wrapPlanCheck"><canvas id="chartPlanCheck"></canvas></div>
+          </div>
+          <div class="analysis-mini-metrics" id="miniPlan" style="padding:0 20px 16px"></div>
+        </article>
+        <article class="analysis-chart-panel">
+          <div class="emergency-panel-head"><h2 class="emergency-panel-title">事件状况分析</h2></div>
+          <div class="analysis-chart-body">
+            <div class="analysis-chart-canvas-wrap" id="wrapEventCategory"><canvas id="chartEventCategory"></canvas></div>
+            <div class="analysis-chart-canvas-wrap" id="wrapEventTrend"><canvas id="chartEventTrend"></canvas></div>
+          </div>
+          <div class="analysis-mini-metrics" id="miniEvent" style="padding:0 20px 16px"></div>
+        </article>
+      </section>
+
+      <section class="card inspection-list-card inspection-stats-detail">
+        <div class="inspection-toolbar">
+          <div class="toolbar-left"><h2 class="toolbar-title">执行核查明细</h2></div>
+          <div class="toolbar-right">
+            <button class="btn btn-secondary" type="button" data-stats-action="export"><i class="fa-solid fa-download"></i> 导出</button>
+          </div>
+        </div>
+        <div class="inspection-table-wrap">
+          <table class="table inspection-table inspection-stats-table table-actions-sticky">
+            <thead>
+              <tr>
+                <th>任务编码</th><th>任务名称</th><th>计划</th><th>等级</th><th>保养人</th><th>负责人</th>
+                <th>状态</th><th>结果</th><th>超期状态</th><th>设备/检查项</th><th>异常项</th>
+                <th>计划执行</th><th>截止时间</th><th>开始时间</th><th>提交时间</th><th>保养时长</th><th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="statsDetailBody"></tbody>
+          </table>
+        </div>
+        <div id="statsDetailPagination" class="inspection-pagination"></div>
+      </section>
+    </div></main>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="../../../app/config/menu.js?v=nav-hide-1"></script>
+  <script src="../../../app/data/maintenance-data.js"></script>
+  <script src="../../../app/components/sidebar.js?v=nav-home-1"></script>
+  <script src="../../../app/components/header.js?v=nav-home-1"></script>
+  <script src="../../../app/components/drawer.js"></script>
+  <script src="../../../app/components/maintenance.js"></script>
+  <script src="../../../app/components/maintenance-stats-logic.js"></script>
+  <script src="../../../app/components/maintenance-stats.js"></script>
+  <script src="../../../app/components/requirement.js"></script>
+</body>
+</html>

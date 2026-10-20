@@ -1,0 +1,25 @@
+.floor-page .screen-frame { max-width: 1680px; }
+.floor-list-card { overflow: hidden; }
+.floor-toolbar { min-height: 56px; padding: 0 24px; }
+.floor-toolbar .card-title { margin: 0; }
+.floor-table { min-width: 1780px; }
+.floor-table th, .floor-table td { height: 40px; padding: 0 12px; }
+.floor-table .capacity-cell { max-width: 150px; overflow: hidden; text-overflow: ellipsis; }
+.floor-table th, .floor-table td { white-space: nowrap; }
+.floor-table th:last-child, .floor-table td:last-child { min-width: 150px; }
+.floor-page .table-actions-sticky th:last-child, .floor-page .table-actions-sticky td:last-child { position: sticky; right: 0; z-index: 2; background: #fff; box-shadow: -8px 0 16px rgba(26,28,31,.06); }
+.floor-page .table-actions-sticky th:last-child { background: var(--primary-bg); }
+.floor-page .table-actions-sticky tbody tr:hover td:last-child { background: #f7f9ff; }
+.floor-page .icon-btn { width: 32px; height: 32px; border: 1px solid var(--border); border-radius: 50%; display: inline-grid; place-items: center; color: var(--text-primary); background: #fff; cursor: pointer; }
+.floor-page .icon-btn:hover { color: var(--primary); border-color: var(--primary); background: var(--primary-bg); }
+.floor-page .icon-btn { display: none; }
+.floor-page .upload-box { min-height: 180px; border: 1px dashed #b8c6dc; border-radius: 4px; display: grid; place-items: center; align-content: center; gap: 6px; color: var(--text-secondary); text-align: center; }
+.floor-page .upload-box i { font-size: 32px; color: var(--primary); }
+.floor-page .upload-box p, .floor-page .upload-box small { margin: 0; }
+.floor-page .upload-box small { font-size: 12px; }
+.floor-page .detail-text { margin: 0; color: var(--text-primary); line-height: 1.7; }
+.floor-page .requirement-fab { left: 24px; bottom: 24px; }
+.floor-page .textarea-count-wrap { position: relative; display: block; }
+.floor-page .textarea-count-wrap .textarea { padding-bottom: 24px; }
+.floor-page .textarea-count-wrap .field-count { position: absolute; right: 12px; bottom: 8px; margin: 0; line-height: 16px; pointer-events: none; }
+@media (max-width: 720px) { .floor-toolbar { align-items: flex-start; flex-direction: column; gap: 12px; padding: 16px; } .floor-toolbar .btn-row { flex-wrap: wrap; } }

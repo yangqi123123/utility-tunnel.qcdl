@@ -1,0 +1,66 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>通话记录 - 科学岛管廊监控中心</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/tob-ui.css">
+  <link rel="stylesheet" href="../../assets/css/emergency.css">
+</head>
+<body class="emergency-page emergency-ledger-page" data-menu-key="emergency.calls" data-page-section="应急管理系统" data-page-title="通话记录">
+  <div class="app-shell">
+    <aside id="app-sidebar" class="sidebar"></aside>
+    <header id="app-header" class="header"></header>
+    <main class="main">
+      <div class="screen-frame stack">
+        <section class="card filters emergency-ledger-filter">
+          <div class="filter-actions">
+            <label class="form-field"><span class="form-label">事件编号</span><select class="form-control" id="callEventId"><option value="">全部事件</option></select></label>
+            <label class="form-field"><span class="form-label">通话类型</span><select class="form-control" id="callType"><option value="">全部类型</option><option>单呼</option><option>群呼</option><option>视频呼叫</option><option>短信</option><option>广播</option></select></label>
+            <label class="form-field"><span class="form-label">通话结果</span><select class="form-control" id="callResult"><option value="">全部结果</option><option>已接通</option><option>未接通</option><option>拒接</option><option>超时</option><option>失败</option></select></label>
+            <label class="form-field"><span class="form-label">人员</span><input class="form-control" id="callKeyword" type="search" placeholder="姓名"></label>
+            <button class="btn btn-secondary" type="button" data-call-action="reset">重置</button>
+            <button class="btn btn-primary" type="button" data-call-action="filter">搜索</button>
+          </div>
+        </section>
+        <section class="card">
+          <div class="card-title-row emergency-ledger-toolbar">
+            <h1 class="card-title">通话记录</h1>
+            <div class="btn-row">
+              <button class="btn btn-secondary" type="button" data-call-action="sync"><i class="fa-solid fa-arrows-rotate"></i> 同步通话记录</button>
+              <button class="btn btn-secondary" type="button" data-call-action="export"><i class="fa-solid fa-file-export"></i> 导出</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="table emergency-ledger-table" aria-label="通话记录列表">
+              <thead>
+                <tr>
+                  <th>通话时间</th>
+                  <th>事件编号</th>
+                  <th>主叫人</th>
+                  <th>被叫人</th>
+                  <th>通话类型</th>
+                  <th>通话结果</th>
+                  <th>时长</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="callBody"></tbody>
+            </table>
+          </div>
+          <div id="callCount"></div>
+        </section>
+      </div>
+    </main>
+  </div>
+  <script src="../../../app/config/menu.js?v=nav-hide-1"></script>
+  <script src="../../../app/data/emergency-data.js"></script>
+  <script src="../../../app/components/sidebar.js?v=nav-home-1"></script>
+  <script src="../../../app/components/header.js?v=nav-home-1"></script>
+  <script src="../../../app/components/drawer.js"></script>
+  <script src="../../../app/components/emergency-common.js"></script>
+  <script src="../../../app/components/emergency-calls.js"></script>
+  <script src="../../../app/components/requirement.js"></script>
+</body>
+</html>

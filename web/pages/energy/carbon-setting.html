@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>碳排放设置 - 科学岛管廊监控中心</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/tob-ui.css">
+  <link rel="stylesheet" href="../../assets/css/carbon-setting.css">
+</head>
+<body class="carbon-setting-page" data-menu-key="energy.carbon-setting" data-page-section="能源管理" data-page-title="碳排放设置">
+  <div class="app-shell">
+    <aside id="app-sidebar" class="sidebar"></aside>
+    <header id="app-header" class="header"></header>
+    <main class="main">
+      <div class="screen-frame stack">
+        <div id="carbonSettingFilters"></div>
+        <section class="card setting-list-card">
+          <div class="card-title-row setting-list-head"><h2 class="card-title">碳排放因子</h2><button class="btn btn-primary" type="button" data-setting-action="create"><i class="fa-solid fa-plus" aria-hidden="true"></i> 新增</button></div>
+          <div class="table-wrap setting-table-wrap"><table class="table setting-table"><thead><tr><th>因子名称</th><th>能源分类</th><th>适用行业</th><th>二氧化碳当量</th><th>因子单位</th><th>来源信息</th><th>来源年份</th><th>操作</th></tr></thead><tbody id="carbonSettingTableBody"></tbody></table></div>
+          <div id="carbonSettingPagination"></div>
+        </section>
+      </div>
+    </main>
+  </div>
+  <script src="../../../app/config/menu.js?v=nav-hide-1"></script>
+  <script src="../../../app/data/carbon-setting-data.js"></script>
+  <script src="../../../app/components/sidebar.js?v=nav-home-1"></script>
+  <script src="../../../app/components/header.js?v=nav-home-1"></script>
+  <script src="../../../app/components/drawer.js"></script>
+  <script src="../../../app/components/carbon-setting.js"></script>
+  <script src="../../../app/components/requirement.js"></script>
+</body>
+</html>
+

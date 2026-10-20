@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>配置管理 - 科学岛管廊监控中心</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/tob-ui.css">
+  <link rel="stylesheet" href="../../assets/css/service-center.css?v=3">
+  <link rel="stylesheet" href="../../assets/css/network.css">
+</head>
+<body class="service-center-page" data-menu-key="network.config" data-page-section="网络管理" data-page-title="配置管理">
+  <div class="app-shell">
+    <aside id="app-sidebar" class="sidebar"></aside>
+    <header id="app-header" class="header"></header>
+    <main class="main">
+      <div class="screen-frame stack">
+        <div data-mode="list">
+          <section class="card filters">
+            <div class="filter-actions">
+              <label class="form-field">
+                <span class="form-label">设备名称</span>
+                <input class="form-control" data-filter="deviceName" placeholder="请输入设备名称">
+              </label>
+              <label class="form-field">
+                <span class="form-label">备份时间</span>
+                <input class="form-control" type="date" data-filter="backedAt">
+              </label>
+              <button class="btn btn-secondary" type="button" data-action="reset">重置</button>
+              <button class="btn btn-primary" type="button" data-action="search">搜索</button>
+            </div>
+          </section>
+
+          <section class="card device-list-card">
+            <div class="card-title-row device-toolbar">
+              <h1 class="card-title">配置备份记录</h1>
+              <div class="btn-row">
+                <button class="btn btn-secondary" type="button" data-action="sync-log"><i class="fa-solid fa-clock-rotate-left"></i> 同步记录</button>
+                <button class="btn btn-secondary" type="button" data-action="export"><i class="fa-solid fa-file-export"></i> 导出</button>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table class="table table-actions-sticky" aria-label="配置备份列表">
+                <thead>
+                  <tr>
+                    <th>备份编号</th>
+                    <th>设备名称</th>
+                    <th>设备 IP</th>
+                    <th>版本</th>
+                    <th>备份时间</th>
+                    <th>操作人</th>
+                    <th>文件大小</th>
+                    <th>备注</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody id="cfgBody"></tbody>
+              </table>
+            </div>
+            <div class="pagination" id="cfgPagination"></div>
+          </section>
+        </div>
+
+        <div class="stack hidden" data-mode="sync">
+          <section class="card device-list-card">
+            <div class="card-title-row device-toolbar">
+              <h1 class="card-title">同步记录</h1>
+              <div class="btn-row">
+                <button class="btn btn-secondary" type="button" data-action="back-list"><i class="fa-solid fa-arrow-left"></i> 返回配置列表</button>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>同步批次</th>
+                    <th>同步类型</th>
+                    <th>同步范围</th>
+                    <th>结果</th>
+                    <th>成功</th>
+                    <th>失败</th>
+                    <th>开始时间</th>
+                    <th>结束时间</th>
+                    <th>操作人</th>
+                  </tr>
+                </thead>
+                <tbody id="syncBody"></tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="../../../app/config/menu.js?v=nav-hide-1"></script>
+  <script src="../../../app/components/sidebar.js?v=nav-home-1"></script>
+  <script src="../../../app/components/header.js?v=nav-home-1"></script>
+  <script src="../../../app/components/drawer.js"></script>
+  <script src="../../../app/components/requirement.js"></script>
+  <script src="../../assets/vendor/xlsx.full.min.js"></script>
+  <script src="../../../app/data/network-data.js"></script>
+  <script>
+    const PAGE_SIZE = 10;
+    let page = 1;
+    let filtered = [];
+    const filters = Object.fromEntries(
+      [...document.querySelectorAll("[data-filter]")].map((el) => [el.dataset.filter, el])
+    );
+
+    function showMode(mode) {
+      document.querySelectorAll("[data-mode]").forEach((el) => {
+        el.classList.toggle("hidden", el.dataset.mode !== mode);
+      });
+    }
+
+    function applyFilter() {
+      const deviceName = (filters.deviceName?.value || "").trim().toLowerCase();
+      const backedAt = (filters.backedAt?.value || "").trim();
+      filtered = NETWORK_STORE.listConfigBackups().filter((c) => {
+        const matchName = !deviceName || c.deviceName.toLowerCase().includes(deviceName);
+        const matchDate = !backedAt || c.backedAt.startsWith(backedAt);
+        return matchName && matchDate;
+      });
+      page = 1;
+      render();
+    }
+
+    function renderPager(total) {
+      const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+      if (page > pages) page = pages;
+      const items = [];
+      items.push(`<span>共 <strong>${total}</strong> 条，每页显示 ${PAGE_SIZE} 条</span>`);
+      items.push(`<span class="page-item ${page <= 1 ? "disabled" : ""}" data-page="${page - 1}">‹</span>`);
+      for (let i = 1; i <= pages; i += 1) {
+        items.push(`<span class="page-item ${i === page ? "active" : ""}" data-page="${i}">${i}</span>`);
+      }
+      items.push(`<span class="page-item ${page >= pages ? "disabled" : ""}" data-page="${page + 1}">›</span>`);
+      document.getElementById("cfgPagination").innerHTML = items.join("");
+    }
+
+    function render() {
+      const start = (page - 1) * PAGE_SIZE;
+      const rows = filtered.slice(start, start + PAGE_SIZE);
+      document.getElementById("cfgBody").innerHTML = rows.map((c) => `<tr>
+        <td>${c.id}</td>
+        <td>${c.deviceName}</td>
+        <td>${c.deviceIp}</td>
+        <td>${c.version}</td>
+        <td>${c.backedAt}</td>
+        <td>${c.operator}</td>
+        <td>${c.size}</td>
+        <td>${c.remark}</td>
+        <td>
+          <button class="table-action" type="button" data-view="${c.id}">查看</button>
+        </td>
+      </tr>`).join("") || '<tr><td colspan="9" class="service-muted" style="text-align:center">暂无匹配记录</td></tr>';
+      renderPager(filtered.length);
+    }
+
+    function openView(id) {
+      const c = NETWORK_STORE.getConfigBackup(id);
+      if (!c || !window.openAppDrawer) return;
+      openAppDrawer({
+        title: "配置备份详情",
+        body: `<div class="network-detail-grid">
+          <div class="info-item"><span class="info-label">备份编号</span><span class="info-value">${c.id}</span></div>
+          <div class="info-item"><span class="info-label">配置版本</span><span class="info-value">${c.version}</span></div>
+          <div class="info-item"><span class="info-label">设备名称</span><span class="info-value">${c.deviceName}</span></div>
+          <div class="info-item"><span class="info-label">设备 IP</span><span class="info-value">${c.deviceIp}</span></div>
+          <div class="info-item"><span class="info-label">主机名</span><span class="info-value">${c.hostname}</span></div>
+          <div class="info-item"><span class="info-label">管理地址</span><span class="info-value">${c.mgmtIp}</span></div>
+          <div class="info-item"><span class="info-label">VLAN</span><span class="info-value">${c.vlan}</span></div>
+          <div class="info-item"><span class="info-label">上联接口</span><span class="info-value">${c.uplink}</span></div>
+          <div class="info-item"><span class="info-label">备份时间</span><span class="info-value">${c.backedAt}</span></div>
+          <div class="info-item"><span class="info-label">操作人</span><span class="info-value">${c.operator}</span></div>
+          <div class="info-item"><span class="info-label">文件大小</span><span class="info-value">${c.size}</span></div>
+          <div class="info-item"><span class="info-label">校验值</span><span class="info-value">${c.checksum}</span></div>
+          <div class="info-item" style="grid-column:1/-1"><span class="info-label">备注</span><span class="info-value">${c.remark}</span></div>
+        </div>`,
+        footer: '<button class="btn btn-secondary" type="button" data-drawer-close>关闭</button>',
+      });
+    }
+
+    function renderSync() {
+      document.getElementById("syncBody").innerHTML = NETWORK_STORE.listConfigSyncLogs().map((s) => `<tr>
+        <td>${s.id}</td><td>${s.type}</td><td>${s.scope}</td><td>${s.result}</td>
+        <td>${s.success}</td><td>${s.failed}</td><td>${s.startAt}</td><td>${s.endAt}</td><td>${s.operator}</td>
+      </tr>`).join("");
+    }
+
+    function ensureXlsx() {
+      if (window.XLSX) return true;
+      window.openAppConfirm?.({ title: "提示", message: "Excel 组件加载失败，请刷新页面后重试。", confirmText: "知道了" });
+      return false;
+    }
+
+    function exportConfig() {
+      if (!ensureXlsx()) return;
+      const rows = filtered.map((c) => ({
+        备份编号: c.id,
+        设备名称: c.deviceName,
+        设备IP: c.deviceIp,
+        版本: c.version,
+        备份时间: c.backedAt,
+        操作人: c.operator,
+        文件大小: c.size,
+        备注: c.remark,
+      }));
+      const sheet = XLSX.utils.json_to_sheet(rows.length ? rows : [{ 备份编号: "" }]);
+      const book = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(book, sheet, "配置备份");
+      const content = XLSX.write(book, { bookType: "xlsx", type: "array" });
+      const blob = new Blob([content], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "配置备份记录.xlsx";
+      document.body.append(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      applyFilter();
+      document.querySelector("[data-action=search]").addEventListener("click", applyFilter);
+      document.querySelector("[data-action=reset]").addEventListener("click", () => {
+        Object.values(filters).forEach((el) => { el.value = ""; });
+        applyFilter();
+      });
+      document.querySelector("[data-action=export]").addEventListener("click", exportConfig);
+      document.querySelector("[data-action=sync-log]").addEventListener("click", () => {
+        renderSync();
+        showMode("sync");
+      });
+      document.querySelector("[data-action=back-list]").addEventListener("click", () => showMode("list"));
+      document.getElementById("cfgBody").addEventListener("click", (ev) => {
+        const view = ev.target.closest("[data-view]");
+        if (view) openView(view.dataset.view);
+      });
+      document.getElementById("cfgPagination").addEventListener("click", (ev) => {
+        const item = ev.target.closest("[data-page]");
+        if (!item || item.classList.contains("disabled")) return;
+        const next = Number(item.dataset.page);
+        if (!Number.isFinite(next) || next < 1) return;
+        page = next;
+        render();
+      });
+    });
+  </script>
+</body>
+</html>

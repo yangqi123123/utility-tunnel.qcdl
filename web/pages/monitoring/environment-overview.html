@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>运行总览 - 环境与设备监控 - 科学岛管廊监控中心</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/tob-ui.css">
+  <link rel="stylesheet" href="../../assets/css/environment-monitor.css">
+</head>
+<body class="environment-page" data-menu-key="environment-monitoring.overview" data-page-section="环境与设备监控" data-page-title="运行总览">
+  <div class="app-shell">
+    <aside id="app-sidebar" class="sidebar"></aside>
+    <header id="app-header" class="header"></header>
+    <main class="main">
+      <div class="screen-frame stack">
+        <section class="environment-head">
+          <div>
+            <h1>运行总览</h1>
+            <p>一屏掌握舱室环境安全、附属设备健康与今日告警联动概况</p>
+          </div>
+          <div class="environment-head-actions">
+            <span class="environment-source"><i class="fa-solid fa-circle"></i>第三方数据已接入 · 只读 · 不可下控</span>
+            <span class="environment-sync">最近同步 <strong id="lastSync">刚刚</strong></span>
+          </div>
+        </section>
+
+        <section id="envKpi" class="environment-stat-grid env-kpi-5" aria-label="运行总览指标"></section>
+
+        <section class="card env-overview-panel">
+          <div class="card-title-row">
+            <div>
+              <h2 class="card-title">舱室环境矩阵</h2>
+              <span class="card-caption">O₂ / 温湿度 / CH₄ / H₂S / 水位 · 综合状态</span>
+            </div>
+            <a class="env-panel-link" href="environment-quality.html">环境质量监测 <i class="fa-solid fa-arrow-right"></i></a>
+          </div>
+          <div class="table-wrap">
+            <table class="table env-matrix" id="envZoneMatrix">
+              <thead>
+                <tr>
+                  <th>舱室 / 区段</th>
+                  <th>O₂ (%VOL)</th>
+                  <th>温度 (℃)</th>
+                  <th>湿度 (%RH)</th>
+                  <th>CH₄ (%LEL)</th>
+                  <th>H₂S (ppm)</th>
+                  <th>水位 (m)</th>
+                  <th>综合状态</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+
+        <div class="env-overview-grid">
+          <section class="card env-overview-panel">
+            <div class="card-title-row">
+              <div>
+                <h2 class="card-title">设备健康摘要</h2>
+                <span class="card-caption">按设备类型汇总运行 / 故障 / 离线</span>
+              </div>
+              <a class="env-panel-link" href="environment-devices.html">设备状态监视 <i class="fa-solid fa-arrow-right"></i></a>
+            </div>
+            <div id="envDeviceHealth" class="env-health-list"></div>
+          </section>
+
+          <section class="card env-overview-panel">
+            <div class="card-title-row">
+              <div>
+                <h2 class="card-title">电力关键参数摘要</h2>
+                <span class="card-caption">供配电完整监视归属电力监测系统</span>
+              </div>
+            </div>
+            <div id="envPowerSummary" class="env-power-summary"></div>
+          </section>
+        </div>
+
+        <div class="env-overview-grid">
+          <section class="card env-overview-panel">
+            <div class="card-title-row">
+              <div>
+                <h2 class="card-title">最近告警</h2>
+                <span class="card-caption">TOP 5 · 本域超限 / 故障 / 离线</span>
+              </div>
+              <a class="env-panel-link" href="environment-alarms.html">环境告警记录 <i class="fa-solid fa-arrow-right"></i></a>
+            </div>
+            <div id="envRecentAlarms" class="env-recent-list"></div>
+          </section>
+
+          <section class="card env-overview-panel">
+            <div class="card-title-row">
+              <div>
+                <h2 class="card-title">最近联动</h2>
+                <span class="card-caption">TOP 5 · 自动处置结果留痕</span>
+              </div>
+              <a class="env-panel-link" href="environment-linkage.html">全部联动 <i class="fa-solid fa-arrow-right"></i></a>
+            </div>
+            <div id="envRecentLinkage" class="env-recent-list"></div>
+          </section>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="../../../app/config/menu.js?v=nav-hide-1"></script>
+  <script src="../../../app/components/sidebar.js?v=nav-home-1"></script>
+  <script src="../../../app/components/header.js?v=nav-home-1"></script>
+  <script src="../../../app/components/drawer.js"></script>
+  <script src="../../../app/data/environment-data.js"></script>
+  <script>
+    (function () {
+      const data = window.ENVIRONMENT_DATA;
+      if (!data) return;
+
+      const { statusText, qualityMetrics, devices, linkageRecords, alarmRecords, powerSummary, zoneMatrix } = data;
+      const DEVICE_TYPES = ["通风设备", "排水泵", "照明设备", "供配电"];
+      const TYPE_ICONS = { "通风设备": "fa-fan", "排水泵": "fa-pump-soap", "照明设备": "fa-lightbulb", "供配电": "fa-bolt" };
+      const LEVEL_TEXT = { danger: "严重", warning: "预警", normal: "正常", offline: "离线" };
+
+      function overLimitCount() {
+        return qualityMetrics.filter((item) => item.status === "warning" || item.status === "danger").length;
+      }
+
+      function renderKpi() {
+        const total = qualityMetrics.length;
+        const overLimit = overLimitCount();
+        const alarmCount = alarmRecords.length;
+        const linkageCount = linkageRecords.length;
+        const dangerCount = qualityMetrics.filter((item) => item.status === "danger").length;
+        const warningCount = qualityMetrics.filter((item) => item.status === "warning").length;
+
+        document.getElementById("envKpi").innerHTML = `
+          <a class="environment-stat" href="environment-quality.html">
+            <span class="environment-stat-label">监测点总数</span>
+            <strong>${total}</strong>
+            <small>环境质量监测点</small>
+            <i class="environment-stat-icon fa-solid fa-satellite-dish"></i>
+          </a>
+          <article class="environment-stat success">
+            <span class="environment-stat-label">在线率</span>
+            <strong>97.6%</strong>
+            <small>通信正常 · Mock</small>
+            <i class="environment-stat-icon fa-solid fa-link"></i>
+          </article>
+          <a class="environment-stat warning" href="environment-quality.html?status=warning">
+            <span class="environment-stat-label">当前超限</span>
+            <strong>${overLimit}</strong>
+            <small>${dangerCount} 条高风险 · ${warningCount} 条预警</small>
+            <i class="environment-stat-icon fa-solid fa-triangle-exclamation"></i>
+          </a>
+          <a class="environment-stat danger" href="environment-alarms.html">
+            <span class="environment-stat-label">今日告警</span>
+            <strong>${alarmCount}</strong>
+            <small>已恢复 ${alarmRecords.filter((a) => a.status === "已恢复").length} 条</small>
+            <i class="environment-stat-icon fa-solid fa-bell"></i>
+          </a>
+          <a class="environment-stat" href="environment-linkage.html">
+            <span class="environment-stat-label">今日联动</span>
+            <strong>${linkageCount}</strong>
+            <small>自动处置结果记录</small>
+            <i class="environment-stat-icon fa-solid fa-diagram-project"></i>
+          </a>
+        `;
+      }
+
+      function cellClass(key, value, zoneStatus) {
+        if (key === "ch4" && Number(value) >= 25) return "env-cell-danger";
+        if (key === "h2s" && Number(value) >= 8) return "env-cell-warning";
+        if (key === "level" && Number(value) >= 0.55) return "env-cell-warning";
+        if (zoneStatus === "danger" && key === "ch4") return "env-cell-danger";
+        return "";
+      }
+
+      function renderMatrix() {
+        const tbody = document.querySelector("#envZoneMatrix tbody");
+        tbody.innerHTML = zoneMatrix.map((row) => {
+          const cells = [
+            ["o2", row.o2],
+            ["temp", row.temp],
+            ["humidity", row.humidity],
+            ["ch4", row.ch4],
+            ["h2s", row.h2s],
+            ["level", row.level],
+          ].map(([key, value]) => `<td class="${cellClass(key, value, row.status)}">${value}</td>`).join("");
+          return `<tr class="row-${row.status}" data-zone="${row.zone}">
+            <td><strong>${row.zone}</strong></td>
+            ${cells}
+            <td><span class="env-status ${row.status}">${statusText[row.status] || row.status}</span></td>
+          </tr>`;
+        }).join("");
+      }
+
+      function summarizeType(type) {
+        const list = devices.filter((d) => d.type === type);
+        return {
+          type,
+          total: list.length,
+          running: list.filter((d) => d.run === "running").length,
+          fault: list.filter((d) => d.run === "fault").length,
+          offline: list.filter((d) => d.power === "off").length,
+          stopped: list.filter((d) => d.run === "stopped").length,
+        };
+      }
+
+      function renderDeviceHealth() {
+        document.getElementById("envDeviceHealth").innerHTML = DEVICE_TYPES.map((type) => {
+          const s = summarizeType(type);
+          const icon = TYPE_ICONS[type] || "fa-gears";
+          return `<a class="env-health-item" href="environment-devices.html?type=${encodeURIComponent(type)}">
+            <span class="env-health-icon"><i class="fa-solid ${icon}"></i></span>
+            <span class="env-health-main">
+              <strong>${type}</strong>
+              <small>共 ${s.total} 台</small>
+            </span>
+            <span class="env-health-metrics">
+              <em class="ok">运行 ${s.running}</em>
+              <em class="warn">故障 ${s.fault}</em>
+              <em class="off">离线 ${s.offline}</em>
+            </span>
+          </a>`;
+        }).join("");
+      }
+
+      function renderPowerSummary() {
+        const href = powerSummary.href || "power-monitoring.html?view=overview";
+        document.getElementById("envPowerSummary").innerHTML = `
+          <div class="env-power-grid">
+            <div class="env-power-item">
+              <span class="info-label">变压器温度</span>
+              <strong>${powerSummary.transformerTemp}</strong>
+            </div>
+            <div class="env-power-item">
+              <span class="info-label">UPS 状态</span>
+              <strong>${powerSummary.upsStatus}</strong>
+            </div>
+          </div>
+          <a class="btn btn-secondary env-power-link" href="${href}">
+            <i class="fa-solid fa-bolt"></i> 查看电力监测
+          </a>
+        `;
+      }
+
+      function openAlarmDetail(id) {
+        const item = alarmRecords.find((entry) => entry.id === id);
+        if (!item || !window.openAppDrawer) return;
+        const body = `<div class="environment-detail">
+          <div class="environment-detail-hero">
+            <span class="environment-detail-icon"><i class="fa-solid fa-bell"></i></span>
+            <div><strong>${item.object}</strong><small>${item.id} · ${item.zone}</small></div>
+            <span class="env-status ${item.level}">${LEVEL_TEXT[item.level] || item.level}</span>
+          </div>
+          <section class="environment-detail-section">
+            <h3>告警信息</h3>
+            <div class="environment-detail-grid">
+              <div class="info-item"><span class="info-label">告警时间</span><span class="info-value">${item.time}</span></div>
+              <div class="info-item"><span class="info-label">类型</span><span class="info-value">${item.type}</span></div>
+              <div class="info-item"><span class="info-label">当前值</span><span class="info-value">${item.value}</span></div>
+              <div class="info-item"><span class="info-label">阈值</span><span class="info-value">${item.threshold}</span></div>
+              <div class="info-item"><span class="info-label">状态</span><span class="info-value">${item.status}</span></div>
+              <div class="info-item"><span class="info-label">恢复时间</span><span class="info-value">${item.recoveredAt || "—"}</span></div>
+            </div>
+          </section>
+          <section class="environment-detail-section">
+            <h3>说明</h3>
+            <p class="environment-detail-note">${item.note || "—"}</p>
+          </section>
+        </div>`;
+        window.openAppDrawer({
+          title: "告警详情",
+          body,
+          footer: `<button class="btn btn-secondary" type="button" data-drawer-close>关闭</button>
+            <a class="btn btn-primary" href="environment-alarms.html?id=${encodeURIComponent(item.id)}">打开告警页</a>`,
+        });
+      }
+
+      function openLinkageDetail(id) {
+        const item = linkageRecords.find((entry) => entry.id === id);
+        if (!item || !window.openAppDrawer) return;
+        const devices = (item.items || []).map((row) => row.deviceName).filter(Boolean).join("、") || "-";
+        const systems = [...new Set((item.items || []).map((row) => row.system).filter(Boolean))].join("、") || "-";
+        const body = `<div class="environment-detail">
+          <div class="environment-detail-hero">
+            <span class="environment-detail-icon"><i class="fa-solid fa-diagram-project"></i></span>
+            <div><strong>${item.name || item.type}</strong><small>${item.code || item.id}</small></div>
+            <span class="env-status ${item.result === "成功" ? "normal" : item.result === "部分成功" ? "warning" : "danger"}">${item.result}</span>
+          </div>
+          <section class="environment-detail-section">
+            <h3>联动信息</h3>
+            <div class="environment-detail-grid">
+              <div class="info-item"><span class="info-label">联动类型</span><span class="info-value">${item.type}</span></div>
+              <div class="info-item"><span class="info-label">联动系统</span><span class="info-value">${systems}</span></div>
+              <div class="info-item"><span class="info-label">联动设备</span><span class="info-value">${devices}</span></div>
+              <div class="info-item"><span class="info-label">联动开始时间</span><span class="info-value">${item.startTime || item.time || "-"}</span></div>
+              <div class="info-item"><span class="info-label">联动结束时间</span><span class="info-value">${item.endTime || "-"}</span></div>
+              <div class="info-item"><span class="info-label">关联告警</span><span class="info-value">${item.alarmId || "—"}</span></div>
+            </div>
+          </section>
+        </div>`;
+        window.openAppDrawer({
+          title: "联动详情",
+          body,
+          footer: `<button class="btn btn-secondary" type="button" data-drawer-close>关闭</button>
+            <a class="btn btn-primary" href="environment-linkage.html?id=${encodeURIComponent(item.id)}">打开联动页</a>`,
+        });
+      }
+
+      function renderRecentAlarms() {
+        const list = alarmRecords.slice(0, 5);
+        document.getElementById("envRecentAlarms").innerHTML = list.map((item) => `
+          <button type="button" class="env-recent-item" data-alarm-id="${item.id}">
+            <span class="alert-severity ${item.level === "warning" ? "warning" : ""}">
+              <i class="fa-solid ${item.level === "danger" ? "fa-fire" : "fa-triangle-exclamation"}"></i>
+            </span>
+            <span>
+              <strong class="alert-title">${item.object} · ${item.zone}</strong>
+              <small class="alert-meta">${item.time} · ${item.type} · ${item.status}</small>
+            </span>
+            <span class="alert-value">${item.value}</span>
+          </button>
+        `).join("") || `<div class="empty-state">暂无告警</div>`;
+      }
+
+      function renderRecentLinkage() {
+        const list = linkageRecords.slice(0, 5);
+        document.getElementById("envRecentLinkage").innerHTML = list.map((item) => {
+          const action = (item.items && item.items[0] && item.items[0].action) || item.action || item.type;
+          return `
+          <button type="button" class="env-recent-item" data-linkage-id="${item.id}">
+            <span class="env-linkage-badge">${item.type}</span>
+            <span>
+              <strong class="alert-title">${item.name || item.trigger || item.code}</strong>
+              <small class="alert-meta">${item.startTime || item.time || "-"} · ${action}</small>
+            </span>
+            <span class="env-result ${item.result === "成功" ? "ok" : item.result === "部分成功" ? "partial" : ""}">${item.result}</span>
+          </button>`;
+        }).join("") || `<div class="empty-state">暂无联动记录</div>`;
+      }
+
+      document.addEventListener("click", (event) => {
+        const zoneRow = event.target.closest("#envZoneMatrix tbody tr[data-zone]");
+        if (zoneRow) {
+          location.href = `environment-quality.html?zone=${encodeURIComponent(zoneRow.dataset.zone)}`;
+          return;
+        }
+        const alarmBtn = event.target.closest("[data-alarm-id]");
+        if (alarmBtn) {
+          openAlarmDetail(alarmBtn.dataset.alarmId);
+          return;
+        }
+        const linkageBtn = event.target.closest("[data-linkage-id]");
+        if (linkageBtn) {
+          openLinkageDetail(linkageBtn.dataset.linkageId);
+        }
+      });
+
+      renderKpi();
+      renderMatrix();
+      renderDeviceHealth();
+      renderPowerSummary();
+      renderRecentAlarms();
+      renderRecentLinkage();
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>能耗分析 - 科学岛管廊监控中心</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/tob-ui.css">
+  <link rel="stylesheet" href="../../assets/css/emergency.css">
+  <link rel="stylesheet" href="../../assets/css/big-data.css">
+</head>
+<body class="emergency-page" data-menu-key="big-data.energy" data-page-section="大数据分析" data-page-title="能耗分析" data-big-data-page="energy">
+  <div class="app-shell"><aside id="app-sidebar" class="sidebar"></aside><header id="app-header" class="header"></header>
+    <main class="main"><div class="screen-frame emergency-stack">
+      <section class="page-head emergency-page-head">
+        <div>
+          <h1 class="page-title">能耗分析</h1>
+          <p class="page-desc">用电概览、分区耗电与 UPS 运行趋势分析（只读）。</p>
+        </div>
+      </section>
+
+      <section class="emergency-panel analysis-filter-panel">
+        <div class="analysis-filter-row" id="bdEnergyFilters">
+          <label class="form-field"><span class="form-label">所属项目</span>
+            <select class="form-control" id="bdProject"><option value="">全部项目</option></select>
+          </label>
+          <label class="form-field"><span class="form-label">所属管廊</span>
+            <select class="form-control" id="bdCorridor" disabled><option value="">请先选择所属项目</option></select>
+          </label>
+          <label class="form-field"><span class="form-label">所属舱室</span>
+            <select class="form-control" id="bdRoom" disabled><option value="">请先选择所属管廊</option></select>
+          </label>
+          <label class="form-field"><span class="form-label">所属区段</span>
+            <select class="form-control" id="bdSection" disabled><option value="">请先选择所属舱室</option></select>
+          </label>
+          <label class="form-field"><span class="form-label">所属管线</span>
+            <select class="form-control" id="bdPipeline" disabled><option value="">请先选择所属区段</option></select>
+          </label>
+          <label class="form-field"><span class="form-label">开始时间</span>
+            <input class="form-control" id="bdStart" type="date">
+          </label>
+          <label class="form-field"><span class="form-label">结束时间</span>
+            <input class="form-control" id="bdEnd" type="date">
+          </label>
+          <div class="filter-actions">
+            <button class="btn btn-primary" type="button" data-bd-action="query">查询</button>
+            <button class="btn btn-secondary" type="button" data-bd-action="reset">重置</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="analysis-chart-grid bd-energy-grid">
+        <!-- 1 能耗概览 -->
+        <article class="analysis-chart-panel bd-energy-overview">
+          <div class="emergency-panel-head"><h2 class="emergency-panel-title">能耗概览</h2></div>
+          <div class="bd-energy-summary">
+            <div class="bd-energy-summary-icon"><i class="fa-solid fa-bolt"></i></div>
+            <div class="bd-energy-summary-rows">
+              <div class="bd-energy-summary-row">
+                <span class="bd-energy-label">月度累计</span>
+                <strong id="bdEnergyMonthVal">—</strong>
+                <span class="bd-energy-mom" id="bdEnergyMonthMom">环比 ↑0%</span>
+              </div>
+              <div class="bd-energy-summary-row">
+                <span class="bd-energy-label">年度累计</span>
+                <strong id="bdEnergyYearVal">—</strong>
+                <span class="bd-energy-mom" id="bdEnergyYearMom">环比 ↑0%</span>
+              </div>
+            </div>
+          </div>
+          <div class="bd-chart-unit" style="padding:0 20px">用电趋势 单位(万kW·h)</div>
+          <div class="analysis-chart-body single">
+            <div class="analysis-chart-canvas-wrap" id="wrapEnergyMonthBar"><canvas id="chartEnergyMonthBar"></canvas></div>
+          </div>
+        </article>
+
+        <!-- 2 能耗分区统计 -->
+        <article class="analysis-chart-panel">
+          <div class="emergency-panel-head">
+            <h2 class="emergency-panel-title">能耗分区统计</h2>
+            <span class="bd-chart-unit">单位(万kW·h)</span>
+          </div>
+          <div class="analysis-chart-body">
+            <div class="bd-energy-share">
+              <div class="analysis-chart-canvas-wrap bd-energy-pie" id="wrapEnergySystemPie"><canvas id="chartEnergySystemPie"></canvas></div>
+              <div class="bd-energy-pie-legend" id="legendEnergySystem"></div>
+            </div>
+            <div class="analysis-chart-canvas-wrap" id="wrapEnergyZoneBar"><canvas id="chartEnergyZoneBar"></canvas></div>
+          </div>
+        </article>
+
+        <!-- 3 UPS 电压 -->
+        <article class="analysis-chart-panel">
+          <div class="emergency-panel-head"><h2 class="emergency-panel-title">近24hUPS电压变化趋势</h2></div>
+          <div class="analysis-chart-body single">
+            <div class="analysis-chart-canvas-wrap" id="wrapUpsVoltage"><canvas id="chartUpsVoltage"></canvas></div>
+          </div>
+        </article>
+
+        <!-- 4 UPS 电流 -->
+        <article class="analysis-chart-panel">
+          <div class="emergency-panel-head"><h2 class="emergency-panel-title">近24hUPS电流变化趋势</h2></div>
+          <div class="analysis-chart-body single">
+            <div class="analysis-chart-canvas-wrap" id="wrapUpsCurrent"><canvas id="chartUpsCurrent"></canvas></div>
+          </div>
+        </article>
+      </section>
+
+      <!-- 5 明细 -->
+      <section class="card bd-detail-card">
+        <div class="bd-toolbar">
+          <h2 class="toolbar-title">能耗概览明细</h2>
+          <div class="bd-range-tabs" id="bdEnergyDetailTabs">
+            <button type="button" class="bd-range-tab is-active" data-detail-mode="region">按区域</button>
+            <button type="button" class="bd-range-tab" data-detail-mode="device">按设备</button>
+          </div>
+          <button class="btn btn-secondary" type="button" data-bd-action="export">导出</button>
+        </div>
+        <div class="bd-table-wrap">
+          <table class="table bd-table">
+            <thead id="bdEnergyDetailHead"></thead>
+            <tbody id="bdEnergyDetailBody"></tbody>
+          </table>
+        </div>
+        <div id="bdEnergyDetailPagination" class="emergency-pagination-host"></div>
+      </section>
+    </div></main>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="../../../app/config/menu.js?v=nav-hide-1"></script>
+  <script src="../../../app/data/work-order-data.js"></script>
+  <script src="../../../app/data/power-monitor-data.js"></script>
+  <script src="../../../app/data/big-data-energy-data.js"></script>
+  <script src="../../../app/components/sidebar.js?v=nav-home-1"></script>
+  <script src="../../../app/components/header.js?v=nav-home-1"></script>
+  <script src="../../../app/components/drawer.js"></script>
+  <script src="../../../app/components/emergency-common.js"></script>
+  <script src="../../../app/components/big-data-filters.js"></script>
+  <script src="../../../app/components/big-data-energy.js"></script>
+  <script src="../../../app/components/requirement.js"></script>
+</body>
+</html>

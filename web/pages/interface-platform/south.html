@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>南向采集 - 科学岛管廊监控中心</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/tob-ui.css">
+  <link rel="stylesheet" href="../../assets/css/service-center.css?v=3">
+  <link rel="stylesheet" href="../../assets/css/network.css">
+  <link rel="stylesheet" href="../../assets/css/alarm-center.css">
+  <link rel="stylesheet" href="../../assets/css/interface-platform.css">
+</head>
+<body class="service-center-page interface-platform-page interface-south-page" data-menu-key="interface-platform.south" data-page-section="接口管理平台" data-page-title="南向采集">
+  <div class="app-shell">
+    <aside id="app-sidebar" class="sidebar"></aside>
+    <header id="app-header" class="header"></header>
+    <main class="main">
+      <div class="screen-frame stack">
+        <section class="analysis-kpi-grid network-overview-kpis">
+          <article class="analysis-kpi is-blue">
+            <div class="analysis-kpi-icon"><i class="fa-solid fa-plug"></i></div>
+            <div class="analysis-kpi-body">
+              <span class="analysis-kpi-label">墨斗接入</span>
+              <strong class="analysis-kpi-value" data-kpi-access>01</strong>
+              <em class="analysis-kpi-sub">生产环境 · 连通正常</em>
+            </div>
+          </article>
+          <article class="analysis-kpi is-green">
+            <div class="analysis-kpi-icon"><i class="fa-solid fa-list-check"></i></div>
+            <div class="analysis-kpi-body">
+              <span class="analysis-kpi-label">采集任务</span>
+              <strong class="analysis-kpi-value" data-kpi-task>03</strong>
+              <em class="analysis-kpi-sub" data-kpi-task-sub>运行中 2 · 已停用 1</em>
+            </div>
+          </article>
+          <article class="analysis-kpi is-amber">
+            <div class="analysis-kpi-icon"><i class="fa-solid fa-microchip"></i></div>
+            <div class="analysis-kpi-body">
+              <span class="analysis-kpi-label">今日采集消息</span>
+              <strong class="analysis-kpi-value">18,642</strong>
+              <em class="analysis-kpi-sub">成功率 99.6%</em>
+            </div>
+          </article>
+          <article class="analysis-kpi is-red">
+            <div class="analysis-kpi-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div class="analysis-kpi-body">
+              <span class="analysis-kpi-label">待处理异常</span>
+              <strong class="analysis-kpi-value">02</strong>
+              <em class="analysis-kpi-sub">连接超时 / 鉴权失败</em>
+            </div>
+          </article>
+        </section>
+
+        <section class="card device-list-card">
+          <div class="card-title-row device-toolbar">
+            <h1 class="card-title">墨斗平台接入</h1>
+            <div class="btn-row">
+              <button class="btn btn-primary" type="button" data-south-action="access-create"><i class="fa-solid fa-plus"></i> 新增接入</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="table interface-table" aria-label="墨斗平台接入列表">
+              <thead>
+                <tr>
+                  <th>接入名称</th>
+                  <th>平台地址</th>
+                  <th>认证方式</th>
+                  <th>安全策略</th>
+                  <th>连通状态</th>
+                  <th>状态</th>
+                  <th>最近心跳</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="accessTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="card device-list-card">
+          <div class="card-title-row device-toolbar">
+            <h1 class="card-title">采集任务</h1>
+            <div class="btn-row">
+              <button class="btn btn-primary" type="button" data-south-action="task-create"><i class="fa-solid fa-plus"></i> 新建采集任务</button>
+            </div>
+          </div>
+          <div class="interface-task-filter-wrap">
+            <div class="filter-actions interface-task-filter">
+              <label class="form-field"><span class="form-label">任务名称</span><input class="form-control" data-task-filter="name" placeholder="请输入任务名称"></label>
+              <label class="form-field"><span class="form-label">开始执行时间</span><input class="form-control" type="datetime-local" data-task-filter="start"></label>
+              <label class="form-field"><span class="form-label">结束执行时间</span><input class="form-control" type="datetime-local" data-task-filter="end"></label>
+              <div class="device-filter-actions">
+                <button class="btn btn-secondary" type="button" data-south-action="task-reset">重置</button>
+                <button class="btn btn-primary" type="button" data-south-action="task-search">搜索</button>
+              </div>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="table interface-table table-actions-sticky" aria-label="采集任务列表">
+              <thead>
+                <tr>
+                  <th>任务名称</th>
+                  <th>任务 ID</th>
+                  <th>关联接入</th>
+                  <th>所属系统</th>
+                  <th>设备类型</th>
+                  <th>采集方式</th>
+                  <th>数据主题</th>
+                  <th>最近执行</th>
+                  <th>状态</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="taskTableBody"></tbody>
+            </table>
+          </div>
+          <div class="pagination">
+            <span>共 <strong id="taskCount">0</strong> 条，每页显示 10 条</span>
+            <span class="page-item disabled">‹</span>
+            <span class="page-item active">1</span>
+            <span class="page-item disabled">›</span>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <div class="device-business-mask hidden" id="devicePickerMask" aria-hidden="true">
+    <div class="device-business-modal interface-device-picker" role="dialog" aria-modal="true" aria-labelledby="devicePickerTitle">
+      <div class="device-modal-head">
+        <h2 id="devicePickerTitle">选择设备</h2>
+        <button class="device-modal-close" type="button" data-south-action="picker-close" aria-label="关闭">×</button>
+      </div>
+      <div class="device-modal-body">
+        <div class="filter-actions interface-picker-filter">
+          <label class="form-field"><span class="form-label">设备名称</span><input class="form-control" data-picker-filter="name" placeholder="请输入设备名称"></label>
+          <label class="form-field"><span class="form-label">设备编码</span><input class="form-control" data-picker-filter="code" placeholder="请输入设备编码"></label>
+          <label class="form-field"><span class="form-label">设备分类</span><select class="form-control" data-picker-filter="type"><option value="">请选择</option></select></label>
+          <div class="device-filter-actions">
+            <button class="btn btn-secondary" type="button" data-south-action="picker-reset">重置</button>
+            <button class="btn btn-primary" type="button" data-south-action="picker-search">搜索</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th class="check-cell"><input type="checkbox" data-picker-select-all aria-label="全选"></th>
+                <th>设备名称</th>
+                <th>设备编码</th>
+                <th>所属系统</th>
+                <th>设备分类</th>
+                <th>所属项目</th>
+                <th>所属管廊</th>
+                <th>所属舱室</th>
+              </tr>
+            </thead>
+            <tbody id="pickerTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="device-modal-foot interface-picker-foot">
+        <span class="interface-picker-count" data-picker-count>共 0 条记录，已选 0 条</span>
+        <div class="btn-row">
+          <button class="btn btn-secondary" type="button" data-south-action="picker-close">取消</button>
+          <button class="btn btn-primary" type="button" data-south-action="picker-confirm">确定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../../app/config/menu.js?v=nav-hide-1"></script>
+  <script src="../../../app/data/mock-data.js"></script>
+  <script src="../../../app/data/system-types.js"></script>
+  <script src="../../../app/data/device-categories.js"></script>
+  <script src="../../../app/components/sidebar.js?v=nav-home-1"></script>
+  <script src="../../../app/components/header.js?v=nav-home-1"></script>
+  <script src="../../../app/components/drawer.js"></script>
+  <script src="../../../app/components/requirement.js"></script>
+  <script src="../../assets/js/interface-south.js"></script>
+</body>
+</html>

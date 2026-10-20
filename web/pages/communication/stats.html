@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>通信统计 - 科学岛管廊监控中心</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/tob-ui.css">
+  <link rel="stylesheet" href="../../assets/css/emergency.css">
+  <link rel="stylesheet" href="../../assets/css/communication.css">
+</head>
+<body class="monitoring-page communication-page communication-device-page" data-menu-key="communication.stats" data-page-section="通信系统" data-page-title="通信统计">
+  <div class="app-shell">
+    <aside id="app-sidebar" class="sidebar"></aside>
+    <header id="app-header" class="header"></header>
+    <main class="main">
+      <div class="screen-frame stack communication-shell">
+        <section class="emergency-metric-grid" aria-label="通信总览">
+          <article class="analysis-kpi is-blue">
+            <div class="analysis-kpi-icon"><i class="fa-solid fa-server"></i></div>
+            <div class="analysis-kpi-body"><span class="analysis-kpi-label">通信设备</span><strong class="analysis-kpi-value" id="kpiDevices">0</strong></div>
+          </article>
+          <article class="analysis-kpi is-amber">
+            <div class="analysis-kpi-icon"><i class="fa-solid fa-list-check"></i></div>
+            <div class="analysis-kpi-body"><span class="analysis-kpi-label">广播任务</span><strong class="analysis-kpi-value" id="kpiTasks">0</strong></div>
+          </article>
+          <article class="analysis-kpi is-green">
+            <div class="analysis-kpi-icon"><i class="fa-solid fa-play"></i></div>
+            <div class="analysis-kpi-body"><span class="analysis-kpi-label">播放中</span><strong class="analysis-kpi-value" id="kpiPlaying">0</strong></div>
+          </article>
+          <article class="analysis-kpi is-purple">
+            <div class="analysis-kpi-icon"><i class="fa-solid fa-bullhorn"></i></div>
+            <div class="analysis-kpi-body"><span class="analysis-kpi-label">广播操作</span><strong class="analysis-kpi-value" id="kpiBroadcastOps">0</strong></div>
+          </article>
+          <article class="analysis-kpi is-red">
+            <div class="analysis-kpi-icon"><i class="fa-solid fa-phone"></i></div>
+            <div class="analysis-kpi-body"><span class="analysis-kpi-label">通话记录</span><strong class="analysis-kpi-value" id="kpiCalls">0</strong></div>
+          </article>
+        </section>
+
+        <section class="communication-stats-grid">
+          <section class="card communication-stat-block">
+            <div class="card-title-row device-toolbar"><h2 class="card-title">通信设备概览</h2><a class="btn btn-link" href="./devices.html">查看设备</a></div>
+            <div class="communication-dist" id="deviceTypeDist"></div>
+          </section>
+          <section class="card communication-stat-block">
+            <div class="card-title-row device-toolbar"><h2 class="card-title">广播任务状态</h2><a class="btn btn-link" href="./tasks.html">查看任务</a></div>
+            <div class="communication-dist" id="taskStatusDist"></div>
+          </section>
+          <section class="card communication-stat-block">
+            <div class="card-title-row device-toolbar"><h2 class="card-title">广播任务类型</h2><a class="btn btn-link" href="./console.html">广播控制台</a></div>
+            <div class="communication-dist" id="taskTypeDist"></div>
+          </section>
+          <section class="card communication-stat-block">
+            <div class="card-title-row device-toolbar"><h2 class="card-title">广播操作结果</h2><a class="btn btn-link" href="./logs.html">通讯日志</a></div>
+            <div class="communication-dist" id="broadcastResultDist"></div>
+          </section>
+        </section>
+
+        <section class="card communication-stat-block communication-call-analysis">
+          <div class="card-title-row device-toolbar"><h2 class="card-title">通话记录分析</h2><a class="btn btn-link" href="./logs.html?tab=calls">查看通话记录</a></div>
+          <div class="communication-call-charts">
+            <div class="communication-chart-panel">
+              <canvas id="callTrendChart" height="220"></canvas>
+            </div>
+            <div class="communication-chart-panel communication-pie-panel">
+              <canvas id="callResultChart" height="220"></canvas>
+              <div class="communication-pie-legend" id="callResultLegend"></div>
+            </div>
+          </div>
+          <div class="communication-call-summary">
+            <div><span>通话总数</span><strong id="callTotal">0</strong></div>
+            <div><span>通话总时长</span><strong id="callDurationTotal">0分</strong></div>
+            <div><span>平均时长</span><strong id="callDurationAvg">0秒</strong></div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="../../../app/config/menu.js?v=comm-c2-2"></script>
+  <script src="../../../app/data/mock-data.js"></script>
+  <script src="../../../app/data/emergency-data.js"></script>
+  <script src="../../../app/components/sidebar.js?v=nav-home-1"></script>
+  <script src="../../../app/components/header.js?v=nav-home-1"></script>
+  <script src="../../../app/components/drawer.js"></script>
+  <script src="../../../app/components/communication-stats.js?v=stats-fix-1"></script>
+  <script src="../../../app/components/requirement.js"></script>
+</body>
+</html>

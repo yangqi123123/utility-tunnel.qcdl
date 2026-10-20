@@ -1,0 +1,559 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f5f7fb">
+  <title>工业小程序 - 登录</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://images.unsplash.com">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <style>
+    :root {
+      --app-blue: #1769e8;
+      --app-blue-deep: #0f55ce;
+      --app-ink: #182433;
+      --app-muted: #7a8798;
+      --app-line: #e9eef5;
+      --app-surface: #ffffff;
+      --app-canvas: #f5f7fb;
+      --app-danger: #df5b5b;
+      --app-warning: #d99423;
+      --app-green: #20ae9a;
+      --app-font: "PingFang SC", "PingFang TC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+      --soft-shadow: 0 12px 28px rgba(40, 75, 125, 0.08);
+      --phone-shadow: 0 36px 80px rgba(34, 55, 86, 0.24);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { min-height: 100%; }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      overflow-x: hidden;
+      color: var(--app-ink);
+      background:
+        linear-gradient(rgba(80, 118, 175, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(80, 118, 175, 0.035) 1px, transparent 1px),
+        radial-gradient(circle at 50% 5%, rgba(255, 255, 255, 0.96), transparent 32%),
+        var(--app-canvas);
+      background-size: 32px 32px, 32px 32px, auto, auto;
+      font-family: var(--app-font);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    button, input { font: inherit; }
+    button { border: 0; cursor: pointer; }
+    button, a, input { -webkit-tap-highlight-color: transparent; }
+    a { color: inherit; text-decoration: none; }
+    [hidden] { display: none !important; }
+
+    .prototype-stage {
+      min-height: 100dvh;
+      padding: 32px 16px;
+      display: grid;
+      place-items: center;
+    }
+
+    .iphone-shell {
+      position: relative;
+      width: min(393px, calc(100vw - 32px));
+      aspect-ratio: 393 / 852;
+      padding: 10px;
+      border: 1px solid #454c58;
+      border-radius: 44px;
+      background: #181b20;
+      box-shadow: var(--phone-shadow), 0 0 0 5px rgba(255, 255, 255, 0.9);
+    }
+
+    .iphone-shell::before {
+      content: "";
+      position: absolute;
+      left: -3px;
+      top: 154px;
+      width: 3px;
+      height: 70px;
+      border-radius: 2px 0 0 2px;
+      background: #4c535f;
+      box-shadow: 0 84px 0 #4c535f, 0 116px 0 #4c535f;
+    }
+
+    .iphone-screen {
+      position: relative;
+      height: 100%;
+      overflow: hidden;
+      border-radius: 36px;
+      background: var(--app-surface);
+      isolation: isolate;
+    }
+
+    .dynamic-island {
+      position: absolute;
+      z-index: 5;
+      top: 10px;
+      left: 50%;
+      width: 110px;
+      height: 30px;
+      border-radius: 999px;
+      background: #090b0e;
+      transform: translateX(-50%);
+    }
+
+    .ios-status-bar {
+      position: relative;
+      z-index: 4;
+      height: 54px;
+      padding: 14px 21px 0;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      color: #151a20;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+    }
+
+    .status-icons { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; }
+
+    .screen-content {
+      position: absolute;
+      inset: 54px 0 0;
+      overflow: hidden;
+    }
+
+    .home-indicator {
+      position: absolute;
+      z-index: 6;
+      left: 50%;
+      bottom: 7px;
+      width: 118px;
+      height: 4px;
+      border-radius: 999px;
+      background: #11151a;
+      transform: translateX(-50%);
+      pointer-events: none;
+    }
+
+    .login-view,
+    .home-view {
+      height: 100%;
+    }
+
+    .login-view {
+      padding: 46px 28px 28px;
+      display: flex;
+      flex-direction: column;
+      background:
+        radial-gradient(circle at 90% 0%, rgba(23, 105, 232, 0.12), transparent 30%),
+        linear-gradient(180deg, #fbfdff 0%, #ffffff 72%, #f7faff 100%);
+    }
+
+    .brand-lockup { display: inline-flex; align-items: center; gap: 11px; color: var(--app-blue); }
+
+    .brand-mark {
+      width: 27px;
+      height: 23px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 3px;
+      transform: skew(-13deg);
+    }
+
+    .brand-mark span { border-radius: 1px; background: var(--app-blue); }
+    .brand-mark span:nth-child(2) { opacity: 0.68; }
+    .brand-mark span:nth-child(3) { opacity: 0.28; }
+    .brand-name { font-size: 17px; font-weight: 700; letter-spacing: 0.03em; }
+
+    .login-heading { margin: 62px 0 0; }
+    .login-heading h1 { margin: 0; color: var(--app-ink); font-size: 31px; line-height: 1.25; letter-spacing: -0.04em; }
+    .login-heading p { margin: 10px 0 0; color: var(--app-muted); font-size: 14px; line-height: 1.7; }
+
+    .login-form { margin-top: 40px; display: grid; gap: 17px; }
+    .field { display: grid; gap: 8px; }
+    .field-label { color: #425267; font-size: 13px; font-weight: 600; }
+    .field-control { position: relative; }
+    .field-control > i { position: absolute; left: 16px; top: 50%; color: #9aa7b7; transform: translateY(-50%); }
+
+    .field input {
+      width: 100%;
+      height: 50px;
+      padding: 0 44px;
+      border: 1px solid #e0e7f0;
+      border-radius: 12px;
+      outline: none;
+      color: var(--app-ink);
+      background: rgba(255, 255, 255, 0.88);
+      box-shadow: inset 0 1px 2px rgba(24, 36, 51, 0.025);
+      transition: border-color 160ms ease, box-shadow 160ms ease;
+    }
+
+    .field input::placeholder { color: #aeb8c5; }
+    .field input:focus { border-color: var(--app-blue); box-shadow: 0 0 0 3px rgba(23, 105, 232, 0.11); }
+
+    .password-toggle {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      width: 32px;
+      height: 32px;
+      display: grid;
+      place-items: center;
+      color: #8c99aa;
+      background: transparent;
+      transform: translateY(-50%);
+    }
+
+    .field-error { min-height: 18px; color: var(--app-danger); font-size: 12px; }
+    .field.has-error input { border-color: var(--app-danger); box-shadow: 0 0 0 3px rgba(223, 91, 91, 0.1); }
+    .login-error { min-height: 20px; margin: 0; color: var(--app-danger); font-size: 12px; }
+
+    .login-button {
+      width: 100%;
+      min-height: 50px;
+      margin-top: 3px;
+      border-radius: 12px;
+      color: #fff;
+      background: linear-gradient(135deg, #2879ed, var(--app-blue));
+      box-shadow: 0 12px 22px rgba(23, 105, 232, 0.2);
+      font-size: 16px;
+      font-weight: 700;
+      transition: transform 160ms ease, box-shadow 160ms ease, opacity 160ms ease;
+    }
+
+    .login-button:hover { box-shadow: 0 15px 26px rgba(23, 105, 232, 0.26); }
+    .login-button:active { transform: scale(0.98); }
+    .login-button:disabled { cursor: wait; opacity: 0.72; }
+
+    .demo-note {
+      margin: 19px 0 0;
+      padding: 11px 12px;
+      border: 1px solid #e5edf8;
+      border-radius: 10px;
+      color: #76869b;
+      background: #f7faff;
+      font-size: 11px;
+      line-height: 1.7;
+    }
+
+    .login-foot { margin-top: auto; color: #a8b3c1; font-size: 11px; text-align: center; }
+
+    .home-view { position: relative; overflow: hidden; background: #f8fafc; }
+    .home-scroll { height: 100%; padding: 10px 16px 96px; overflow-y: auto; scrollbar-width: none; }
+    .home-scroll::-webkit-scrollbar { display: none; }
+
+    .home-header { display: flex; align-items: center; justify-content: space-between; min-height: 44px; }
+    .home-title { margin: 0; font-size: 23px; line-height: 1.2; letter-spacing: -0.04em; }
+    .home-subtitle { margin: 4px 0 0; color: var(--app-muted); font-size: 11px; }
+    .icon-button { position: relative; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 14px; color: var(--app-ink); background: #fff; box-shadow: 0 3px 12px rgba(39, 70, 112, 0.06); }
+    .notice-dot { position: absolute; top: 10px; right: 10px; width: 7px; height: 7px; border: 2px solid #fff; border-radius: 50%; background: var(--app-danger); }
+
+    .search-bar { position: relative; margin-top: 15px; }
+    .search-bar i { position: absolute; left: 15px; top: 15px; color: #9ca8b7; }
+    .search-bar input { width: 100%; height: 45px; padding: 0 14px 0 40px; border: 1px solid transparent; border-radius: 12px; outline: none; color: var(--app-ink); background: #fff; box-shadow: 0 4px 16px rgba(31, 64, 105, 0.06); }
+    .search-bar input:focus { border-color: rgba(23, 105, 232, 0.4); }
+
+    .hero-banner { position: relative; min-height: 142px; margin-top: 15px; padding: 21px 17px; overflow: hidden; border-radius: 14px; color: #fff; background: linear-gradient(105deg, rgba(23, 105, 232, 0.96) 0%, rgba(23, 105, 232, 0.82) 50%, rgba(12, 79, 193, 0.65) 100%), url("https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=900&q=82") center / cover; box-shadow: 0 11px 22px rgba(23, 105, 232, 0.2); }
+    .hero-banner::after { content: ""; position: absolute; right: -31px; bottom: -52px; width: 164px; height: 164px; border: 1px solid rgba(255, 255, 255, 0.24); border-radius: 50%; box-shadow: 0 0 0 20px rgba(255, 255, 255, 0.06), 0 0 0 40px rgba(255, 255, 255, 0.04); }
+    .hero-banner h2 { position: relative; z-index: 1; margin: 0; font-size: 18px; letter-spacing: 0.01em; }
+    .hero-banner p { position: relative; z-index: 1; margin: 8px 0 16px; color: #d9e8ff; font-size: 11px; }
+    .hero-link { position: relative; z-index: 1; display: inline-flex; align-items: center; min-height: 32px; padding: 0 13px; border-radius: 999px; color: var(--app-blue-deep); background: #fff; font-size: 11px; font-weight: 700; }
+
+    .section-heading { display: flex; align-items: center; justify-content: space-between; margin: 20px 2px 11px; }
+    .section-heading h2 { margin: 0; font-size: 16px; }
+    .section-heading button { padding: 4px; color: var(--app-muted); background: transparent; font-size: 11px; }
+    .section-heading button i { margin-left: 2px; font-size: 9px; }
+
+    .metric-card { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); padding: 16px 8px; border-radius: 13px; background: #fff; box-shadow: var(--soft-shadow); }
+    .metric { min-width: 0; padding: 0 4px; text-align: center; border-right: 1px solid #f0f2f6; }
+    .metric:last-child { border-right: 0; }
+    .metric-label { display: block; color: var(--app-muted); font-size: 10px; white-space: nowrap; }
+    .metric-value { display: inline-block; margin-top: 8px; color: var(--app-ink); font-family: "DIN Alternate", "PingFang SC", sans-serif; font-size: 22px; font-weight: 700; line-height: 1; }
+    .metric-unit { margin-left: 2px; color: var(--app-muted); font-size: 10px; }
+    .metric.is-danger .metric-value { color: var(--app-danger); }
+
+    .quick-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px 5px; padding: 15px 7px 13px; border-radius: 13px; background: #fff; box-shadow: var(--soft-shadow); }
+    .quick-item { min-height: 69px; display: grid; justify-items: center; align-content: center; gap: 7px; padding: 4px 0; color: var(--app-ink); border-radius: 10px; background: transparent; font-size: 10px; }
+    .quick-item:hover, .quick-item:focus-visible { background: #f5f8ff; }
+    .quick-icon { width: 35px; height: 35px; display: grid; place-items: center; border-radius: 11px; color: var(--app-blue); background: #eaf2ff; font-size: 15px; }
+    .quick-item:nth-child(2) .quick-icon, .quick-item:nth-child(5) .quick-icon { color: var(--app-green); background: #e7f8f5; }
+    .quick-item:nth-child(3) .quick-icon, .quick-item:nth-child(6) .quick-icon { color: #7868d8; background: #efedff; }
+    .quick-item:nth-child(4) .quick-icon { color: var(--app-danger); background: #fff0f0; }
+    .quick-item:nth-child(8) .quick-icon { color: #7e8a99; background: #f0f3f6; }
+
+    .alert-list { overflow: hidden; border: 1px solid #edf1f6; border-radius: 16px; background: #fff; box-shadow: 0 12px 28px rgba(40, 75, 125, 0.07); }
+    .alert-item { width: 100%; min-height: 70px; padding: 11px 14px; display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; gap: 10px; align-items: center; border: 0; border-bottom: 1px solid #f0f2f6; color: var(--app-ink); background: #fff; text-align: left; }
+    .alert-item:last-child { border-bottom: 0; }
+    .alert-item:hover { background: #f9fbff; }
+    .alert-icon { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 10px; font-size: 12px; }
+    .alert-icon.danger { color: var(--app-danger); background: #fff0f0; }
+    .alert-icon.warning { color: var(--app-warning); background: #fff7e8; }
+    .alert-icon.info { color: var(--app-blue); background: #edf3ff; }
+    .alert-copy { min-width: 0; }
+    .alert-title { display: block; overflow: hidden; color: var(--app-ink); font-size: 12px; font-weight: 600; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
+    .alert-meta { margin-top: 5px; display: flex; align-items: center; gap: 6px; color: var(--app-muted); font-size: 10px; line-height: 1.25; }
+    .alert-tag { display: inline-flex; align-items: center; min-height: 18px; padding: 0 5px; border-radius: 5px; font-weight: 600; }
+    .alert-tag.is-danger { color: #c64e51; background: #fff0f0; }
+    .alert-tag.is-warning { color: #b77a19; background: #fff6e5; }
+    .alert-tag.is-info { color: #3f6dc8; background: #edf3ff; }
+    .alert-time { align-self: start; margin-top: 3px; color: #9ba8b8; font-size: 10px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+    .app-tabbar { position: absolute; z-index: 3; right: 0; bottom: 0; left: 0; padding: 8px 12px calc(11px + env(safe-area-inset-bottom)); display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid rgba(229, 235, 243, 0.95); background: rgba(255, 255, 255, 0.94); box-shadow: 0 -4px 16px rgba(30, 60, 98, 0.04); backdrop-filter: blur(16px); }
+    .app-tab { min-height: 48px; display: grid; justify-items: center; align-content: center; gap: 4px; color: #9aa5b4; background: transparent; font-size: 10px; }
+    .app-tab i { font-size: 17px; }
+    .app-tab.active { color: var(--app-blue); font-weight: 700; }
+    .app-tab:active, .icon-button:active, .quick-item:active, .alert-item:active { transform: scale(0.97); }
+
+    .simple-view { height: 100%; padding: 24px 18px; background: #f8fafc; }
+    .simple-view h1 { margin: 0; font-size: 23px; }
+    .simple-view p { margin: 8px 0 20px; color: var(--app-muted); font-size: 13px; line-height: 1.7; }
+    .simple-card { padding: 17px; border: 1px solid var(--app-line); border-radius: 13px; background: #fff; box-shadow: var(--soft-shadow); }
+    .simple-card strong { display: block; font-size: 14px; }
+    .simple-card span { display: block; margin-top: 8px; color: var(--app-muted); font-size: 12px; }
+
+    .toast { position: absolute; z-index: 10; left: 50%; bottom: 82px; max-width: calc(100% - 36px); padding: 9px 13px; border-radius: 999px; color: #fff; background: rgba(24, 36, 51, 0.88); font-size: 11px; opacity: 0; pointer-events: none; transform: translate(-50%, 8px); transition: opacity 180ms ease, transform 180ms ease; white-space: nowrap; }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+    :focus-visible { outline: 3px solid rgba(23, 105, 232, 0.33); outline-offset: 2px; }
+
+    @media (max-width: 480px) {
+      .prototype-stage { padding: 0; }
+      .iphone-shell { width: 100vw; min-height: 100dvh; padding: 0; border: 0; border-radius: 0; box-shadow: none; }
+      .iphone-shell::before { display: none; }
+      .iphone-screen { min-height: 100dvh; border-radius: 0; }
+      .dynamic-island { top: 12px; }
+      .ios-status-bar { height: 59px; padding-top: 16px; }
+      .screen-content { inset: 59px 0 0; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="prototype-stage">
+    <section class="iphone-shell" aria-label="工业小程序移动端原型">
+      <div class="iphone-screen">
+        <div class="dynamic-island" aria-hidden="true"></div>
+        <header class="ios-status-bar" aria-label="状态栏">
+          <span>9:41</span>
+          <span class="status-icons" aria-hidden="true"><i class="fa-solid fa-signal"></i><i class="fa-solid fa-wifi"></i><i class="fa-solid fa-battery-three-quarters"></i></span>
+        </header>
+
+        <div class="screen-content">
+          <section class="login-view" id="loginView" aria-labelledby="loginTitle">
+            <div class="brand-lockup"><span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></span><span class="brand-name">工业小程序</span></div>
+            <div class="login-heading">
+              <h1 id="loginTitle">欢迎回来</h1>
+              <p>登录移动端，随时掌握现场运行状态</p>
+            </div>
+
+            <form class="login-form" id="loginForm" novalidate>
+              <label class="field" id="accountField">
+                <span class="field-label">账号</span>
+                <span class="field-control"><i class="fa-regular fa-user" aria-hidden="true"></i><input id="accountInput" name="account" type="tel" inputmode="numeric" autocomplete="username" value="13800002026" placeholder="请输入账号"><span class="field-error" id="accountError"></span></span>
+              </label>
+              <label class="field" id="passwordField">
+                <span class="field-label">密码</span>
+                <span class="field-control"><i class="fa-solid fa-lock" aria-hidden="true"></i><input id="passwordInput" name="password" type="password" autocomplete="current-password" value="888888" placeholder="请输入密码"><button class="password-toggle" id="passwordToggle" type="button" aria-label="显示密码"><i class="fa-regular fa-eye" aria-hidden="true"></i></button><span class="field-error" id="passwordError"></span></span>
+              </label>
+              <p class="login-error" id="loginError" role="alert" aria-live="polite"></p>
+              <button class="login-button" id="loginButton" type="submit">登录</button>
+            </form>
+
+            <p class="demo-note"><i class="fa-solid fa-circle-info" aria-hidden="true"></i> 原型演示账号：13800002026　密码：888888</p>
+            <p class="login-foot">工业小程序 · 移动运维工作台</p>
+          </section>
+
+          <section class="home-view" id="homeView" aria-labelledby="homeTitle" hidden>
+            <div class="home-scroll" id="homeScroll">
+              <header class="home-header">
+                <div><h1 class="home-title" id="homeTitle" tabindex="-1">首页</h1><p class="home-subtitle">早上好，今天也高效完成工作</p></div>
+                <button class="icon-button" id="noticeButton" type="button" aria-label="查看告警通知"><i class="fa-regular fa-bell" aria-hidden="true"></i><span class="notice-dot" aria-hidden="true"></span></button>
+              </header>
+
+              <label class="search-bar" for="homeSearch"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><input id="homeSearch" type="search" placeholder="搜索设备、工单、功能" autocomplete="off"></label>
+
+              <article class="hero-banner" aria-label="工业管理平台介绍">
+                <h2>智能工业管理平台</h2>
+                <p>数字化 · 智能化 · 高效化</p>
+                <button class="hero-link" type="button" data-toast="平台能力介绍已打开">了解更多</button>
+              </article>
+
+              <div class="section-heading"><h2>数据概览</h2><button type="button" data-toast="已切换至今日数据">今日数据 <i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button></div>
+              <div class="metric-card" aria-label="今日数据概览">
+                <div class="metric"><span class="metric-label">设备总数</span><strong class="metric-value">256</strong><span class="metric-unit">台</span></div>
+                <div class="metric"><span class="metric-label">运行设备</span><strong class="metric-value">189</strong><span class="metric-unit">台</span></div>
+                <div class="metric is-danger"><span class="metric-label">告警设备</span><strong class="metric-value">12</strong><span class="metric-unit">台</span></div>
+                <div class="metric"><span class="metric-label">工单数量</span><strong class="metric-value">32</strong><span class="metric-unit">个</span></div>
+              </div>
+
+              <div class="section-heading"><h2>常用功能</h2><button type="button" data-toast="更多功能正在整理">全部 <i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button></div>
+              <div class="quick-grid">
+                <button class="quick-item" type="button" data-toast="设备管理已打开"><span class="quick-icon"><i class="fa-solid fa-briefcase" aria-hidden="true"></i></span><span>设备管理</span></button>
+                <button class="quick-item" type="button" data-toast="工单管理已打开"><span class="quick-icon"><i class="fa-solid fa-clipboard-list" aria-hidden="true"></i></span><span>工单管理</span></button>
+                <button class="quick-item" type="button" data-toast="巡检管理已打开"><span class="quick-icon"><i class="fa-solid fa-list-check" aria-hidden="true"></i></span><span>巡检管理</span></button>
+                <button class="quick-item" type="button" data-toast="告警管理已打开"><span class="quick-icon"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i></span><span>告警管理</span></button>
+                <button class="quick-item" type="button" data-toast="备件管理已打开"><span class="quick-icon"><i class="fa-solid fa-gear" aria-hidden="true"></i></span><span>备件管理</span></button>
+                <button class="quick-item" type="button" data-toast="数据报表已打开"><span class="quick-icon"><i class="fa-solid fa-chart-column" aria-hidden="true"></i></span><span>数据报表</span></button>
+                <button class="quick-item" type="button" data-toast="能耗管理已打开"><span class="quick-icon"><i class="fa-solid fa-bolt" aria-hidden="true"></i></span><span>能耗管理</span></button>
+                <button class="quick-item" type="button" data-toast="更多功能正在整理"><span class="quick-icon"><i class="fa-solid fa-grid-2" aria-hidden="true"></i></span><span>更多功能</span></button>
+              </div>
+
+              <div class="section-heading"><h2>告警信息</h2><button type="button" data-toast="已查看全部告警">查看全部 <i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button></div>
+              <div class="alert-list">
+                <button class="alert-item" type="button" data-toast="正在查看 1#生产线告警"><i class="alert-icon danger fa-solid fa-triangle-exclamation" aria-hidden="true"></i><span class="alert-copy"><span class="alert-title">1#生产线 · 主电机过载</span><span class="alert-meta"><span class="alert-tag is-danger">紧急</span><span>设备异常</span></span></span><span class="alert-time">10:30</span></button>
+                <button class="alert-item" type="button" data-toast="正在查看 2#空压机告警"><i class="alert-icon warning fa-solid fa-circle-exclamation" aria-hidden="true"></i><span class="alert-copy"><span class="alert-title">2#空压机 · 温度异常</span><span class="alert-meta"><span class="alert-tag is-warning">重要</span><span>需要巡检</span></span></span><span class="alert-time">09:45</span></button>
+                <button class="alert-item" type="button" data-toast="正在查看 3#风机告警"><i class="alert-icon info fa-solid fa-circle-info" aria-hidden="true"></i><span class="alert-copy"><span class="alert-title">3#风机 · 振动超限</span><span class="alert-meta"><span class="alert-tag is-info">提示</span><span>建议关注</span></span></span><span class="alert-time">08:15</span></button>
+              </div>
+            </div>
+
+            <div class="simple-view" id="simpleView" hidden>
+              <h1 id="simpleTitle" tabindex="-1">设备</h1>
+              <p id="simpleDescription">现场设备状态、运行数据和维护计划都将在这里汇总。</p>
+              <div class="simple-card"><strong>待处理事项</strong><span>当前有 12 台设备需要关注，返回首页查看最新告警。</span></div>
+            </div>
+
+            <nav class="app-tabbar" aria-label="移动端主导航">
+              <button class="app-tab active" type="button" data-tab="home"><i class="fa-solid fa-house" aria-hidden="true"></i><span>首页</span></button>
+              <button class="app-tab" type="button" data-tab="device"><i class="fa-solid fa-layer-group" aria-hidden="true"></i><span>设备</span></button>
+              <button class="app-tab" type="button" data-tab="work"><i class="fa-regular fa-rectangle-list" aria-hidden="true"></i><span>工单</span></button>
+              <button class="app-tab" type="button" data-tab="profile"><i class="fa-regular fa-user" aria-hidden="true"></i><span>我的</span></button>
+            </nav>
+            <div class="toast" id="toast" aria-live="polite"></div>
+          </section>
+        </div>
+        <div class="home-indicator" aria-hidden="true"></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      const TEST_ACCOUNT = "13800002026";
+      const TEST_PASSWORD = "888888";
+      const loginView = document.querySelector("#loginView");
+      const homeView = document.querySelector("#homeView");
+      const loginForm = document.querySelector("#loginForm");
+      const accountInput = document.querySelector("#accountInput");
+      const passwordInput = document.querySelector("#passwordInput");
+      const accountField = document.querySelector("#accountField");
+      const passwordField = document.querySelector("#passwordField");
+      const accountError = document.querySelector("#accountError");
+      const passwordError = document.querySelector("#passwordError");
+      const loginError = document.querySelector("#loginError");
+      const loginButton = document.querySelector("#loginButton");
+      const passwordToggle = document.querySelector("#passwordToggle");
+      const homeTitle = document.querySelector("#homeTitle");
+      const homeScroll = document.querySelector("#homeScroll");
+      const simpleView = document.querySelector("#simpleView");
+      const simpleTitle = document.querySelector("#simpleTitle");
+      const simpleDescription = document.querySelector("#simpleDescription");
+      const toast = document.querySelector("#toast");
+      let toastTimer;
+
+      const tabCopy = {
+        device: ["设备", "现场设备状态、运行数据和维护计划都将在这里汇总。"],
+        work: ["工单", "巡检、维修和保养任务将在这里按优先级排队。"],
+        profile: ["我的", "查看个人信息、消息设置和移动端使用帮助。"]
+      };
+
+      function clearFieldError(field, output) {
+        field.classList.remove("has-error");
+        output.textContent = "";
+      }
+
+      function showToast(message) {
+        window.clearTimeout(toastTimer);
+        toast.textContent = message;
+        toast.classList.add("show");
+        toastTimer = window.setTimeout(() => toast.classList.remove("show"), 2600);
+      }
+
+      function showHome() {
+        loginView.hidden = true;
+        homeView.hidden = false;
+        document.title = "工业小程序 - 首页";
+        homeTitle.focus({ preventScroll: true });
+      }
+
+      passwordToggle.addEventListener("click", () => {
+        const showing = passwordInput.type === "text";
+        passwordInput.type = showing ? "password" : "text";
+        passwordToggle.setAttribute("aria-label", showing ? "显示密码" : "隐藏密码");
+        passwordToggle.innerHTML = `<i class="fa-regular ${showing ? "fa-eye" : "fa-eye-slash"}" aria-hidden="true"></i>`;
+      });
+
+      accountInput.addEventListener("input", () => clearFieldError(accountField, accountError));
+      passwordInput.addEventListener("input", () => clearFieldError(passwordField, passwordError));
+
+      loginForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        clearFieldError(accountField, accountError);
+        clearFieldError(passwordField, passwordError);
+        loginError.textContent = "";
+
+        let valid = true;
+        if (!accountInput.value.trim()) {
+          accountField.classList.add("has-error");
+          accountError.textContent = "请输入账号";
+          valid = false;
+        }
+        if (!passwordInput.value) {
+          passwordField.classList.add("has-error");
+          passwordError.textContent = "请输入密码";
+          valid = false;
+        }
+        if (!valid) return;
+
+        if (accountInput.value.trim() !== TEST_ACCOUNT || passwordInput.value !== TEST_PASSWORD) {
+          loginError.textContent = "账号或密码错误，请检查后重试";
+          passwordField.classList.add("has-error");
+          passwordInput.focus();
+          return;
+        }
+
+        loginButton.disabled = true;
+        loginButton.textContent = "正在进入…";
+        window.setTimeout(() => {
+          loginButton.disabled = false;
+          loginButton.textContent = "登录";
+          showHome();
+        }, 420);
+      });
+
+      document.querySelectorAll("[data-toast]").forEach((element) => {
+        element.addEventListener("click", () => showToast(element.dataset.toast));
+      });
+
+      document.querySelector("#noticeButton").addEventListener("click", () => showToast("你有 12 条设备告警待处理"));
+
+      document.querySelector("#homeSearch").addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          const query = event.currentTarget.value.trim();
+          showToast(query ? `正在搜索：${query}` : "请输入设备、工单或功能名称");
+        }
+      });
+
+      document.querySelectorAll(".app-tab").forEach((tab) => {
+        tab.addEventListener("click", () => {
+          const tabKey = tab.dataset.tab;
+          document.querySelectorAll(".app-tab").forEach((item) => item.classList.toggle("active", item === tab));
+          const isHome = tabKey === "home";
+          homeScroll.hidden = !isHome;
+          simpleView.hidden = isHome;
+          if (isHome) {
+            homeTitle.focus({ preventScroll: true });
+          } else {
+            [simpleTitle.textContent, simpleDescription.textContent] = tabCopy[tabKey];
+            simpleTitle.focus({ preventScroll: true });
+          }
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

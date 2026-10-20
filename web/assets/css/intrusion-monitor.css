@@ -1,0 +1,222 @@
+/* 入侵报警监测：仅视图切换、列表/地图显隐、报警闪烁补充；布局复用 home-monitor / environment-quality */
+
+/* 盖过 .dm-root { display:flex }，否则 hidden 属性无效、两套视图叠在一起 */
+.ias-view-hidden,
+.ias-map-view[hidden],
+.ias-list-view[hidden],
+#eqMapView[hidden],
+#eqListView[hidden] {
+  display: none !important;
+}
+
+.ias-view-switch {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 10px 14px 0;
+  position: relative;
+  z-index: 2;
+}
+
+body.dm-page .main {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 切换条在 dm-root 外时，地图区吃剩余高度，避免把切换条顶出视口 */
+body.dm-page #iasMapView.dm-root,
+body.dm-page #eqMapView.dm-root {
+  flex: 1;
+  min-height: 0;
+  height: auto;
+}
+
+body.ias-list-mode .ias-view-switch {
+  padding: 0 0 12px;
+}
+
+.ias-view-tabs {
+  display: inline-flex;
+  height: 34px;
+  border: 1px solid #d8dee9;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: #fff;
+  flex-shrink: 0;
+}
+
+.ias-view-tabs button {
+  min-width: 96px;
+  height: 32px;
+  padding: 0 16px;
+  border: 0;
+  border-right: 1px solid #d8dee9;
+  color: var(--text-primary);
+  background: #fff;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.ias-view-tabs button:last-child { border-right: 0; }
+
+.ias-view-tabs button:hover {
+  color: var(--primary);
+  background: var(--primary-bg);
+}
+
+.ias-view-tabs button.is-active {
+  color: #fff;
+  background: var(--primary);
+}
+
+.ias-map-view,
+.ias-list-view { min-width: 0; }
+
+.ias-list-view .env-quality-side .dm-tabs {
+  margin: 0 12px 8px;
+}
+
+/*
+ * 列表模式：整页不纵向滚动；
+ * KPI / 左栏固定；右侧整块（.env-quality-main）纵向滚动。
+ */
+body.ias-list-mode .main {
+  display: flex;
+  flex-direction: column;
+  padding: 12px 24px 16px;
+  overflow: hidden;
+  min-height: 0;
+}
+
+body.ias-list-mode #iasListView,
+body.ias-list-mode #eqListView {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+body.ias-list-mode #iasListView .screen-frame,
+body.ias-list-mode #eqListView .screen-frame {
+  width: 100%;
+  margin: 0;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: hidden;
+}
+
+body.ias-list-mode .env-quality-kpi-grid {
+  flex: 0 0 auto;
+}
+
+body.ias-list-mode .env-quality-workspace {
+  flex: 1;
+  min-height: 0;
+  height: auto;
+  max-height: none;
+  overflow: hidden;
+  align-items: stretch;
+}
+
+body.ias-list-mode .env-quality-side.dm-panel {
+  min-height: 0;
+  height: 100%;
+  max-height: none;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+body.ias-list-mode .env-quality-side .dm-tree {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+/*
+ * 右侧红框区域（.env-quality-main）整体纵向滚动：
+ * 含筛选条 + 卡片网格 + 底栏；左侧树固定。
+ * 小卡片内部仍走环境质量的 .env-device-card-metrics 两排指标滚动，不要改掉。
+ */
+body.ias-list-mode .env-quality-main {
+  min-height: 0;
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+body.ias-list-mode .env-quality-scope-bar {
+  flex: 0 0 auto;
+}
+
+body.ias-list-mode #iasListIntrusion {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+}
+
+body.ias-list-mode #eqCardGrid {
+  flex: 0 0 auto;
+  overflow: visible;
+  align-content: start;
+}
+
+body.ias-list-mode .env-quality-card-foot {
+  flex: 0 0 auto;
+  margin-top: 8px;
+}
+
+body.ias-list-mode #iasListVideo {
+  display: block;
+  flex: 0 0 auto;
+  min-height: calc(100vh - 280px);
+  height: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: #fff;
+  overflow: hidden;
+}
+
+/*
+ * display:flex/block 会盖掉原生 [hidden]，导致切到「视频监控系统」后
+ * 入侵卡片/筛选条仍可见。与 .ias-view-hidden 同级强制隐藏。
+ */
+body.ias-list-mode #iasListIntrusion[hidden],
+body.ias-list-mode #iasListVideo[hidden],
+body.ias-list-mode #eqScopeFilters[hidden],
+body.ias-list-mode #eqStatusBar[hidden] {
+  display: none !important;
+}
+
+body.ias-list-mode #iasListVideo iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  border: 0;
+  background: #fff;
+}
+
+.ias-list-video {
+  min-height: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: #fff;
+  overflow: hidden;
+}
+
+/* 报警点脉冲（补充 home 的 is-fault） */
+.dm-marker.is-alarm {
+  animation: ias-alarm-pulse 1s ease-in-out infinite;
+}
+
+@keyframes ias-alarm-pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(245, 63, 87, 0.55), 0 2px 8px rgba(13, 46, 92, 0.3); }
+  50% { transform: scale(1.12); box-shadow: 0 0 0 10px rgba(245, 63, 87, 0), 0 2px 8px rgba(13, 46, 92, 0.3); }
+}

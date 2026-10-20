@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>网络拓扑 - 科学岛管廊监控中心</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/tob-ui.css">
+  <link rel="stylesheet" href="../../assets/css/service-center.css?v=3">
+  <link rel="stylesheet" href="../../assets/css/network.css">
+</head>
+<body class="service-center-page" data-menu-key="network.topology" data-page-section="网络管理" data-page-title="网络拓扑">
+  <div class="app-shell">
+    <aside id="app-sidebar" class="sidebar"></aside>
+    <header id="app-header" class="header"></header>
+    <main class="main">
+      <div class="screen-frame service-dashboard">
+        <section class="network-topo-layout">
+          <article class="network-topo-card">
+            <div class="card-head"><h2>服务器拓扑图</h2></div>
+            <div class="network-topo-stage">
+              <svg id="topoCanvas" viewBox="0 0 840 540" role="img" aria-label="服务器拓扑图"></svg>
+              <div class="network-topo-legend">
+                <span><i class="ok"></i>正常</span>
+                <span><i class="warn"></i>告警</span>
+                <span><i class="critical"></i>严重</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="network-monitor-card">
+            <div class="card-head"><h2>网管监控</h2></div>
+            <div class="network-monitor-body" id="monitorBody"></div>
+          </article>
+        </section>
+      </div>
+    </main>
+  </div>
+  <script src="../../../app/config/menu.js?v=nav-hide-1"></script>
+  <script src="../../../app/components/sidebar.js?v=nav-home-1"></script>
+  <script src="../../../app/components/header.js?v=nav-home-1"></script>
+  <script src="../../../app/components/drawer.js"></script>
+  <script src="../../../app/components/requirement.js"></script>
+  <script src="../../../app/data/network-data.js"></script>
+  <script>
+    let selectedId = "core";
+
+    function iconMark(icon) {
+      const map = {
+        "fa-network-wired": "⇄",
+        "fa-server": "▣",
+        "fa-database": "⛁",
+        "fa-shield-halved": "⛨",
+        "fa-hard-drive": "▭",
+        "fa-table-cells": "▦",
+      };
+      return map[icon] || "▣";
+    }
+
+    function renderTopo() {
+      const nodes = NETWORK_STORE.listTopologyNodes();
+      const links = NETWORK_STORE.listTopologyLinks();
+      const byId = Object.fromEntries(nodes.map((n) => [n.id, n]));
+      const linkHtml = links.map((l) => {
+        const a = byId[l[0]], b = byId[l[1]];
+        const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+        return `<line class="link-line ${l[2]}" x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}"/>
+          <circle class="link-dot" cx="${mx}" cy="${my}" r="3.5"/>`;
+      }).join("");
+      const nodeHtml = nodes.map((n) => {
+        const cls = n.status === "warn" ? "warn" : n.status === "critical" || n.status === "offline" ? "critical" : "online";
+        return `<g class="network-topo-node ${cls} ${n.id === selectedId ? "selected" : ""}" data-node-id="${n.id}" transform="translate(${n.x},${n.y})">
+          <rect class="node-card" x="-90" y="-38" width="180" height="76" rx="8"/>
+          <rect class="node-icon-bg" x="-76" y="-18" width="36" height="36" rx="8"/>
+          <text x="-58" y="6" text-anchor="middle" fill="#2167c7" font-size="16">${iconMark(n.icon)}</text>
+          <text class="node-name" x="24" y="-2">${n.name}</text>
+          <circle class="status-dot" cx="4" cy="18" r="4"/>
+          <text class="node-status" x="14" y="22">${n.statusText || n.status}</text>
+        </g>`;
+      }).join("");
+      document.getElementById("topoCanvas").innerHTML = linkHtml + nodeHtml;
+      document.querySelectorAll("[data-node-id]").forEach((el) => {
+        el.addEventListener("click", () => {
+          selectedId = el.dataset.nodeId;
+          renderTopo();
+        });
+      });
+    }
+
+    function trendChart(values, colorClass) {
+      const w = 220, h = 88;
+      const padL = 4, padR = 4, padT = 8, padB = 18;
+      const chartW = w - padL - padR;
+      const chartH = h - padT - padB;
+      const max = Math.max(...values, 1);
+      const pts = values.map((v, i) => {
+        const x = padL + (i / (values.length - 1)) * chartW;
+        const y = padT + chartH - (v / max) * chartH;
+        return [x, y];
+      });
+      const line = pts.map((p, i) => `${i ? "L" : "M"}${p[0]},${p[1]}`).join(" ");
+      const area = `${line} L${pts[pts.length - 1][0]},${padT + chartH} L${pts[0][0]},${padT + chartH} Z`;
+      return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+        <line class="axis-line" x1="${padL}" y1="${padT + chartH}" x2="${padL + chartW}" y2="${padT + chartH}"/>
+        <path class="area ${colorClass}" d="${area}"/>
+        <path class="line ${colorClass}" d="${line}"/>
+        <text class="axis-text" x="${padL}" y="${h - 4}">60秒</text>
+        <text class="axis-text" x="${padL + chartW}" y="${h - 4}" text-anchor="end">0</text>
+      </svg>`;
+    }
+
+    function renderMonitor() {
+      const m = NETWORK_STORE.getTopoMonitor();
+      const storageMeta = [
+        { countLabel: "照片数量", sizeLabel: "照片大小" },
+        { countLabel: "视频数量", sizeLabel: "视频大小" },
+        { countLabel: "文件数量", sizeLabel: "文件大小" },
+      ];
+      document.getElementById("monitorBody").innerHTML = `
+        <div class="network-monitor-row">
+          <div class="network-monitor-panel is-chart">
+            <div class="panel-head"><span class="label">CPU使用率</span><strong class="value cpu">${m.cpuUsage}%</strong></div>
+            <div class="network-monitor-chart">${trendChart(m.cpuTrend, "cpu")}</div>
+          </div>
+          <div class="network-monitor-panel is-chart">
+            <div class="panel-head"><span class="label">内存使用率</span><strong class="value mem">${m.memUsage}%</strong></div>
+            <div class="network-monitor-chart">${trendChart(m.memTrend, "mem")}</div>
+          </div>
+          <div class="network-monitor-panel is-chart">
+            <div class="panel-head"><span class="label">磁盘使用率</span><strong class="value disk">${m.diskUsage}%</strong></div>
+            <div class="network-monitor-chart">${trendChart(m.diskTrend, "disk")}</div>
+          </div>
+        </div>
+        <div class="network-monitor-row">
+          <div class="network-monitor-panel is-metric">
+            <span class="label">CPU核心数</span>
+            <strong class="value cpu">${m.cpuCores}</strong>
+          </div>
+          <div class="network-monitor-panel is-metric">
+            <span class="label">剩余内存情况</span>
+            <strong class="value sm">${m.memRemain}</strong>
+          </div>
+          <div class="network-monitor-panel is-metric">
+            <span class="label">剩余磁盘情况</span>
+            <strong class="value sm">${m.diskRemain}</strong>
+          </div>
+        </div>
+        <div class="network-monitor-row">
+          ${m.storages.map((s, i) => `
+            <div class="network-monitor-panel is-storage">
+              <span class="storage-title">${s.name}</span>
+              <div class="storage-cols">
+                <div><strong>${s.count}</strong><span>${storageMeta[i].countLabel}</span></div>
+                <div><strong>${s.size}</strong><span>${storageMeta[i].sizeLabel}</span></div>
+              </div>
+            </div>`).join("")}
+        </div>`;
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      renderTopo();
+      renderMonitor();
+    });
+  </script>
+</body>
+</html>

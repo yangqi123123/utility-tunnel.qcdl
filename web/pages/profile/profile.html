@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>个人中心 - 科学岛管廊监控中心</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/tob-ui.css">
+</head>
+<body data-menu-key="profile" data-page-section="账号管理" data-page-title="个人中心">
+  <div class="app-shell">
+    <aside id="app-sidebar" class="sidebar"></aside>
+    <header id="app-header" class="header"></header>
+
+    <main class="main">
+      <div class="screen-frame">
+        <section class="profile-grid">
+          <aside class="card profile-card" aria-label="个人资料">
+            <div class="profile-avatar-wrap">
+              <div class="profile-avatar">
+                <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></span>
+              </div>
+            </div>
+            <h1 class="profile-name">疯狂的狮子Li</h1>
+            <p class="profile-signature">无人争，将持牛同凉。</p>
+
+            <div class="profile-info">
+              <div class="profile-row"><span>账号：</span><strong>admin</strong></div>
+              <div class="profile-row"><span>手机号码：</span><strong>15888888888</strong></div>
+              <div class="profile-row"><span>邮箱：</span><strong>crazyLionLi@163.com</strong></div>
+              <div class="profile-row">
+                <span>部门：</span>
+                <span class="profile-tag-row">
+                  <span class="tag">研发部门</span>
+                  <span class="tag">董事长</span>
+                </span>
+              </div>
+              <div class="profile-row"><span>上次登录：</span><strong>2026-07-28 13:54:35</strong></div>
+            </div>
+          </aside>
+
+          <section class="card settings-card" aria-label="个人中心设置">
+            <div class="settings-tabs" role="tablist">
+              <button class="settings-tab active" type="button" data-profile-tab="basic">基本设置</button>
+              <button class="settings-tab" type="button" data-profile-tab="security">安全设置</button>
+            </div>
+
+            <div class="settings-body" data-profile-panel="basic">
+              <form class="profile-form">
+                <label class="profile-form-row">
+                  <span class="form-label"><i class="required-mark">*</i>昵称：</span>
+                  <span class="input-affix">
+                    <input class="form-control" value="疯狂的狮子Li">
+                    <i class="affix-icon fa-solid fa-circle-xmark" aria-hidden="true"></i>
+                  </span>
+                </label>
+
+                <label class="profile-form-row">
+                  <span class="form-label"><i class="required-mark">*</i>邮箱：</span>
+                  <span class="input-affix">
+                    <input class="form-control" value="crazyLionLi@163.com">
+                    <i class="affix-icon fa-solid fa-circle-xmark" aria-hidden="true"></i>
+                  </span>
+                </label>
+
+                <div class="profile-form-row">
+                  <span class="form-label"><i class="required-mark">*</i>性别：</span>
+                  <div class="segmented" role="group" aria-label="性别">
+                    <button class="active" type="button">男</button>
+                    <button type="button">女</button>
+                    <button type="button">未知</button>
+                  </div>
+                </div>
+
+                <label class="profile-form-row">
+                  <span class="form-label"><i class="required-mark">*</i>电话：</span>
+                  <span class="input-affix">
+                    <input class="form-control" value="15888888888">
+                    <i class="affix-icon fa-solid fa-circle-xmark" aria-hidden="true"></i>
+                  </span>
+                </label>
+
+                <div class="profile-form-row">
+                  <span></span>
+                  <button class="btn btn-primary" type="button">更新信息</button>
+                </div>
+              </form>
+            </div>
+
+            <div class="settings-body" data-profile-panel="security" hidden>
+              <form class="profile-form">
+                <label class="profile-form-row">
+                  <span class="form-label"><i class="required-mark">*</i>旧密码：</span>
+                  <span class="input-affix">
+                    <input class="form-control" type="password" placeholder="请输入">
+                    <button class="password-eye" type="button" aria-label="切换旧密码可见"><i class="fa-regular fa-eye"></i></button>
+                  </span>
+                </label>
+
+                <label class="profile-form-row">
+                  <span class="form-label"><i class="required-mark">*</i>新密码：</span>
+                  <span class="input-affix">
+                    <input class="form-control" type="password" placeholder="请输入">
+                    <button class="password-eye" type="button" aria-label="切换新密码可见"><i class="fa-regular fa-eye"></i></button>
+                  </span>
+                </label>
+
+                <label class="profile-form-row">
+                  <span class="form-label"><i class="required-mark">*</i>确认密码：</span>
+                  <span class="input-affix">
+                    <input class="form-control" type="password" placeholder="请输入">
+                    <button class="password-eye" type="button" aria-label="切换确认密码可见"><i class="fa-regular fa-eye"></i></button>
+                  </span>
+                </label>
+
+                <div class="profile-form-row">
+                  <span></span>
+                  <button class="btn btn-primary" type="button">修改密码</button>
+                </div>
+              </form>
+            </div>
+          </section>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="../../../app/config/menu.js?v=nav-hide-1"></script>
+  <script src="../../../app/components/sidebar.js?v=nav-home-1"></script>
+  <script src="../../../app/components/header.js?v=nav-home-1"></script>
+  <script src="../../../app/components/drawer.js"></script>
+  <script src="../../../app/components/requirement.js"></script>
+  <script>
+    document.querySelectorAll("[data-profile-tab]").forEach((tab) => {
+      tab.addEventListener("click", () => {
+        const key = tab.dataset.profileTab;
+        document.querySelectorAll("[data-profile-tab]").forEach((item) => item.classList.toggle("active", item === tab));
+        document.querySelectorAll("[data-profile-panel]").forEach((panel) => {
+          panel.hidden = panel.dataset.profilePanel !== key;
+        });
+      });
+    });
+
+    document.querySelectorAll(".segmented button").forEach((button) => {
+      button.addEventListener("click", () => {
+        button.parentElement.querySelectorAll("button").forEach((item) => item.classList.toggle("active", item === button));
+      });
+    });
+
+    document.querySelectorAll(".password-eye").forEach((button) => {
+      button.addEventListener("click", () => {
+        const input = button.parentElement.querySelector("input");
+        const visible = input.type === "text";
+        input.type = visible ? "password" : "text";
+        button.innerHTML = `<i class="fa-regular ${visible ? "fa-eye" : "fa-eye-slash"}"></i>`;
+      });
+    });
+  </script>
+</body>
+</html>
+
+
+
+
+
+

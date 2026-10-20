@@ -1,0 +1,626 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>电力状态监测 - 电力监测系统 - 科学岛管廊监控中心</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/tob-ui.css">
+  <link rel="stylesheet" href="../../assets/css/emergency.css">
+  <link rel="stylesheet" href="../../assets/css/environment-monitor.css">
+  <style>
+    .env-status-page .page-head { display: none; }
+    .env-status-filter .filter-actions {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(140px, 1fr)) auto;
+      gap: 16px;
+      align-items: end;
+    }
+    .device-detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 24px; }
+    .device-detail-grid .info-item { min-height: 56px; padding: 4px 0; }
+    .env-status-filter .extra-filter { display: none; }
+    .env-status-filter.expanded .extra-filter { display: block; }
+    .env-status-filter-actions {
+      display: flex;
+      align-items: end;
+      justify-content: flex-start;
+      gap: 8px;
+      min-height: 32px;
+    }
+    .env-status-view-card { overflow: hidden; }
+    .env-status-view-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 16px 24px 0;
+      margin-bottom: 12px;
+    }
+    .env-status-view-tabs {
+      display: inline-flex;
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .env-status-view-tab {
+      min-width: 96px;
+      height: 32px;
+      border: 0;
+      border-right: 1px solid var(--border);
+      background: #fff;
+      color: var(--text-secondary);
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .env-status-view-tab:last-child { border-right: 0; }
+    .env-status-view-tab.is-active {
+      background: var(--primary);
+      color: #fff;
+      font-weight: 600;
+    }
+    .env-status-period {
+      display: inline-flex;
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .env-status-period[hidden] { display: none !important; }
+    .env-status-period button {
+      min-width: 56px;
+      height: 28px;
+      border: 0;
+      border-right: 1px solid var(--border);
+      background: #fff;
+      color: var(--text-secondary);
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .env-status-period button:last-child { border-right: 0; }
+    .env-status-period button.is-active {
+      background: var(--primary);
+      color: #fff;
+      font-weight: 600;
+    }
+    .env-status-chart-wrap { padding: 0 24px 20px; }
+    .env-status-list-wrap { padding: 0 0 8px; }
+    .env-status-list-wrap[hidden],
+    .env-status-chart-wrap[hidden] { display: none !important; }
+    .env-status-table { min-width: 1100px; }
+    .env-status-table th,
+    .env-status-table td { white-space: nowrap; }
+    .env-status-table .device-name-cell { color: var(--text-title); font-weight: 400; }
+    .env-status-actions .table-action { margin-right: 14px; }
+    .env-status-actions .table-action:last-child { margin-right: 0; }
+    .env-status-page .analysis-chart-panel .emergency-panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 48px;
+      padding: 0 20px;
+      border-bottom: 1px solid var(--divider);
+    }
+    .env-status-page .analysis-chart-body.single {
+      padding: 16px 20px 20px;
+    }
+    .env-status-page .analysis-chart-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    @media (max-width: 1100px) {
+      .env-status-filter .filter-actions { grid-template-columns: repeat(2, minmax(140px, 1fr)); }
+      .env-status-filter-actions { grid-column: 1 / -1; }
+      .env-status-view-head { flex-wrap: wrap; }
+      .env-status-page .analysis-chart-grid { grid-template-columns: 1fr; }
+      .device-detail-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      .env-status-filter .filter-actions { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body class="environment-page env-status-page" data-menu-key="power-monitor.status" data-page-section="电力监测系统" data-page-title="电力状态监测">
+  <div class="app-shell">
+    <aside id="app-sidebar" class="sidebar"></aside>
+    <header id="app-header" class="header"></header>
+    <main class="main">
+      <div class="screen-frame stack">
+        <section class="env-quality-kpi-grid" id="statusKpis" aria-label="设备状态概览"></section>
+
+        <section class="card environment-filter-card env-status-filter" id="statusFilterCard">
+          <div class="filter-actions">
+            <label class="form-field">
+              <span class="form-label">设备类型</span>
+              <select class="form-control" data-filter="kind">
+                <option value="">全部类型</option>
+                <option value="ups">UPS</option>
+                <option value="cabinet">配电柜</option>
+                <option value="transformer">变压器</option>
+                <option value="meter">电表</option>
+              </select>
+            </label>
+            <label class="form-field">
+              <span class="form-label">设备名称</span>
+              <input class="form-control" data-filter="name" placeholder="请输入设备名称">
+            </label>
+            <label class="form-field">
+              <span class="form-label">设备编码</span>
+              <input class="form-control" data-filter="code" placeholder="请输入设备编码">
+            </label>
+            <label class="form-field extra-filter" data-filter-extra>
+              <span class="form-label">运行状态</span>
+              <select class="form-control" data-filter="runStatus">
+                <option value="">全部</option>
+                <option value="正常">正常</option>
+                <option value="预警">预警</option>
+                <option value="报警">报警</option>
+                <option value="故障">故障</option>
+                <option value="离线">离线</option>
+              </select>
+            </label>
+            <label class="form-field extra-filter" data-filter-extra>
+              <span class="form-label">所属管廊</span>
+              <input class="form-control" data-filter="corridor" placeholder="请输入管廊名称">
+            </label>
+            <div class="env-status-filter-actions">
+              <button class="btn btn-ghost" type="button" data-action="collapse"><span>展开</span> <i class="fa-solid fa-chevron-down"></i></button>
+              <button class="btn btn-secondary" type="button" data-action="reset">重置</button>
+              <button class="btn btn-primary" type="button" data-action="search">搜索</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="card env-status-view-card">
+          <div class="env-status-view-head">
+            <div class="env-status-view-tabs" role="tablist" aria-label="视图切换">
+              <button class="env-status-view-tab is-active" type="button" role="tab" aria-selected="true" data-view="chart">图表视图</button>
+              <button class="env-status-view-tab" type="button" role="tab" aria-selected="false" data-view="list">列表视图</button>
+            </div>
+            <div class="env-status-period" id="chartPeriod" role="group" aria-label="统计周期">
+              <button type="button" class="is-active" data-period="today">今日</button>
+              <button type="button" data-period="month">本月</button>
+              <button type="button" data-period="year">本年</button>
+            </div>
+          </div>
+
+          <div class="env-status-chart-wrap" id="chartView">
+            <section class="analysis-chart-grid">
+              <article class="analysis-chart-panel">
+                <div class="emergency-panel-head"><h2 class="emergency-panel-title">近24h环境指数变化趋势</h2></div>
+                <div class="analysis-chart-body single">
+                  <div class="analysis-chart-canvas-wrap" id="wrapEnvIndex"><canvas id="chartEnvIndex"></canvas></div>
+                </div>
+              </article>
+              <article class="analysis-chart-panel">
+                <div class="emergency-panel-head"><h2 class="emergency-panel-title">近24hUPS电压变化趋势</h2></div>
+                <div class="analysis-chart-body single">
+                  <div class="analysis-chart-canvas-wrap" id="wrapUpsVoltage"><canvas id="chartUpsVoltage"></canvas></div>
+                </div>
+              </article>
+              <article class="analysis-chart-panel">
+                <div class="emergency-panel-head"><h2 class="emergency-panel-title">近24hUPS电流变化趋势</h2></div>
+                <div class="analysis-chart-body single">
+                  <div class="analysis-chart-canvas-wrap" id="wrapUpsCurrent"><canvas id="chartUpsCurrent"></canvas></div>
+                </div>
+              </article>
+              <article class="analysis-chart-panel">
+                <div class="emergency-panel-head"><h2 class="emergency-panel-title">报警趋势分析</h2></div>
+                <div class="analysis-chart-body single">
+                  <div class="analysis-chart-canvas-wrap" id="wrapAlarmTrend"><canvas id="chartAlarmTrend"></canvas></div>
+                </div>
+              </article>
+            </section>
+          </div>
+
+          <div class="env-status-list-wrap" id="listView" hidden>
+            <div class="table-wrap">
+              <table class="table env-status-table" aria-label="电力状态监测列表">
+                <thead>
+                  <tr>
+                    <th>设备名称</th>
+                    <th>设备编码</th>
+                    <th>类型</th>
+                    <th>位置</th>
+                    <th>关键运行值</th>
+                    <th>负载率</th>
+                    <th>运行状态</th>
+                    <th>通信状态</th>
+                    <th>最后上报</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody id="deviceTableBody"></tbody>
+              </table>
+            </div>
+            <div class="environment-pagination" style="padding:0 24px 16px">
+              <span>共 <strong id="deviceRecordCount">0</strong> 条</span>
+              <span class="page-item active">1</span>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="../../../app/config/menu.js?v=nav-hide-1"></script>
+  <script src="../../../app/components/sidebar.js?v=nav-home-1"></script>
+  <script src="../../../app/components/header.js?v=nav-home-1"></script>
+  <script src="../../../app/components/drawer.js"></script>
+  <script src="../../../app/data/power-monitor-data.js"></script>
+  <script>
+    (function () {
+      const data = window.POWER_MONITOR_DATA;
+      if (!data) return;
+
+      const devices = data.statusDevices || [];
+      const charts = {};
+      const filterCard = document.getElementById("statusFilterCard");
+      const collapseButton = filterCard.querySelector('[data-action="collapse"]');
+
+      const KIND_LABEL = { ups: "UPS", cabinet: "配电柜", transformer: "变压器", meter: "电表" };
+
+      const state = {
+        view: "chart",
+        period: "today",
+        filters: { name: "", code: "", kind: "", runStatus: "", corridor: "" },
+      };
+
+      function esc(value) {
+        return String(value ?? "").replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+      }
+      function kindLabel(kind) {
+        return KIND_LABEL[kind] || kind || "-";
+      }
+      function locationText(item) {
+        return [item.corridor, item.room, item.section].filter(Boolean).join(" / ") || "-";
+      }
+      function commClass(comm) {
+        if (comm === "在线") return "normal";
+        if (comm === "离线") return "danger";
+        return "offline";
+      }
+      function runStatusClass(status) {
+        if (status === "正常") return "normal";
+        if (status === "预警") return "offline";
+        if (status === "报警" || status === "故障" || status === "离线") return "danger";
+        return "offline";
+      }
+
+      function filteredDevices() {
+        const f = state.filters;
+        const nameQ = f.name.toLowerCase();
+        const codeQ = f.code.toLowerCase();
+        const corridorQ = f.corridor.toLowerCase();
+        return devices.filter((item) =>
+          (!nameQ || (item.name || "").toLowerCase().includes(nameQ)) &&
+          (!codeQ || (item.code || "").toLowerCase().includes(codeQ)) &&
+          (!f.kind || item.kind === f.kind) &&
+          (!f.runStatus || item.runStatus === f.runStatus) &&
+          (!corridorQ || (item.corridor || "").toLowerCase().includes(corridorQ))
+        );
+      }
+
+      function destroyChart(id) {
+        if (charts[id]) { charts[id].destroy(); delete charts[id]; }
+      }
+      function showEmpty(wrapId, message) {
+        const wrap = document.getElementById(wrapId);
+        if (!wrap) return;
+        wrap.innerHTML = `<div class="analysis-empty">${esc(message || "暂无数据")}</div>`;
+      }
+      function ensureCanvas(wrapId, canvasId) {
+        const wrap = document.getElementById(wrapId);
+        if (!wrap) return null;
+        wrap.innerHTML = `<canvas id="${canvasId}"></canvas>`;
+        return document.getElementById(canvasId);
+      }
+      function renderChart(wrapId, canvasId, config) {
+        if (typeof window.Chart !== "function") {
+          showEmpty(wrapId, "图表组件未加载");
+          return;
+        }
+        const labels = config.data?.labels || [];
+        const values = (config.data?.datasets || []).flatMap((ds) => ds.data || []);
+        const total = values.reduce((sum, n) => sum + Number(n || 0), 0);
+        if (!labels.length || total === 0) {
+          destroyChart(canvasId);
+          showEmpty(wrapId, "暂无数据");
+          return;
+        }
+        const canvas = ensureCanvas(wrapId, canvasId);
+        if (!canvas) return;
+        destroyChart(canvasId);
+        const userOptions = config.options || {};
+        const userPlugins = userOptions.plugins || {};
+        charts[canvasId] = new window.Chart(canvas, {
+          ...config,
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: "nearest", intersect: false, ...(userOptions.interaction || {}) },
+            ...userOptions,
+            plugins: {
+              legend: {
+                position: "bottom",
+                labels: {
+                  usePointStyle: true,
+                  pointStyle: "rect",
+                  boxWidth: 10,
+                  boxHeight: 10,
+                  font: { size: 11 },
+                },
+              },
+              tooltip: {
+                enabled: true,
+                displayColors: true,
+                backgroundColor: "rgba(26,28,31,.88)",
+                titleFont: { size: 12 },
+                bodyFont: { size: 12 },
+                padding: 10,
+                cornerRadius: 4,
+              },
+              ...userPlugins,
+            },
+          },
+        });
+      }
+
+      function solidLegend() {
+        return {
+          position: "top",
+          align: "end",
+          labels: {
+            usePointStyle: true,
+            pointStyle: "rect",
+            boxWidth: 10,
+            boxHeight: 10,
+            font: { size: 11 },
+          },
+        };
+      }
+
+      function lineDefaults(color) {
+        return {
+          tension: 0.35,
+          fill: false,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          borderWidth: 2,
+          borderColor: color,
+          backgroundColor: color,
+          pointBackgroundColor: color,
+          pointBorderColor: color,
+        };
+      }
+
+      function renderCharts() {
+        const series = (window.POWER_MONITOR_DATA && window.POWER_MONITOR_DATA.chartSeries) || {};
+        const env = series.envIndex || { labels: [], temperature: [], humidity: [] };
+        const volt = series.upsVoltage || { labels: [], phaseA: [], phaseB: [], phaseC: [] };
+        const curr = series.upsCurrent || { labels: [], phaseA: [], phaseB: [], phaseC: [] };
+        const trendKey = state.period === "month" ? "month" : state.period === "year" ? "year" : "today";
+        const alarm = (series.alarmTrend && series.alarmTrend[trendKey]) || { labels: [], values: [] };
+
+        renderChart("wrapEnvIndex", "chartEnvIndex", {
+          type: "line",
+          data: {
+            labels: env.labels,
+            datasets: [
+              { label: "温度", data: env.temperature, ...lineDefaults("#F77234") },
+              { label: "湿度", data: env.humidity, ...lineDefaults("#135AFA") },
+            ],
+          },
+          options: {
+            plugins: { legend: solidLegend() },
+            scales: { y: { min: 0, max: 100, ticks: { stepSize: 25 } } },
+          },
+        });
+
+        renderChart("wrapUpsVoltage", "chartUpsVoltage", {
+          type: "line",
+          data: {
+            labels: volt.labels,
+            datasets: [
+              { label: "A相电压", data: volt.phaseA, ...lineDefaults("#F77234") },
+              { label: "B相电压", data: volt.phaseB, ...lineDefaults("#135AFA") },
+              { label: "C相电压", data: volt.phaseC, ...lineDefaults("#8B5CF6") },
+            ],
+          },
+          options: {
+            plugins: { legend: solidLegend() },
+            scales: { y: { min: 0, max: 100, ticks: { stepSize: 25 } } },
+          },
+        });
+
+        renderChart("wrapUpsCurrent", "chartUpsCurrent", {
+          type: "line",
+          data: {
+            labels: curr.labels,
+            datasets: [
+              { label: "A相电流", data: curr.phaseA, ...lineDefaults("#F77234") },
+              { label: "B相电流", data: curr.phaseB, ...lineDefaults("#135AFA") },
+              { label: "C相电流", data: curr.phaseC, ...lineDefaults("#8B5CF6") },
+            ],
+          },
+          options: {
+            plugins: { legend: solidLegend() },
+            scales: { y: { min: 0, max: 100, ticks: { stepSize: 25 } } },
+          },
+        });
+
+        renderChart("wrapAlarmTrend", "chartAlarmTrend", {
+          type: "line",
+          data: {
+            labels: alarm.labels,
+            datasets: [{
+              label: "告警数",
+              data: alarm.values,
+              borderColor: "#F53F57",
+              backgroundColor: "#F53F57",
+              pointBackgroundColor: "#F53F57",
+              pointRadius: 3,
+              tension: 0.35,
+              fill: false,
+            }],
+          },
+          options: {
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+          },
+        });
+      }
+
+      function renderKpis() {
+        const total = devices.length;
+        const online = devices.filter((d) => d.comm === "在线").length;
+        const offline = devices.filter((d) => d.comm === "离线" || d.runStatus === "离线").length;
+        const warn = devices.filter((d) => d.runStatus === "预警").length;
+        const cards = [
+          ["设备总数", total, "fa-solid fa-bolt", "is-blue"],
+          ["在线", online, "fa-solid fa-signal", "is-green"],
+          ["离线", offline, "fa-solid fa-plug-circle-xmark", "is-red"],
+          ["预警", warn, "fa-solid fa-triangle-exclamation", "is-amber"],
+        ];
+        document.getElementById("statusKpis").innerHTML = cards.map(([label, value, icon, tone]) => `
+          <article class="analysis-kpi ${tone}">
+            <div class="analysis-kpi-icon"><i class="${icon}"></i></div>
+            <div class="analysis-kpi-body">
+              <span class="analysis-kpi-label">${esc(label)}</span>
+              <strong class="analysis-kpi-value">${esc(value)}</strong>
+            </div>
+          </article>
+        `).join("");
+      }
+
+      function renderTable(list) {
+        document.getElementById("deviceRecordCount").textContent = list.length;
+        document.getElementById("deviceTableBody").innerHTML = list.map((item) => `
+          <tr data-device-id="${esc(item.id)}">
+            <td><span class="device-name-cell">${esc(item.name)}</span></td>
+            <td>${esc(item.code)}</td>
+            <td>${esc(kindLabel(item.kind))}</td>
+            <td>${esc(locationText(item))}</td>
+            <td>${esc(item.primaryMetric || "-")}</td>
+            <td>${esc(item.loadRate || "-")}</td>
+            <td><span class="env-status ${runStatusClass(item.runStatus)}">${esc(item.runStatus || "-")}</span></td>
+            <td><span class="env-status ${commClass(item.comm)}">${esc(item.comm || "-")}</span></td>
+            <td>${esc(item.lastSeen || "-")}</td>
+            <td class="env-status-actions">
+              <button class="table-action" type="button" data-open-detail="${esc(item.id)}">详情</button>
+            </td>
+          </tr>
+        `).join("") || `<tr><td colspan="10" class="empty-state">当前筛选条件下暂无设备记录</td></tr>`;
+      }
+
+      function syncFilters() {
+        document.querySelectorAll("[data-filter]").forEach((field) => {
+          state.filters[field.dataset.filter] = field.value.trim();
+        });
+      }
+
+      function setView(view) {
+        state.view = view;
+        document.querySelectorAll("[data-view]").forEach((btn) => {
+          const active = btn.dataset.view === view;
+          btn.classList.toggle("is-active", active);
+          btn.setAttribute("aria-selected", active ? "true" : "false");
+        });
+        document.getElementById("chartView").hidden = view !== "chart";
+        document.getElementById("listView").hidden = view !== "list";
+        document.getElementById("chartPeriod").hidden = view !== "chart";
+        if (view === "chart") renderCharts();
+        if (view === "list") renderTable(filteredDevices());
+      }
+
+      function setPeriod(period) {
+        state.period = period;
+        document.querySelectorAll("[data-period]").forEach((btn) => {
+          btn.classList.toggle("is-active", btn.dataset.period === period);
+        });
+        if (state.view === "chart") renderCharts();
+      }
+
+      function render() {
+        renderKpis();
+        if (state.view === "chart") renderCharts();
+        else renderTable(filteredDevices());
+      }
+
+      function infoItem(label, text) {
+        return `<div class="info-item"><span class="info-label">${esc(label)}</span><span class="info-value">${esc(text || "-")}</span></div>`;
+      }
+
+      function openDetail(id) {
+        const item = devices.find((entry) => entry.id === id);
+        if (!item || !window.openAppDrawer) return;
+        const body = `
+          <div class="device-detail">
+            <div class="device-detail-grid">
+                ${infoItem("设备名称", item.name)}
+                ${infoItem("设备编码", item.code)}
+                ${infoItem("设备类型", kindLabel(item.kind))}
+                ${infoItem("关键运行值", item.primaryMetric)}
+                ${infoItem("负载率", item.loadRate)}
+                ${infoItem("运行状态", item.runStatus)}
+                ${infoItem("通信状态", item.comm)}
+                ${infoItem("所属管廊", item.corridor)}
+                ${infoItem("所属舱室", item.room)}
+                ${infoItem("所属区段", item.section)}
+                ${infoItem("安装位置", locationText(item))}
+                ${infoItem("最后上报", item.lastSeen)}
+            </div>
+          </div>
+        `;
+        window.openAppDrawer({
+          title: "设备详情",
+          body,
+          footer: `<button class="btn btn-secondary" type="button" data-drawer-close>关闭</button>`,
+        });
+      }
+
+      document.addEventListener("click", (event) => {
+        const viewBtn = event.target.closest("[data-view]");
+        if (viewBtn) {
+          setView(viewBtn.dataset.view);
+          return;
+        }
+
+        const periodBtn = event.target.closest("[data-period]");
+        if (periodBtn) {
+          setPeriod(periodBtn.dataset.period);
+          return;
+        }
+
+        const action = event.target.closest("[data-action]")?.dataset.action;
+        if (action === "collapse") {
+          const expanded = filterCard.classList.toggle("expanded");
+          collapseButton.querySelector("span").textContent = expanded ? "收起" : "展开";
+          collapseButton.querySelector("i").className = expanded ? "fa-solid fa-chevron-up" : "fa-solid fa-chevron-down";
+          return;
+        }
+        if (action === "search") {
+          syncFilters();
+          render();
+          return;
+        }
+        if (action === "reset") {
+          document.querySelectorAll("[data-filter]").forEach((field) => { field.value = ""; });
+          state.filters = { name: "", code: "", kind: "", runStatus: "", corridor: "" };
+          render();
+          return;
+        }
+        const detailId = event.target.closest("[data-open-detail]")?.dataset.openDetail;
+        if (detailId) openDetail(detailId);
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" && event.target.matches("[data-filter]")) {
+          syncFilters();
+          render();
+        }
+      });
+
+      renderKpis();
+      setView("chart");
+    })();
+  </script>
+</body>
+</html>

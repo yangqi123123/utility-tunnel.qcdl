@@ -1,0 +1,124 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>风险预警分析 - 科学岛管廊监控中心</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/tob-ui.css">
+  <link rel="stylesheet" href="../../assets/css/emergency.css">
+</head>
+<body class="emergency-page" data-menu-key="emergency.risks" data-page-section="应急管理系统" data-page-title="风险预警分析">
+  <div class="app-shell"><aside id="app-sidebar" class="sidebar"></aside><header id="app-header" class="header"></header>
+    <main class="main"><div class="screen-frame emergency-stack">
+      <section class="page-head emergency-page-head">
+        <div>
+          <h1 class="page-title">风险预警分析</h1>
+          <p class="page-desc">基于应急各模块数据的统计分析总览（只读）。</p>
+        </div>
+      </section>
+
+      <section class="emergency-panel analysis-filter-panel">
+        <div class="analysis-filter-row" id="analysisFilters">
+          <label class="form-field"><span class="form-label">时间范围</span>
+            <select class="form-control" id="analysisRange">
+              <option value="7">近7天</option>
+              <option value="30" selected>近30天</option>
+              <option value="90">近90天</option>
+              <option value="custom">自定义</option>
+            </select>
+          </label>
+          <label class="form-field custom-range"><span class="form-label">开始日期</span><input class="form-control" id="analysisStart" type="date"></label>
+          <label class="form-field custom-range"><span class="form-label">结束日期</span><input class="form-control" id="analysisEnd" type="date"></label>
+          <label class="form-field"><span class="form-label">所属项目</span>
+            <select class="form-control" id="analysisProject" data-location-level="project"><option value="">全部项目</option></select>
+          </label>
+          <label class="form-field"><span class="form-label">所属管廊</span>
+            <select class="form-control" id="analysisCorridor" data-location-level="corridor" disabled><option value="">请先选择所属项目</option></select>
+          </label>
+          <label class="form-field"><span class="form-label">所属舱室</span>
+            <select class="form-control" id="analysisRoom" data-location-level="room" disabled><option value="">请先选择所属管廊</option></select>
+          </label>
+          <label class="form-field"><span class="form-label">所属区段</span>
+            <select class="form-control" id="analysisSection" data-location-level="section" disabled><option value="">请先选择所属舱室</option></select>
+          </label>
+          <label class="form-field"><span class="form-label">所属管线</span>
+            <select class="form-control" id="analysisPipeline" data-location-level="pipeline" disabled><option value="">请先选择所属区段</option></select>
+          </label>
+          <div class="filter-actions">
+            <button class="btn btn-primary" type="button" data-analysis-action="query">查询</button>
+            <button class="btn btn-secondary" type="button" data-analysis-action="reset">重置</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="emergency-metric-grid analysis-kpi-grid" id="riskAnalysisKpis"></section>
+
+      <section class="analysis-chart-grid">
+        <article class="analysis-chart-panel">
+          <div class="emergency-panel-head"><h2 class="emergency-panel-title">风险类型分析</h2></div>
+          <div class="analysis-chart-body">
+            <div class="analysis-chart-canvas-wrap" id="wrapRiskLevel"><canvas id="chartRiskLevel"></canvas></div>
+            <div class="analysis-chart-canvas-wrap" id="wrapRiskTrend"><canvas id="chartRiskTrend"></canvas></div>
+          </div>
+          <div class="analysis-mini-metrics" id="miniRisk" style="padding:0 20px 16px"></div>
+        </article>
+
+        <article class="analysis-chart-panel">
+          <div class="emergency-panel-head"><h2 class="emergency-panel-title">应急事件分析</h2></div>
+          <div class="analysis-chart-body">
+            <div class="analysis-chart-canvas-wrap" id="wrapEventStatus"><canvas id="chartEventStatus"></canvas></div>
+            <div class="analysis-chart-canvas-wrap" id="wrapEventLevel"><canvas id="chartEventLevel"></canvas></div>
+          </div>
+          <div class="analysis-mini-metrics" id="miniEvent" style="padding:0 20px 16px"></div>
+        </article>
+
+        <article class="analysis-chart-panel">
+          <div class="emergency-panel-head"><h2 class="emergency-panel-title">应急物资分析</h2></div>
+          <div class="analysis-chart-body">
+            <div class="analysis-chart-canvas-wrap" id="wrapResourceCategory"><canvas id="chartResourceCategory"></canvas></div>
+            <div class="analysis-chart-canvas-wrap" id="wrapResourceWarehouse"><canvas id="chartResourceWarehouse"></canvas></div>
+          </div>
+          <div class="analysis-mini-metrics" id="miniResource" style="padding:0 20px 16px"></div>
+        </article>
+
+        <article class="analysis-chart-panel">
+          <div class="emergency-panel-head"><h2 class="emergency-panel-title">应急人员分析</h2></div>
+          <div class="analysis-chart-body">
+            <div class="analysis-chart-canvas-wrap" id="wrapPersonnelType"><canvas id="chartPersonnelType"></canvas></div>
+            <div class="analysis-chart-canvas-wrap" id="wrapPersonnelDispatch"><canvas id="chartPersonnelDispatch"></canvas></div>
+          </div>
+          <div class="analysis-mini-metrics" id="miniPersonnel" style="padding:0 20px 16px"></div>
+        </article>
+
+        <article class="analysis-chart-panel">
+          <div class="emergency-panel-head"><h2 class="emergency-panel-title">应急预案分析</h2></div>
+          <div class="analysis-chart-body">
+            <div class="analysis-chart-canvas-wrap" id="wrapPlanType"><canvas id="chartPlanType"></canvas></div>
+            <div class="analysis-chart-canvas-wrap" id="wrapPlanEnabled"><canvas id="chartPlanEnabled"></canvas></div>
+          </div>
+          <div class="analysis-mini-metrics" id="miniPlan" style="padding:0 20px 16px"></div>
+        </article>
+
+        <article class="analysis-chart-panel">
+          <div class="emergency-panel-head"><h2 class="emergency-panel-title">通话记录分析</h2></div>
+          <div class="analysis-chart-body">
+            <div class="analysis-chart-canvas-wrap" id="wrapCallTrend"><canvas id="chartCallTrend"></canvas></div>
+            <div class="analysis-chart-canvas-wrap" id="wrapCallResult"><canvas id="chartCallResult"></canvas></div>
+          </div>
+          <div class="analysis-mini-metrics" id="miniCall" style="padding:0 20px 16px"></div>
+        </article>
+      </section>
+    </div></main>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="../../../app/config/menu.js?v=nav-hide-1"></script>
+  <script src="../../../app/data/work-order-data.js"></script>
+  <script src="../../../app/data/emergency-data.js"></script>
+  <script src="../../../app/components/sidebar.js?v=nav-home-1"></script>
+  <script src="../../../app/components/header.js?v=nav-home-1"></script>
+  <script src="../../../app/components/drawer.js"></script>
+  <script src="../../../app/components/requirement.js"></script>
+  <script src="../../../app/components/emergency-common.js"></script>
+  <script src="../../../app/components/emergency-risk-analysis.js"></script>
+</body>
+</html>

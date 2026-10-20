@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>联动记录 - 联动管理系统 - 科学岛管廊监控中心</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/tob-ui.css">
+  <link rel="stylesheet" href="../../assets/css/environment-monitor.css">
+  <style>
+    .linkage-page .page-head { display: none; }
+    .linkage-filter-card { padding: 16px 24px; }
+    .linkage-filter-card .filter-actions {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(150px, 1fr)) auto;
+      gap: 16px;
+      align-items: end;
+    }
+    .linkage-filter-card .extra-filter { display: none; }
+    .linkage-filter-card.expanded .extra-filter { display: block; }
+    .linkage-filter-actions {
+      display: flex;
+      align-items: end;
+      justify-content: flex-start;
+      gap: 8px;
+      min-height: 32px;
+    }
+    .linkage-list-card { overflow: hidden; }
+    .linkage-toolbar { padding: 16px 24px 0; margin-bottom: 12px; }
+    .linkage-toolbar .btn-row { flex-wrap: wrap; justify-content: flex-end; }
+    .linkage-table { min-width: 1280px; }
+    .linkage-table th,
+    .linkage-table td { white-space: nowrap; }
+    .linkage-name-cell { color: var(--text-title); font-weight: 600; }
+    .linkage-devices {
+      display: inline-block;
+      max-width: 180px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      vertical-align: bottom;
+      cursor: default;
+    }
+    .linkage-actions .table-action { margin-right: 0; }
+    .linkage-detail-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px 24px;
+      margin-bottom: 20px;
+    }
+    .linkage-detail-table { min-width: 980px; }
+    .drawer:has(.linkage-detail) { width: min(860px, 94vw); }
+    @media (max-width: 1100px) {
+      .linkage-filter-card .filter-actions { grid-template-columns: repeat(2, minmax(150px, 1fr)); }
+      .linkage-filter-actions { grid-column: 1 / -1; }
+    }
+    @media (max-width: 640px) {
+      .linkage-filter-card .filter-actions,
+      .linkage-detail-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body class="environment-page linkage-page" data-menu-key="linkage.records" data-page-section="联动管理系统" data-page-title="联动记录">
+  <div class="app-shell">
+    <aside id="app-sidebar" class="sidebar"></aside>
+    <header id="app-header" class="header"></header>
+    <main class="main">
+      <div class="screen-frame stack">
+        <section class="env-quality-kpi-grid" id="linkageKpis" aria-label="联动记录概览"></section>
+
+        <section class="card linkage-filter-card" id="linkageFilterCard">
+          <div class="filter-actions">
+            <label class="form-field">
+              <span class="form-label">联动系统</span>
+              <select class="form-control" data-filter="system">
+                <option value="">全部系统</option>
+              </select>
+            </label>
+            <label class="form-field">
+              <span class="form-label">联动名称</span>
+              <input class="form-control" data-filter="name" placeholder="请输入联动名称">
+            </label>
+            <label class="form-field">
+              <span class="form-label">联动编号</span>
+              <input class="form-control" data-filter="code" placeholder="请输入联动编号">
+            </label>
+            <label class="form-field">
+              <span class="form-label">联动类型</span>
+              <select class="form-control" data-filter="type">
+                <option value="">全部类型</option>
+                <option value="自动处置">自动处置</option>
+                <option value="跨系统协同">跨系统协同</option>
+              </select>
+            </label>
+            <label class="form-field extra-filter" data-filter-extra>
+              <span class="form-label">执行结果</span>
+              <select class="form-control" data-filter="result">
+                <option value="">全部结果</option>
+                <option value="成功">成功</option>
+                <option value="部分成功">部分成功</option>
+                <option value="失败">失败</option>
+              </select>
+            </label>
+            <label class="form-field extra-filter" data-filter-extra>
+              <span class="form-label">开始时间</span>
+              <input class="form-control" type="date" data-filter="from">
+            </label>
+            <label class="form-field extra-filter" data-filter-extra>
+              <span class="form-label">结束时间</span>
+              <input class="form-control" type="date" data-filter="to">
+            </label>
+            <div class="linkage-filter-actions">
+              <button class="btn btn-ghost" type="button" data-action="collapse"><span>展开</span> <i class="fa-solid fa-chevron-down"></i></button>
+              <button class="btn btn-secondary" type="button" data-action="reset">重置</button>
+              <button class="btn btn-primary" type="button" data-action="search">搜索</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="card linkage-list-card">
+          <div class="card-title-row linkage-toolbar">
+            <h1 class="card-title">联动记录</h1>
+            <div class="btn-row">
+              <button class="btn btn-secondary" type="button" data-action="sync-linkage"><i class="fa-solid fa-arrows-rotate"></i> 同步联动记录</button>
+              <button class="btn btn-secondary" type="button" data-action="export"><i class="fa-solid fa-download"></i> 导出联动记录</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="table linkage-table" aria-label="联动记录列表">
+              <thead>
+                <tr>
+                  <th>联动名称</th>
+                  <th>联动编号</th>
+                  <th>联动类型</th>
+                  <th>联动系统</th>
+                  <th>联动设备</th>
+                  <th>执行结果</th>
+                  <th>联动开始时间</th>
+                  <th>联动结束时间</th>
+                  <th>发送时间</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="linkageTableBody"></tbody>
+            </table>
+          </div>
+          <div class="pagination" style="padding:12px 24px 16px">
+            <span>共 <strong id="recordCount">0</strong> 条，每页显示 10 条</span>
+            <span class="page-item active">1</span>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+  <script src="../../../app/config/menu.js?v=nav-hide-1"></script>
+  <script src="../../../app/components/sidebar.js?v=nav-home-1"></script>
+  <script src="../../../app/components/header.js?v=nav-home-1"></script>
+  <script src="../../../app/components/drawer.js"></script>
+  <script src="../../../app/components/requirement.js"></script>
+  <script src="../../../app/data/linkage-data.js"></script>
+  <script src="../../../app/components/linkage-records.js"></script>
+</body>
+</html>

@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>音频资源 - 科学岛管廊监控中心</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/tob-ui.css">
+  <link rel="stylesheet" href="../../assets/css/communication.css">
+</head>
+<body class="monitoring-page communication-page communication-device-page" data-menu-key="communication.resources" data-page-section="通信系统" data-page-title="音频资源">
+  <div class="app-shell">
+    <aside id="app-sidebar" class="sidebar"></aside>
+    <header id="app-header" class="header"></header>
+    <main class="main">
+      <div class="screen-frame stack communication-shell">
+        <section class="card communication-tab-card">
+          <div class="resource-tabs">
+            <button class="resource-tab active" type="button" data-tab="music">音频资源</button>
+            <button class="resource-tab" type="button" data-tab="tts">TTS语音引擎</button>
+          </div>
+        </section>
+
+        <div class="resource-panel active" data-panel="music">
+          <section class="card communication-device-filter">
+            <div class="communication-device-filter-grid communication-resource-filter-grid">
+              <label class="form-field"><span class="form-label">音频名称</span><input class="form-control" data-music-filter placeholder="请输入"></label>
+              <label class="form-field"><span class="form-label">所属媒体库</span>
+                <select class="form-control" data-music-dir>
+                  <option value="">请选择</option>
+                  <option>默认媒体库</option>
+                  <option>消防宣传库</option>
+                </select>
+              </label>
+              <div class="communication-device-filter-actions">
+                <button class="btn btn-secondary" type="button" data-action="reset-music">重置</button>
+                <button class="btn btn-primary" type="button" data-action="search-music">搜索</button>
+              </div>
+            </div>
+          </section>
+          <section class="card communication-device-list-card">
+            <div class="card-title-row device-toolbar">
+              <h1 class="card-title">音频资源</h1>
+              <div class="btn-row">
+                <button class="btn btn-secondary" type="button" data-action="sync-music"><i class="fa-solid fa-arrows-rotate"></i> 同步资源</button>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table class="table device-table communication-device-table">
+                <thead>
+                  <tr>
+                    <th>音频名称</th>
+                    <th>音频ID</th>
+                    <th>所属媒体库</th>
+                    <th>音频时长</th>
+                    <th>来源</th>
+                    <th>最后同步时间</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody id="musicBody"></tbody>
+              </table>
+            </div>
+            <div class="pagination"><span>共 <strong id="musicCount">0</strong> 条记录，每页 10 条</span><span class="page-item active">1</span></div>
+          </section>
+        </div>
+
+        <div class="resource-panel" data-panel="tts">
+          <section class="card communication-device-filter">
+            <div class="communication-device-filter-grid communication-resource-filter-grid communication-tts-filter-grid">
+              <label class="form-field"><span class="form-label">引擎名称</span><input class="form-control" data-tts-filter placeholder="请输入"></label>
+              <div class="communication-device-filter-actions">
+                <button class="btn btn-secondary" type="button" data-action="reset-tts">重置</button>
+                <button class="btn btn-primary" type="button" data-action="search-tts">搜索</button>
+              </div>
+            </div>
+          </section>
+          <section class="card communication-device-list-card">
+            <div class="card-title-row device-toolbar">
+              <h1 class="card-title">TTS语音引擎</h1>
+              <div class="btn-row">
+                <button class="btn btn-secondary" type="button" data-action="sync-tts"><i class="fa-solid fa-arrows-rotate"></i> 同步引擎</button>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table class="table device-table communication-device-table">
+                <thead>
+                  <tr>
+                    <th>引擎名称</th>
+                    <th>EngineIndex</th>
+                    <th>第三方引擎名称</th>
+                    <th>状态</th>
+                    <th>默认引擎</th>
+                    <th>最后同步时间</th>
+                  </tr>
+                </thead>
+                <tbody id="ttsBody"></tbody>
+              </table>
+            </div>
+            <div class="pagination"><span>共 <strong id="ttsCount">0</strong> 条记录，每页 10 条</span><span class="page-item active">1</span></div>
+          </section>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="../../../app/config/menu.js?v=comm-c2-2"></script>
+  <script src="../../../app/components/sidebar.js?v=nav-home-1"></script>
+  <script src="../../../app/components/header.js?v=nav-home-1"></script>
+  <script src="../../../app/components/drawer.js"></script>
+  <script src="../../../app/components/requirement.js"></script>
+  <script>
+    const music = [
+      ["消防宣传.mp3", 23, "默认媒体库", "03:20"],
+      ["物业通知.mp3", 24, "默认媒体库", "02:18"],
+      ["国歌.mp3", 25, "消防宣传库", "04:12"],
+    ];
+    const engines = [
+      ["普通话女声", 0, "Microsoft Huihui Desktop - Chinese (Simplified)", "是"],
+      ["普通话男声", 1, "Microsoft Kangkang Desktop - Chinese (Simplified)", "否"],
+    ];
+    const esc = (v) => String(v ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+    function renderMusic(list = music) {
+      musicBody.innerHTML = list.map((x) => `<tr>
+        <td>${esc(x[0])}</td><td>${x[1]}</td><td>${esc(x[2])}</td><td>${esc(x[3])}</td>
+        <td>第三方广播平台</td><td>2026-09-24 09:20:11</td>
+        <td class="device-actions"><button class="table-action" type="button" data-preview>试听</button></td>
+      </tr>`).join("");
+      musicCount.textContent = list.length;
+    }
+    function renderTts(list = engines) {
+      ttsBody.innerHTML = list.map((x) => `<tr>
+        <td>${esc(x[0])}</td><td>${x[1]}</td><td>${esc(x[2])}</td>
+        <td><span class="tag success">启用</span></td><td>${esc(x[3])}</td><td>2026-09-24 09:20:12</td>
+      </tr>`).join("");
+      ttsCount.textContent = list.length;
+    }
+    document.addEventListener("click", (e) => {
+      const tab = e.target.closest("[data-tab]");
+      if (tab) {
+        document.querySelectorAll("[data-tab]").forEach((x) => x.classList.toggle("active", x === tab));
+        document.querySelectorAll("[data-panel]").forEach((x) => x.classList.toggle("active", x.dataset.panel === tab.dataset.tab));
+      }
+      const a = e.target.closest("[data-action]")?.dataset.action;
+      if (a === "reset-music") {
+        document.querySelector("[data-music-filter]").value = "";
+        document.querySelector("[data-music-dir]").value = "";
+        renderMusic();
+      }
+      if (a === "search-music") {
+        const n = document.querySelector("[data-music-filter]").value;
+        const d = document.querySelector("[data-music-dir]").value;
+        renderMusic(music.filter((x) => (!n || x[0].includes(n)) && (!d || x[2] === d)));
+      }
+      if (a === "reset-tts") {
+        document.querySelector("[data-tts-filter]").value = "";
+        renderTts();
+      }
+      if (a === "search-tts") {
+        const n = document.querySelector("[data-tts-filter]").value;
+        renderTts(engines.filter((x) => !n || x[0].includes(n)));
+      }
+      if (a === "sync-music") window.openAppConfirm?.({ title: "同步资源", message: "已同步服务器音频列表。", confirmText: "知道了" });
+      if (a === "sync-tts") window.openAppConfirm?.({ title: "同步引擎", message: "已同步 TTS 语音引擎。", confirmText: "知道了" });
+      if (e.target.closest("[data-preview]")) window.openAppConfirm?.({ title: "试听", message: "试听任务已发送到当前选中的终端。", confirmText: "知道了" });
+    });
+    renderMusic();
+    renderTts();
+  </script>
+</body>
+</html>

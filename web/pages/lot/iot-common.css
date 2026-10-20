@@ -1,0 +1,73 @@
+/* Shared IoT page extension styles aligned with the enterprise admin shell. */
+:root { --nav: #ffffff; --nav2: #eaf0ff; --ink: #1a1c1f; --muted: #86909c; --line: #e5eaf3; --bg: #f5f7fc; --panel: #ffffff; --blue: #135afa; --blue-soft: #f3f6ff; }
+.app { min-height: 100vh; background: var(--bg); }
+.sidebar { width: 222.88px; flex-basis: 222.88px; background: #fff; color: #50565d; border-right: 1px solid var(--line); }
+.brand { height: 58px; padding: 0 12px; color: #135afa; border-bottom-color: var(--line); font-size: 16px; }
+.brand-mark { width: 34px; height: 34px; border-radius: 4px; font-size: 12px; }
+.nav { padding: 16px 0; }
+.nav-label { padding: 12px 24px 6px; color: #86909c; letter-spacing: 0; }
+.nav-item { min-height: 40px; margin: 0; border-radius: 0; color: #50565d; }
+.nav-item:hover, .nav-item.active { color: var(--blue); background: var(--blue-soft); }
+.nav-item.active { box-shadow: inset -4px 0 var(--blue); }
+.sidebar-foot { color: #86909c; border-top-color: var(--line); }
+.topbar { height: 58px; padding: 0 24px; }
+.content { padding: 24px; }
+.page-head h1 { font-size: 22px; }
+.button { border-radius: 2px; }
+.panel, .stat { border-radius: 4px; border-color: var(--line); box-shadow: 0 8px 24px rgba(19,90,250,.04); }
+.panel-head { min-height: 56px; }
+.drawer { border-left: 1px solid var(--line); }
+.drawer-head { padding: 16px 24px; }
+.drawer-head h2 { font-size: 16px; }
+html, body { min-height: 100%; }
+body { overflow-x: hidden; }
+.main { min-width: 0; min-height: 100vh; overflow: auto; }
+.content { width: 100%; max-width: none; }
+.layout { min-width: 0; }
+.panel, .stat { min-width: 0; }
+.table-wrap { max-width: 100%; overflow-x: auto; }
+.lot-filter-card { display:flex; align-items:flex-end; gap:16px; padding:16px 24px !important; margin:0 0 16px; border:1px solid var(--line); }
+.lot-filter-fields { flex:1 1 auto; min-width:0; display:grid; grid-template-columns:repeat(4,minmax(140px,1fr)); gap:16px; }
+.lot-filter-fields .form-field { min-width:0; }
+.lot-filter-fields .form-label { display:block; margin-bottom:8px; color:var(--muted); font-size:13px; }
+.lot-filter-controls { display:flex; align-items:flex-end; gap:8px; flex:0 0 auto; }
+.lot-filter-controls .button, .lot-action-row .button { height:32px; padding:0 16px; border-radius:2px; font-size:14px; }
+.lot-action-row { display:flex; align-items:center; justify-content:space-between; min-height:56px; padding:12px 24px !important; margin:0 0 16px; border:1px solid var(--line); }
+.lot-action-title { color:var(--ink); font-size:16px; font-weight:600; }
+.lot-action-actions { display:flex; align-items:center; gap:8px; }
+.panel-head > .lot-action-actions { margin-left:auto; }
+.panel-head > span { margin-left:auto; margin-right:16px; }
+.lot-action-actions .button.primary { color:#fff; background:var(--blue); border-color:var(--blue); }
+.lot-action-actions .button:not(.primary) { color:#50565d; background:#fff; border:1px solid #d8dee9; }
+.table-action { height:32px; padding:0 8px; border:0; border-radius:2px; color:var(--blue); background:transparent; font-size:14px; cursor:pointer; }
+.table-action:hover { color:#2f6bff; background:var(--blue-soft); }
+.stat { position:relative; min-height:142px; padding:20px !important; overflow:hidden; }
+.stat::after { content:""; position:absolute; right:-24px; top:-28px; width:120px; height:120px; background:linear-gradient(135deg,rgba(19,90,250,.12),rgba(20,201,186,.05)); transform:rotate(24deg); pointer-events:none; }
+.stat-top, .stat-value, .stat-note { position:relative; z-index:1; }
+@media (max-width: 900px) { .lot-filter-card { align-items:stretch; flex-direction:column; }.lot-filter-fields { grid-template-columns:repeat(2,minmax(140px,1fr)); }.lot-filter-controls { justify-content:flex-end; } }
+@media (max-width: 540px) { .lot-filter-fields { grid-template-columns:1fr; }.lot-action-row { align-items:flex-start; flex-direction:column; gap:12px; }.lot-action-actions { width:100%; flex-wrap:wrap; } }
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: none;
+  overflow: hidden;
+}
+.drawer-backdrop.open { display: block; }
+.drawer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: min(560px, 90vw);
+  height: 100%;
+  max-height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  transform: none;
+  transition: none;
+}
+.drawer-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+.drawer-foot { flex: 0 0 auto; }
+@media (max-width: 900px) { .sidebar { width: 64px; flex-basis: 64px; } }

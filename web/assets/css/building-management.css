@@ -1,0 +1,36 @@
+.building-page .screen-frame { max-width: 1680px; }
+.building-filters .filter-field-extra { display: none; }
+.building-filters.is-expanded .filter-field-extra { display: block; }
+/* 筛选区：一行默认最多 4 个条件，超出折叠，逻辑对齐设备管理页 */
+.building-filters .filter-actions { display: grid; grid-template-columns: repeat(4, minmax(150px, 1fr)) auto auto auto; gap: 16px; align-items: end; }
+.building-filters .filter-actions > .btn { align-self: end; }
+.building-filters .filter-actions > .btn[data-action="collapse"] { white-space: nowrap; }
+@media (max-width: 1100px) { .building-filters .filter-actions { grid-template-columns: repeat(2, minmax(150px, 1fr)) auto auto; } .building-filters .filter-actions > .btn[data-action="collapse"] { grid-column: 1; } }
+@media (max-width: 640px) { .building-filters .filter-actions { grid-template-columns: 1fr; } .building-filters .filter-actions > .btn[data-action="collapse"] { grid-column: auto; } }
+.building-list-card { overflow: hidden; }
+.building-toolbar { min-height: 56px; padding: 0 24px; }
+.building-toolbar .card-title { margin: 0; }
+.building-table { min-width: 1180px; }
+.building-table th, .building-table td { white-space: nowrap; }
+.building-table th:last-child, .building-table td:last-child { min-width: 190px; }
+.building-page .table-actions-sticky th:last-child, .building-page .table-actions-sticky td:last-child { position: sticky; right: 0; z-index: 2; background: #fff; box-shadow: -8px 0 16px rgba(26,28,31,.06); }
+.building-page .table-actions-sticky th:last-child { background: var(--primary-bg); }
+.building-page .table-actions-sticky tbody tr:hover td:last-child { background: #f7f9ff; }
+.icon-btn { width: 32px; height: 32px; border: 1px solid var(--border); border-radius: 50%; display: inline-grid; place-items: center; color: var(--text-primary); background: #fff; cursor: pointer; }
+.icon-btn:hover { color: var(--primary); border-color: var(--primary); background: var(--primary-bg); }
+.building-page .icon-btn { display: none; }
+.upload-box { min-height: 116px; border: 1px dashed #b8c6dc; border-radius: 4px; display: grid; place-items: center; align-content: center; gap: 6px; color: var(--text-secondary); text-align: center; }
+.upload-box i { font-size: 24px; color: var(--primary); }
+.upload-box p, .upload-box small { margin: 0; }
+.upload-box small { font-size: 12px; }
+.drawer-upload-box { min-height: 96px; }
+.drawer-upload-name { margin-top: 6px; color: var(--text-primary); font-size: 12px; word-break: break-all; }
+.detail-text { margin: 0; color: var(--text-primary); line-height: 1.7; }
+.textarea-count-wrap { position: relative; display: block; }
+.textarea-count-wrap .textarea { padding-bottom: 24px; }
+.textarea-count-wrap .field-count { position: absolute; right: 12px; bottom: 8px; margin: 0; line-height: 16px; pointer-events: none; }
+@media (max-width: 720px) { .building-toolbar { align-items: flex-start; flex-direction: column; gap: 12px; padding: 16px; } .building-toolbar .btn-row { flex-wrap: wrap; } }
+/* 跨页跳转带入的项目筛选提示条 */
+.filter-tip { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; padding: 8px 12px; border: 1px solid var(--primary); border-radius: 4px; background: var(--primary-bg); color: var(--text-primary); font-size: 13px; }
+.filter-tip > span { min-width: 0; }
+.filter-tip .btn-ghost { flex: 0 0 auto; }

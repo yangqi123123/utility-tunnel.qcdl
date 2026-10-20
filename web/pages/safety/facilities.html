@@ -1,0 +1,602 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>安全设施台账 - 科学岛管廊监控中心</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/tob-ui.css">
+</head>
+<body data-menu-key="safety.facilities" data-page-section="安全管理" data-page-title="安全设施台账">
+  <div class="app-shell">
+    <aside id="app-sidebar" class="sidebar"></aside>
+    <header id="app-header" class="header"></header>
+    <main class="main">
+      <div class="screen-frame stack">
+        <section class="page-head">
+          <div>
+            <h1 class="page-title">安全设施台账</h1>
+            <p class="page-desc">消防等安全设施一物一档，跟踪有效期与维保临期，临期可生成风险预警。</p>
+          </div>
+        </section>
+        <div class="tabs tab-row">
+          <button type="button" class="tab active" data-tab="basic">基础信息</button>
+          <button type="button" class="tab" data-tab="maintain">维保临期</button>
+        </div>
+
+        <div data-panel="basic">
+          <section class="metric-grid" id="basicMetrics"></section>
+          <section class="card filters">
+            <div class="filter-grid basic-filters">
+              <label class="form-field"><span class="form-label">关键词</span><input class="form-control" data-basic-filter="keyword" placeholder="编号、名称或位置"></label>
+              <label class="form-field"><span class="form-label">设施类别</span><select class="form-control" data-basic-filter="category"><option value="">全部类别</option></select></label>
+              <label class="form-field"><span class="form-label">所属区段</span><select class="form-control" data-basic-filter="area"><option value="">全部区段</option></select></label>
+              <label class="form-field"><span class="form-label">管理单位</span><select class="form-control" data-basic-filter="manageUnit"><option value="">全部单位</option></select></label>
+              <label class="form-field"><span class="form-label">有效状态</span><select class="form-control" data-basic-filter="dueState"><option value="">全部状态</option><option>正常</option><option>临期</option><option>超期</option></select></label>
+              <div class="filter-actions">
+                <button class="btn btn-secondary" type="button" data-action="basic-reset">重置</button>
+                <button class="btn btn-primary" type="button" data-action="basic-search">查询</button>
+              </div>
+            </div>
+          </section>
+          <section class="card">
+            <div class="card-title-row safety-toolbar">
+              <div><h2 class="card-title">设施列表</h2></div>
+              <button class="btn btn-primary" type="button" data-action="create"><i class="fa-solid fa-plus"></i> 新增设施</button>
+            </div>
+            <div class="table-wrap">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>设施编号</th>
+                    <th>类别</th>
+                    <th>名称</th>
+                    <th>位置</th>
+                    <th>管理单位</th>
+                    <th>生产日期</th>
+                    <th>有效期</th>
+                    <th>状态</th>
+                    <th>临期状态</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody id="basicBody"></tbody>
+              </table>
+            </div>
+            <div class="pagination">
+              <span>共 <strong id="basicCount">0</strong> 条，每页 10 条</span>
+              <span class="page-item disabled">‹</span>
+              <span class="page-item active">1</span>
+              <span class="page-item disabled">›</span>
+            </div>
+          </section>
+        </div>
+
+        <div data-panel="maintain" hidden>
+          <section class="metric-grid" id="maintainMetrics"></section>
+          <section class="card filters">
+            <div class="filter-grid maintain-filters">
+              <label class="form-field"><span class="form-label">关键词</span><input class="form-control" data-maintain-filter="keyword" placeholder="编号或名称"></label>
+              <label class="form-field"><span class="form-label">设施类别</span><select class="form-control" data-maintain-filter="category"><option value="">全部类别</option></select></label>
+              <label class="form-field"><span class="form-label">临期状态</span><select class="form-control" data-maintain-filter="dueState"><option value="">全部状态</option><option>正常</option><option>临期</option><option>超期</option></select></label>
+              <label class="form-field"><span class="form-label">下次检查起</span><input class="form-control" type="date" data-maintain-filter="nextFrom"></label>
+              <label class="form-field"><span class="form-label">下次检查止</span><input class="form-control" type="date" data-maintain-filter="nextTo"></label>
+              <div class="filter-actions">
+                <button class="btn btn-secondary" type="button" data-action="maintain-reset">重置</button>
+                <button class="btn btn-primary" type="button" data-action="maintain-search">查询</button>
+              </div>
+            </div>
+          </section>
+          <section class="card">
+            <div class="card-title-row safety-toolbar">
+              <div><h2 class="card-title">维保临期列表</h2></div>
+            </div>
+            <div class="table-wrap">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>设施编号</th>
+                    <th>名称</th>
+                    <th>类别</th>
+                    <th>上次维保</th>
+                    <th>下次检查</th>
+                    <th>有效期</th>
+                    <th>临期状态</th>
+                    <th>责任人</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody id="maintainBody"></tbody>
+              </table>
+            </div>
+            <div class="pagination">
+              <span>共 <strong id="maintainCount">0</strong> 条，每页 10 条</span>
+              <span class="page-item disabled">‹</span>
+              <span class="page-item active">1</span>
+              <span class="page-item disabled">›</span>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../../../app/config/menu.js?v=nav-hide-1"></script>
+  <script src="../../../app/data/emergency-data.js"></script>
+  <script src="../../../app/components/sidebar.js?v=nav-home-1"></script>
+  <script src="../../../app/components/header.js?v=nav-home-1"></script>
+  <script src="../../../app/components/drawer.js"></script>
+  <script>
+(function () {
+  "use strict";
+
+  const STORE_KEY = "safety.facilities";
+  const SUBTITLE = "安全管理 · 安全设施台账";
+  const CATEGORIES = ["灭火器", "消火栓", "消防水带", "防火门", "应急照明"];
+  const MS_DAY = 86400000;
+
+  const seed = [
+    {
+      facilityId: "FAC-001", code: "MF-东段-012", category: "灭火器", name: "东段舱室干粉灭火器",
+      location: "东段 K0+120 消防箱", area: "东段", manageUnit: "运营维保部",
+      manufactureDate: "2023-06-01", expireDate: "2026-10-28", lastMaintainAt: "2026-04-10",
+      nextCheckAt: "2026-10-25", status: "在用", owner: "李维保", remark: "临期演示数据",
+    },
+    {
+      facilityId: "FAC-002", code: "XH-中段-008", category: "消火栓", name: "中段室内消火栓",
+      location: "中段 K1+050 消火栓箱", area: "中段", manageUnit: "消防管理组",
+      manufactureDate: "2021-03-15", expireDate: "2026-09-01", lastMaintainAt: "2025-12-20",
+      nextCheckAt: "2026-09-15", status: "在用", owner: "王消防", remark: "超期演示数据",
+    },
+    {
+      facilityId: "FAC-003", code: "SD-西段-003", category: "消防水带", name: "西段消防水带卷盘",
+      location: "西段 K2+200 消防柜", area: "西段", manageUnit: "运营维保部",
+      manufactureDate: "2024-01-10", expireDate: "2028-01-10", lastMaintainAt: "2026-08-01",
+      nextCheckAt: "2027-02-01", status: "在用", owner: "赵巡检", remark: "",
+    },
+    {
+      facilityId: "FAC-004", code: "FM-东段-021", category: "防火门", name: "东段舱室防火门",
+      location: "东段舱室分隔门", area: "东段", manageUnit: "安全管理部",
+      manufactureDate: "2022-08-20", expireDate: "2030-08-20", lastMaintainAt: "2026-09-01",
+      nextCheckAt: "2027-03-01", status: "在用", owner: "陈安全", remark: "",
+    },
+    {
+      facilityId: "FAC-005", code: "ZM-中段-015", category: "应急照明", name: "中段应急照明灯组",
+      location: "中段人员出入口", area: "中段", manageUnit: "机电运维组",
+      manufactureDate: "2023-11-05", expireDate: "2027-11-05", lastMaintainAt: "2026-10-01",
+      nextCheckAt: "2026-11-01", status: "在用", owner: "刘机电", remark: "临期检查窗口",
+    },
+    {
+      facilityId: "FAC-006", code: "MF-西段-004", category: "灭火器", name: "西段备用灭火器",
+      location: "西段物资间", area: "西段", manageUnit: "运营维保部",
+      manufactureDate: "2020-05-01", expireDate: "2025-05-01", lastMaintainAt: "2025-01-10",
+      nextCheckAt: "2025-06-01", status: "停用", owner: "李维保", remark: "已停用待更换",
+    },
+  ];
+
+  let data = load();
+  let activeTab = "basic";
+
+  const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const todayStr = () => new Date().toISOString().slice(0, 10);
+  const byId = (id) => data.find((x) => String(x.facilityId) === String(id));
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length) return parsed;
+      }
+    } catch (_) { /* ignore */ }
+    localStorage.setItem(STORE_KEY, JSON.stringify(seed));
+    return seed.map((x) => ({ ...x }));
+  }
+
+  function persist() {
+    localStorage.setItem(STORE_KEY, JSON.stringify(data));
+  }
+
+  function dueState(item, today = new Date()) {
+    const expire = item.expireDate ? new Date(item.expireDate) : null;
+    const next = item.nextCheckAt ? new Date(item.nextCheckAt) : null;
+    const days = (d) => (d && !Number.isNaN(d.getTime()) ? Math.ceil((d - today) / MS_DAY) : Infinity);
+    const d = Math.min(days(expire), days(next));
+    if (d < 0) return "超期";
+    if (d <= 30) return "临期";
+    return "正常";
+  }
+
+  function dueTag(state) {
+    const tone = state === "超期" ? "danger" : state === "临期" ? "warning" : "success";
+    return `<span class="tag ${tone}">${esc(state)}</span>`;
+  }
+
+  function statusTag(status) {
+    const tone = status === "在用" ? "success" : status === "停用" ? "danger" : "warning";
+    return `<span class="tag ${tone}">${esc(status || "-")}</span>`;
+  }
+
+  function toast(msg) {
+    let el = document.getElementById("facilityToast");
+    if (!el) {
+      el = document.createElement("div");
+      el.id = "facilityToast";
+      el.className = "facility-toast";
+      document.body.appendChild(el);
+    }
+    el.textContent = msg;
+    el.classList.add("show");
+    clearTimeout(toast.timer);
+    toast.timer = setTimeout(() => el.classList.remove("show"), 2200);
+  }
+
+  function fillSelect(selector, values) {
+    document.querySelectorAll(selector).forEach((select) => {
+      const current = select.value;
+      const options = values.map((v) => `<option value="${esc(v)}">${esc(v)}</option>`).join("");
+      const first = select.querySelector("option")?.outerHTML || '<option value="">全部</option>';
+      select.innerHTML = first + options;
+      select.value = current;
+    });
+  }
+
+  function refreshFilterOptions() {
+    fillSelect('[data-basic-filter="category"], [data-maintain-filter="category"]', [...new Set(data.map((x) => x.category).filter(Boolean))]);
+    fillSelect('[data-basic-filter="area"]', [...new Set(data.map((x) => x.area).filter(Boolean))]);
+    fillSelect('[data-basic-filter="manageUnit"]', [...new Set(data.map((x) => x.manageUnit).filter(Boolean))]);
+  }
+
+  function basicFiltered() {
+    const f = Object.fromEntries([...document.querySelectorAll("[data-basic-filter]")].map((el) => [el.dataset.basicFilter, el.value.trim()]));
+    return data.filter((i) => {
+      const keyword = `${i.code || ""} ${i.name || ""} ${i.location || ""} ${i.facilityId || ""}`;
+      const state = dueState(i);
+      return (!f.keyword || keyword.includes(f.keyword))
+        && (!f.category || i.category === f.category)
+        && (!f.area || i.area === f.area)
+        && (!f.manageUnit || i.manageUnit === f.manageUnit)
+        && (!f.dueState || state === f.dueState);
+    });
+  }
+
+  function maintainFiltered() {
+    const f = Object.fromEntries([...document.querySelectorAll("[data-maintain-filter]")].map((el) => [el.dataset.maintainFilter, el.value.trim()]));
+    return data.filter((i) => {
+      const keyword = `${i.code || ""} ${i.name || ""} ${i.facilityId || ""}`;
+      const state = dueState(i);
+      const next = i.nextCheckAt || "";
+      return (!f.keyword || keyword.includes(f.keyword))
+        && (!f.category || i.category === f.category)
+        && (!f.dueState || state === f.dueState)
+        && (!f.nextFrom || next >= f.nextFrom)
+        && (!f.nextTo || next <= f.nextTo);
+    });
+  }
+
+  function renderBasicMetrics() {
+    const total = data.length;
+    const inUse = data.filter((x) => x.status === "在用").length;
+    const dueSoon = data.filter((x) => dueState(x) === "临期").length;
+    const overdue = data.filter((x) => dueState(x) === "超期").length;
+    const disabled = data.filter((x) => x.status === "停用").length;
+    document.getElementById("basicMetrics").innerHTML = [
+      ["设施总数", total, "primary"],
+      ["在用", inUse, "success"],
+      ["临期", dueSoon, "warning"],
+      ["超期", overdue, "danger"],
+      ["停用", disabled, "purple"],
+    ].map(([a, b, c]) => `<div class="metric-card"><span>${a}</span><strong class="${c}">${b}</strong><small>一物一档台账</small></div>`).join("");
+  }
+
+  function renderMaintainMetrics() {
+    const now = new Date();
+    const in7 = data.filter((x) => {
+      const expire = x.expireDate ? new Date(x.expireDate) : null;
+      const next = x.nextCheckAt ? new Date(x.nextCheckAt) : null;
+      const days = (d) => (d && !Number.isNaN(d.getTime()) ? Math.ceil((d - now) / MS_DAY) : Infinity);
+      const d = Math.min(days(expire), days(next));
+      return d >= 0 && d <= 7;
+    }).length;
+    const overdue = data.filter((x) => dueState(x) === "超期").length;
+    const monthPrefix = todayStr().slice(0, 7);
+    const maintained = data.filter((x) => (x.lastMaintainAt || "").startsWith(monthPrefix)).length;
+    const pending = data.filter((x) => {
+      const state = dueState(x);
+      return x.status === "在用" && (state === "临期" || state === "超期" || !x.nextCheckAt);
+    }).length;
+    document.getElementById("maintainMetrics").innerHTML = [
+      ["7 日内临期", in7, "warning"],
+      ["已超期", overdue, "danger"],
+      ["本月已维保", maintained, "success"],
+      ["待检查", pending, "primary"],
+    ].map(([a, b, c]) => `<div class="metric-card"><span>${a}</span><strong class="${c}">${b}</strong><small>维保临期跟踪</small></div>`).join("");
+  }
+
+  function renderBasic() {
+    const rows = basicFiltered();
+    document.getElementById("basicCount").textContent = rows.length;
+    document.getElementById("basicBody").innerHTML = rows.length ? rows.map((i) => {
+      const state = dueState(i);
+      return `<tr>
+        <td>${esc(i.code || i.facilityId)}</td>
+        <td>${esc(i.category || "-")}</td>
+        <td><strong>${esc(i.name)}</strong></td>
+        <td>${esc(i.location || "-")}</td>
+        <td>${esc(i.manageUnit || "-")}</td>
+        <td>${esc(i.manufactureDate || "-")}</td>
+        <td>${esc(i.expireDate || "-")}</td>
+        <td>${statusTag(i.status)}</td>
+        <td>${dueTag(state)}</td>
+        <td>
+          <button class="table-action" type="button" data-row="detail" data-id="${esc(i.facilityId)}">详情</button>
+          <button class="table-action" type="button" data-row="edit" data-id="${esc(i.facilityId)}">编辑</button>
+          ${i.status !== "停用" ? `<button class="table-action" type="button" data-row="disable" data-id="${esc(i.facilityId)}">停用</button>` : ""}
+        </td>
+      </tr>`;
+    }).join("") : `<tr><td colspan="10" class="empty-cell">暂无设施数据</td></tr>`;
+    renderBasicMetrics();
+  }
+
+  function renderMaintain() {
+    const rows = maintainFiltered();
+    document.getElementById("maintainCount").textContent = rows.length;
+    document.getElementById("maintainBody").innerHTML = rows.length ? rows.map((i) => {
+      const state = dueState(i);
+      return `<tr>
+        <td>${esc(i.code || i.facilityId)}</td>
+        <td><strong>${esc(i.name)}</strong></td>
+        <td>${esc(i.category || "-")}</td>
+        <td>${esc(i.lastMaintainAt || "-")}</td>
+        <td>${esc(i.nextCheckAt || "-")}</td>
+        <td>${esc(i.expireDate || "-")}</td>
+        <td>${dueTag(state)}</td>
+        <td>${esc(i.owner || "-")}</td>
+        <td>
+          <button class="table-action" type="button" data-row="maintain" data-id="${esc(i.facilityId)}">登记维保</button>
+          <button class="table-action" type="button" data-row="set-next" data-id="${esc(i.facilityId)}">设置下次检查</button>
+          <button class="table-action" type="button" data-risk data-id="${esc(i.facilityId)}">生成风险预警</button>
+        </td>
+      </tr>`;
+    }).join("") : `<tr><td colspan="9" class="empty-cell">暂无维保数据</td></tr>`;
+    renderMaintainMetrics();
+  }
+
+  function renderAll() {
+    refreshFilterOptions();
+    renderBasic();
+    renderMaintain();
+  }
+
+  function switchTab(tab) {
+    activeTab = tab;
+    document.querySelectorAll("[data-tab]").forEach((btn) => btn.classList.toggle("active", btn.dataset.tab === tab));
+    document.querySelectorAll("[data-panel]").forEach((panel) => {
+      panel.hidden = panel.dataset.panel !== tab;
+    });
+  }
+
+  function detail(i) {
+    const state = dueState(i);
+    return `<section class="detail-section"><h3 class="detail-title">设施一物一档</h3><div class="detail-grid">${[
+      ["设施编号", i.code || i.facilityId],
+      ["设施类别", i.category],
+      ["设施名称", i.name],
+      ["安装位置", i.location],
+      ["所属区段", i.area],
+      ["管理单位", i.manageUnit],
+      ["生产日期", i.manufactureDate],
+      ["有效期至", i.expireDate],
+      ["上次维保", i.lastMaintainAt],
+      ["下次检查", i.nextCheckAt],
+      ["使用状态", statusTag(i.status)],
+      ["临期状态", dueTag(state)],
+      ["责任人", i.owner],
+    ].map(([a, b]) => `<div class="info-item"><span class="info-label">${a}</span><span class="info-value">${String(b || "-").startsWith("<span") ? b : esc(b || "-")}</span></div>`).join("")}</div></section>
+    <section class="detail-section"><h3 class="detail-title">备注</h3><p class="detail-text">${esc(i.remark || "无")}</p></section>`;
+  }
+
+  function form(i, mode) {
+    const item = mode === "create" ? { status: "在用", category: CATEGORIES[0] } : (i || {});
+    const v = (k, fallback = "") => esc(item[k] ?? fallback);
+    const catOptions = CATEGORIES.map((c) => `<option ${item.category === c ? "selected" : ""}>${c}</option>`).join("");
+    return `<div class="form-grid-2">
+      <label class="form-field"><span class="form-label">设施编号</span><input class="form-control" data-field="code" value="${v("code")}" placeholder="如：MF-东段-012"></label>
+      <label class="form-field"><span class="form-label">设施类别</span><select class="form-control" data-field="category">${catOptions}</select></label>
+      <label class="form-field"><span class="form-label">设施名称</span><input class="form-control" data-field="name" value="${v("name")}" placeholder="请输入设施名称"></label>
+      <label class="form-field"><span class="form-label">安装位置</span><input class="form-control" data-field="location" value="${v("location")}" placeholder="请输入位置"></label>
+      <label class="form-field"><span class="form-label">所属区段</span><input class="form-control" data-field="area" value="${v("area")}" placeholder="如：东段"></label>
+      <label class="form-field"><span class="form-label">管理单位</span><input class="form-control" data-field="manageUnit" value="${v("manageUnit")}" placeholder="请输入管理单位"></label>
+      <label class="form-field"><span class="form-label">生产日期</span><input class="form-control" type="date" data-field="manufactureDate" value="${v("manufactureDate")}"></label>
+      <label class="form-field"><span class="form-label">有效期至</span><input class="form-control" type="date" data-field="expireDate" value="${v("expireDate")}"></label>
+      <label class="form-field"><span class="form-label">上次维保</span><input class="form-control" type="date" data-field="lastMaintainAt" value="${v("lastMaintainAt")}"></label>
+      <label class="form-field"><span class="form-label">下次检查</span><input class="form-control" type="date" data-field="nextCheckAt" value="${v("nextCheckAt")}"></label>
+      <label class="form-field"><span class="form-label">使用状态</span><select class="form-control" data-field="status"><option ${item.status === "在用" ? "selected" : ""}>在用</option><option ${item.status === "停用" ? "selected" : ""}>停用</option></select></label>
+      <label class="form-field"><span class="form-label">责任人</span><input class="form-control" data-field="owner" value="${v("owner")}" placeholder="请输入责任人"></label>
+    </div>
+    <label class="form-field"><span class="form-label">备注</span><textarea class="form-control textarea" data-field="remark">${v("remark")}</textarea></label>`;
+  }
+
+  function openDrawer(mode, item) {
+    const title = mode === "create" ? "新增安全设施" : mode === "edit" ? "编辑安全设施" : "设施详情";
+    window.openAppDrawer({
+      title,
+      subtitle: SUBTITLE,
+      body: mode === "detail" ? detail(item) : form(item, mode),
+      footer: `<button class="btn btn-secondary" data-drawer-close>${mode === "detail" ? "关闭" : "取消"}</button>${mode === "detail" ? "" : `<button class="btn btn-primary" data-save-facility="${mode}" data-id="${esc(item?.facilityId || "")}">保存</button>`}`,
+    });
+  }
+
+  function openMaintainForm(item, mode) {
+    const isMaintain = mode === "maintain";
+    const title = isMaintain ? "登记维保" : "设置下次检查";
+    const body = isMaintain
+      ? `<div class="form-grid-2">
+          <label class="form-field"><span class="form-label">维保日期</span><input class="form-control" type="date" data-field="lastMaintainAt" value="${esc(todayStr())}"></label>
+          <label class="form-field"><span class="form-label">下次检查</span><input class="form-control" type="date" data-field="nextCheckAt" value=""></label>
+          <label class="form-field form-span-2"><span class="form-label">备注</span><input class="form-control" data-field="remark" value="${esc(item.remark || "")}" placeholder="维保说明"></label>
+        </div>`
+      : `<div class="form-grid-2">
+          <label class="form-field"><span class="form-label">下次检查</span><input class="form-control" type="date" data-field="nextCheckAt" value="${esc(item.nextCheckAt || "")}"></label>
+        </div>`;
+    window.openAppDrawer({
+      title,
+      subtitle: `${item.code || item.facilityId} · ${item.name}`,
+      body,
+      footer: `<button class="btn btn-secondary" data-drawer-close>取消</button><button class="btn btn-primary" data-save-maintain="${mode}" data-id="${esc(item.facilityId)}">保存</button>`,
+    });
+  }
+
+  function createRisk(item) {
+    const store = window.EMERGENCY_STORE;
+    if (!store || typeof store.saveRisk !== "function") {
+      toast("风险预警服务不可用");
+      return;
+    }
+    const state = dueState(item);
+    store.saveRisk({
+      title: `${item.name}设施临期预警`,
+      objectType: "安全设施",
+      objectId: item.facilityId,
+      objectName: item.name,
+      level: state === "超期" ? "高" : "中",
+      source: "设施临期",
+      status: "待评估",
+      area: item.area,
+      linkedFacilityId: item.facilityId,
+      factors: [`有效期:${item.expireDate || "-"}`, `下次检查:${item.nextCheckAt || "-"}`],
+      suggestion: "建议更换或安排维保检查",
+    });
+    toast("已生成风险预警");
+  }
+
+  function readFields() {
+    return Object.fromEntries([...document.querySelectorAll("[data-field]")].map((el) => [el.dataset.field, el.value.trim()]));
+  }
+
+  renderAll();
+  switchTab("basic");
+
+  document.addEventListener("click", (e) => {
+    const tabBtn = e.target.closest("[data-tab]");
+    if (tabBtn) {
+      switchTab(tabBtn.dataset.tab);
+      return;
+    }
+
+    const action = e.target.closest("[data-action]")?.dataset.action;
+    if (action === "create") openDrawer("create", {});
+    if (action === "basic-reset") {
+      document.querySelectorAll("[data-basic-filter]").forEach((x) => { x.value = ""; });
+      renderBasic();
+    }
+    if (action === "basic-search") renderBasic();
+    if (action === "maintain-reset") {
+      document.querySelectorAll("[data-maintain-filter]").forEach((x) => { x.value = ""; });
+      renderMaintain();
+    }
+    if (action === "maintain-search") renderMaintain();
+
+    const saveBtn = e.target.closest("[data-save-facility]");
+    if (saveBtn) {
+      const fields = readFields();
+      if (!fields.name || !fields.code) {
+        window.alert("请填写设施编号和名称");
+        return;
+      }
+      const mode = saveBtn.dataset.saveFacility;
+      if (mode === "create") {
+        data.unshift({
+          facilityId: `FAC-${Date.now().toString(36).toUpperCase()}`,
+          ...fields,
+          status: fields.status || "在用",
+        });
+      } else {
+        const existing = byId(saveBtn.dataset.id);
+        if (existing) Object.assign(existing, fields);
+      }
+      persist();
+      renderAll();
+      window.closeAppDrawer();
+      toast("设施已保存");
+      return;
+    }
+
+    const maintainSave = e.target.closest("[data-save-maintain]");
+    if (maintainSave) {
+      const item = byId(maintainSave.dataset.id);
+      if (!item) return;
+      const fields = readFields();
+      if (maintainSave.dataset.saveMaintain === "maintain") {
+        item.lastMaintainAt = fields.lastMaintainAt || todayStr();
+        if (fields.nextCheckAt) item.nextCheckAt = fields.nextCheckAt;
+        if (fields.remark != null) item.remark = fields.remark;
+      } else if (fields.nextCheckAt) {
+        item.nextCheckAt = fields.nextCheckAt;
+      }
+      persist();
+      renderAll();
+      window.closeAppDrawer();
+      toast(maintainSave.dataset.saveMaintain === "maintain" ? "维保已登记" : "下次检查已更新");
+      return;
+    }
+
+    const riskBtn = e.target.closest("[data-risk]");
+    if (riskBtn) {
+      const item = byId(riskBtn.dataset.id);
+      if (item) createRisk(item);
+      return;
+    }
+
+    const row = e.target.closest("[data-row]");
+    if (!row) return;
+    const item = byId(row.dataset.id);
+    if (!item) return;
+    const op = row.dataset.row;
+    if (op === "detail") openDrawer("detail", item);
+    if (op === "edit") openDrawer("edit", item);
+    if (op === "disable") {
+      item.status = "停用";
+      persist();
+      renderAll();
+      toast("设施已停用");
+    }
+    if (op === "maintain") openMaintainForm(item, "maintain");
+    if (op === "set-next") openMaintainForm(item, "set-next");
+  });
+})();
+  </script>
+  <style>
+    .tab-row { margin-bottom: 0; background: #fff; border: 1px solid var(--line, var(--border)); border-bottom: 0; }
+    .metric-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
+    #maintainMetrics.metric-grid { grid-template-columns: repeat(4, 1fr); }
+    .metric-card { background: #fff; border: 1px solid var(--line, var(--border)); padding: 18px 20px; }
+    .metric-card span, .metric-card small { display: block; color: var(--text-secondary); font-size: 12px; }
+    .metric-card strong { display: block; font-size: 28px; margin: 6px 0; }
+    .metric-card .primary { color: var(--primary); }
+    .metric-card .warning { color: var(--yellow); }
+    .metric-card .success { color: var(--green); }
+    .metric-card .danger { color: var(--red, #d4380d); }
+    .metric-card .purple { color: var(--purple); }
+    .filter-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)) auto; gap: 16px; align-items: end; }
+    .filter-actions { display: flex; gap: 8px; }
+    .safety-toolbar { padding: 16px 20px; align-items: center; }
+    .safety-toolbar .card-title { margin: 0; }
+    .safety-toolbar .btn { margin-left: auto; }
+    .pagination { margin: 16px 8px 0; }
+    .table-action { border: 0; background: none; color: var(--primary); cursor: pointer; margin-right: 10px; }
+    .table-action:last-child { color: var(--text-secondary); }
+    .form-span-2 { grid-column: 1 / -1; }
+    .facility-toast {
+      position: fixed; right: 24px; bottom: 24px; z-index: 4000;
+      padding: 10px 16px; background: #1f2a37; color: #fff; border-radius: 4px;
+      opacity: 0; transform: translateY(8px); transition: .2s; pointer-events: none;
+    }
+    .facility-toast.show { opacity: 1; transform: translateY(0); }
+    @media (max-width: 1200px) {
+      .filter-grid { grid-template-columns: repeat(2, 1fr); }
+      .metric-grid, #maintainMetrics.metric-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</body>
+</html>

@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>科学岛管廊监控中心 - 登录</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="web/assets/css/tob-ui.css">
+  <style>
+    html,
+    body {
+      min-height: 100%;
+    }
+
+    body {
+      min-height: 100vh;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 22% 8%, rgba(255, 255, 255, 0.82), transparent 18%),
+        radial-gradient(circle at 70% 36%, rgba(255, 255, 255, 0.38), transparent 20%),
+        linear-gradient(110deg, #EAF3FF 0%, #DCEBFF 38%, #9ED0F5 100%);
+    }
+
+    .login-page {
+      position: relative;
+      min-height: 100vh;
+      max-width: 1440px;
+      margin: 0 auto;
+      overflow: hidden;
+    }
+
+    .login-page::before,
+    .login-page::after {
+      content: "";
+      position: absolute;
+      pointer-events: none;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.34);
+    }
+
+    .login-page::before {
+      width: 680px;
+      height: 680px;
+      left: -220px;
+      bottom: -210px;
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .login-page::after {
+      width: 760px;
+      height: 760px;
+      right: -210px;
+      top: -160px;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .brand-area {
+      position: absolute;
+      left: 118px;
+      top: 70px;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #1F2D3D;
+    }
+
+    .brand-logo {
+      width: 52px;
+      height: 52px;
+      flex: 0 0 52px;
+      object-fit: contain;
+    }
+
+    .brand-area .brand-name {
+      display: block;
+      max-width: none;
+      color: #1F2D3D;
+      font-size: 18px;
+      line-height: 1.35;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: visible;
+    }
+
+    .guide-area {
+      position: absolute;
+      left: 0;
+      top: 54px;
+      z-index: 1;
+      width: 860px;
+      height: 710px;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+    }
+
+    .guide-image {
+      position: relative;
+      width: 650px;
+      max-width: none;
+      display: block;
+      transform: translateY(0);
+      filter: drop-shadow(0 24px 36px rgba(19, 90, 250, 0.12));
+    }
+
+    .login-card {
+      position: absolute;
+      right: 164px;
+      top: 210px;
+      z-index: 3;
+      width: 376px;
+      min-height: 454px;
+      padding: 28px 44px 34px;
+      border-radius: 14px;
+      background: rgba(244, 248, 255, 0.92);
+      border: 1px solid rgba(255, 255, 255, 0.84);
+      box-shadow: 0 22px 42px rgba(35, 76, 135, 0.18);
+      overflow: hidden;
+    }
+
+    .login-title {
+      margin: 0 0 26px;
+      color: #1F2D3D;
+      font-size: 26px;
+      font-weight: 800;
+      text-align: center;
+      letter-spacing: 6px;
+    }
+
+    .login-title span {
+      margin-right: 12px;
+      letter-spacing: 0;
+    }
+
+    .login-field {
+      position: relative;
+      display: block;
+      margin-bottom: 0;
+    }
+
+    .login-field + .login-field {
+      margin-top: 24px;
+    }
+
+    .field-icon {
+      position: absolute;
+      left: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 18px;
+      height: 18px;
+      display: grid;
+      place-items: center;
+      color: #63758B;
+      font-size: 16px;
+      z-index: 1;
+    }
+
+    .login-field input {
+      width: 100%;
+      height: 54px;
+      padding: 0 18px 0 50px;
+      border: none;
+      border-radius: 8px;
+      color: #1F2D3D;
+      background: rgba(255, 255, 255, 0.96);
+      outline: none;
+      box-shadow: inset 0 0 0 1px rgba(229, 234, 243, 0.7);
+    }
+
+    .login-field input::placeholder {
+      color: #7A8794;
+      font-weight: 600;
+    }
+
+    .login-field.password-field input {
+      padding-right: 52px;
+    }
+
+    .password-toggle {
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      width: 24px;
+      height: 24px;
+      transform: translateY(-50%);
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: transparent;
+      color: #63758B;
+      cursor: pointer;
+    }
+
+    .password-toggle svg {
+      width: 16px;
+      height: 16px;
+      stroke: currentColor;
+      stroke-width: 2;
+      fill: none;
+    }
+
+    .password-toggle .eye-closed,
+    .password-toggle.is-visible .eye-open {
+      display: none;
+    }
+
+    .password-toggle.is-visible .eye-closed {
+      display: block;
+    }
+
+    .password-toggle:hover {
+      color: var(--primary);
+      background: rgba(19, 90, 250, 0.06);
+    }
+
+    .login-options {
+      margin: 18px 0;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      color: #65758A;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .login-error {
+      min-height: 18px;
+      margin: 8px 0 -10px;
+      color: #F53F57;
+      font-size: 12px;
+      line-height: 18px;
+      visibility: hidden;
+    }
+
+    .login-error.show {
+      visibility: visible;
+    }
+
+    .login-button {
+      width: 100%;
+      height: 42px;
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 700;
+      text-decoration: none;
+      background: linear-gradient(90deg, #59B8FF 0%, #3670FF 100%);
+      box-shadow: 0 10px 18px rgba(54, 112, 255, 0.18);
+    }
+
+    @media (max-width: 1180px) {
+      body { overflow: auto; }
+      .login-page {
+        min-height: 100vh;
+        padding: 32px;
+      }
+      .brand-area,
+      .guide-area,
+      .login-card {
+        position: relative;
+        left: auto;
+        right: auto;
+        top: auto;
+      }
+      .brand-area { margin: 0 0 32px; }
+      .guide-area {
+        width: min(760px, 100%);
+        height: min(620px, 72vw);
+        margin: 0 auto;
+      }
+      .guide-image {
+        position: relative;
+        width: min(760px, 100%);
+        transform: translateY(-12px);
+      }
+      .login-card {
+        width: min(376px, 100%);
+        margin: 32px auto 0;
+        padding-right: 32px;
+        padding-left: 32px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .login-page { padding: 24px 20px 32px; }
+      .brand-area { align-items: flex-start; }
+      .brand-logo { width: 46px; height: 46px; flex-basis: 46px; }
+      .brand-area .brand-name { font-size: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="login-page">
+    <section class="brand-area" aria-label="科学岛管廊监控中心">
+      <img class="brand-logo" src="web/assets/images/science-island-icon.png" alt="">
+      <span class="brand-name">科学岛管廊监控中心</span>
+    </section>
+
+    <section class="guide-area" aria-label="智能运营管理平台引导图">
+      <img class="guide-image" src="web/assets/images/login-ai-platform.png" alt="智能运营管理平台引导图">
+    </section>
+
+    <section class="login-card" aria-label="Web 后台登录表单">
+      <h2 class="login-title"><span>🥳</span>欢迎登录</h2>
+      <label class="login-field">
+        <span class="field-icon">♙</span>
+        <input id="usernameInput" autocomplete="username" placeholder="请输入用户名">
+      </label>
+      <label class="login-field password-field">
+        <span class="field-icon">▣</span>
+        <input id="passwordInput" type="password" autocomplete="current-password" placeholder="请输入密码">
+        <button id="passwordToggle" class="password-toggle" type="button" aria-label="显示密码">
+          <svg class="eye-open" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+          <svg class="eye-closed" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 3l18 18"></path>
+            <path d="M10.6 10.6A3 3 0 0 0 13.4 13.4"></path>
+            <path d="M7.5 7.7C4.1 9.4 2 12 2 12s3.5 6 10 6c1.6 0 3-.3 4.3-.8"></path>
+            <path d="M17.8 14.8C20.5 13.2 22 12 22 12s-3.5-6-10-6c-.8 0-1.6.1-2.3.3"></path>
+          </svg>
+        </button>
+      </label>
+      <p id="loginError" class="login-error" role="alert" aria-live="polite">用户名/密码输入错误</p>
+      <div class="login-options">
+        <label><input type="checkbox"> 记住密码</label>
+      </div>
+      <a id="loginButton" class="login-button" href="web/pages/home/home.html">登录</a>
+    </section>
+  </main>
+  <script>
+    const usernameInput = document.getElementById("usernameInput");
+    const passwordInput = document.getElementById("passwordInput");
+    const passwordToggle = document.getElementById("passwordToggle");
+    const loginButton = document.getElementById("loginButton");
+    const loginError = document.getElementById("loginError");
+    const demoCredentials = {
+      username: "admin",
+      password: "zjsj@2026",
+    };
+
+    passwordToggle.addEventListener("click", () => {
+      const visible = passwordInput.type === "text";
+      passwordInput.type = visible ? "password" : "text";
+      passwordToggle.classList.toggle("is-visible", !visible);
+      passwordToggle.setAttribute("aria-label", visible ? "显示密码" : "隐藏密码");
+    });
+
+    const hideLoginError = () => {
+      loginError.classList.remove("show");
+    };
+
+    const submitLogin = () => {
+      const credentialsValid =
+        usernameInput.value.trim() === demoCredentials.username &&
+        passwordInput.value === demoCredentials.password;
+
+      if (!credentialsValid) {
+        loginError.classList.add("show");
+        return;
+      }
+
+      window.location.href = loginButton.href;
+    };
+
+    loginButton.addEventListener("click", (event) => {
+      event.preventDefault();
+      submitLogin();
+    });
+
+    [usernameInput, passwordInput].forEach((input) => {
+      input.addEventListener("input", hideLoginError);
+      input.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          submitLogin();
+        }
+      });
+    });
+  </script>
+</body>
+</html>

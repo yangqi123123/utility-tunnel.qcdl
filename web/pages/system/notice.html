@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>通知公告</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/tob-ui.css">
+</head>
+<body class="notice-page" data-menu-key="system.notice" data-page-section="系统管理" data-page-title="通知公告">
+  <div class="app-shell">
+    <aside id="app-sidebar" class="sidebar"></aside>
+    <header id="app-header" class="header"></header>
+    <main class="main">
+      <div class="screen-frame stack">
+        <section class="card filters">
+          <div class="filter-actions notice-filter-row">
+            <label class="form-field"><span class="form-label">公告类型</span><select class="form-control" data-filter="type"><option value="">请选择</option><option>通知</option><option>公告</option></select></label>
+            <label class="form-field"><span class="form-label">公告标题</span><input class="form-control" data-filter="title" placeholder="请输入"></label>
+            <label class="form-field"><span class="form-label">发布人</span><input class="form-control" data-filter="publisher" placeholder="请输入"></label>
+            <button class="btn btn-secondary" data-action="reset">重置</button>
+            <button class="btn btn-primary" data-action="search">搜索</button>
+          </div>
+        </section>
+
+        <section class="card notice-list-card">
+          <div class="card-title-row notice-toolbar">
+            <h2 class="card-title">通知公告列表</h2>
+            <div class="btn-row">
+              <button class="btn btn-danger-outline" data-action="delete-selected" disabled>删除</button>
+              <button class="btn btn-primary" data-action="create">新增</button>
+              <button class="btn btn-secondary" data-action="refresh">刷新</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="table table-actions-sticky notice-table" aria-label="通知公告列表">
+              <thead><tr><th class="check-cell"><input type="checkbox" data-select-all></th><th>公告标题</th><th>状态</th><th>发布人</th><th>发布时间</th><th>操作</th></tr></thead>
+              <tbody id="noticeTable"></tbody>
+            </table>
+          </div>
+          <div class="pagination notice-pagination"><span>共 <strong id="noticeCount">0</strong> 条记录</span><span>10 条/页</span><span class="page-item active">1</span></div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="../../../app/config/menu.js?v=nav-hide-1"></script>
+  <script src="../../../app/components/sidebar.js?v=nav-home-1"></script>
+  <script src="../../../app/components/header.js?v=nav-home-1"></script>
+  <script src="../../../app/components/drawer.js"></script>
+  <script src="../../../app/components/requirement.js"></script>
+  <script>
+    const notices = [
+      { id: 1, type: "公告", title: "温馨提醒：2018-07-01 新版本发布啦", status: "正常", publisher: "admin", publishedAt: "2026-07-01 10:02:28", content: "系统已完成新版本发布，请各位用户关注功能变化。" },
+      { id: 2, type: "通知", title: "维护通知：2018-07-01 系统凌晨维护", status: "正常", publisher: "admin", publishedAt: "2026-07-01 10:02:28", content: "系统将于凌晨 01:00 - 03:00 进行例行维护，期间部分服务可能短暂不可用。" },
+      { id: 3, type: "通知", title: "111", status: "正常", publisher: "admin", publishedAt: "2026-07-06 17:50:17", content: "通知公告内容示例。" },
+      { id: 4, type: "通知", title: "8888", status: "正常", publisher: "admin", publishedAt: "2026-07-08 21:06:48", content: "通知公告内容示例。" },
+      { id: 5, type: "公告", title: "8888", status: "正常", publisher: "admin", publishedAt: "2026-07-08 21:07:00", content: "公告内容示例。" },
+      { id: 6, type: "通知", title: "阿斯顿撒打算", status: "正常", publisher: "admin", publishedAt: "2026-07-09 22:21:35", content: "通知公告内容示例。" },
+      { id: 7, type: "通知", title: "测试20260720", status: "正常", publisher: "admin", publishedAt: "2026-07-20 13:30:00", content: "测试通知公告内容。" },
+      { id: 8, type: "公告", title: "公告123", status: "正常", publisher: "admin", publishedAt: "2026-07-20 13:31:07", content: "公告内容示例。" },
+      { id: 9, type: "通知", title: "123", status: "关闭", publisher: "admin", publishedAt: "2026-07-26 19:37:05", content: "已关闭的通知公告内容。" },
+      { id: 10, type: "通知", title: "1", status: "正常", publisher: "admin", publishedAt: "2026-08-10 01:37:16", content: "通知公告内容示例。" },
+    ];
+    const table = document.getElementById("noticeTable");
+    const count = document.getElementById("noticeCount");
+    const esc = (value) => String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
+    const attr = (value) => esc(value).replaceAll("'", "&#39;");
+
+    function render(list = notices) {
+      table.innerHTML = list.map((item) => `<tr><td class="check-cell"><input type="checkbox" data-check data-id="${item.id}"></td><td><span class="notice-title-cell"><span class="tag ${item.type === "公告" ? "notice-type-announcement" : "notice-type-notice"}">${item.type}</span><span>${esc(item.title)}</span></span></td><td><span class="tag ${item.status === "正常" ? "primary" : "danger"}">${item.status}</span></td><td>${esc(item.publisher)}</td><td>${esc(item.publishedAt)}</td><td><button class="table-action" data-detail="${item.id}">详情</button><button class="table-action" data-edit="${item.id}">编辑</button><button class="table-action status-danger" data-delete="${item.id}">删除</button></td></tr>`).join("");
+      count.textContent = list.length;
+      document.querySelector('[data-action="delete-selected"]').disabled = !document.querySelector("[data-check]:checked");
+    }
+
+    function editorToolbar() {
+      return `<div class="notice-editor-toolbar"><button type="button" data-editor-command="formatBlock" data-value="p">正文</button><button type="button" data-editor-command="bold"><strong>B</strong></button><button type="button" data-editor-command="italic"><em>I</em></button><button type="button" data-editor-command="underline"><u>U</u></button><button type="button" data-editor-command="strikeThrough"><s>S</s></button><button type="button" data-editor-command="insertUnorderedList">☷</button><button type="button" data-editor-command="insertOrderedList">☷</button><button type="button" data-editor-command="justifyLeft">≡</button><button type="button" data-editor-command="justifyCenter">≡</button><button type="button" data-editor-command="justifyRight">≡</button><button type="button" data-editor-command="undo">↶</button><button type="button" data-editor-command="redo">↷</button></div>`;
+    }
+
+    function openNoticeDrawer(mode = "create", item = {}) {
+      const isDetail = mode === "detail";
+      const body = isDetail
+        ? `<section class="notice-detail-meta"><div class="info-item"><span class="info-label">公告标题</span><span class="info-value">${esc(item.title)}</span></div><div class="info-item"><span class="info-label">公告类型</span><span class="info-value">${esc(item.type)}</span></div><div class="info-item"><span class="info-label">发布人</span><span class="info-value">${esc(item.publisher)}</span></div><div class="info-item"><span class="info-label">发布时间</span><span class="info-value">${esc(item.publishedAt)}</span></div></section><section class="detail-section"><h3 class="detail-title">公告内容</h3><div class="notice-detail-content">${esc(item.content)}</div></section>`
+        : `<label class="form-field form-item"><span class="form-label form-required">公告标题</span><input class="form-control" data-notice-field="title" data-editing="${mode === "edit" ? item.id : ""}" value="${attr(item.title || "")}" placeholder="请输入"></label><div class="menu-choice-row"><span class="form-label form-required">公告状态</span><button type="button" class="${item.status !== "关闭" ? "active" : ""}" data-notice-status="正常">正常</button><button type="button" class="${item.status === "关闭" ? "active" : ""}" data-notice-status="关闭">关闭</button></div><div class="menu-choice-row"><span class="form-label form-required">公告类型</span><button type="button" class="${item.type !== "公告" ? "active" : ""}" data-notice-type="通知">通知</button><button type="button" class="${item.type === "公告" ? "active" : ""}" data-notice-type="公告">公告</button></div><div class="form-field form-item"><span class="form-label form-required">公告内容</span><div class="notice-editor">${editorToolbar()}<div class="notice-editor-content" contenteditable="true" data-notice-field="content">${item.content ? esc(item.content) : ""}</div></div></div>`;
+      const footer = isDetail ? '<button class="btn btn-secondary" data-drawer-close>关闭</button>' : '<button class="btn btn-secondary" data-drawer-close>取消</button><button class="btn btn-primary" data-save-notice>确认</button>';
+      window.openAppDrawer({ title: isDetail ? "公告详情" : mode === "edit" ? "编辑" : "新增", subtitle: "系统管理 · 通知公告", body, footer });
+      if (!isDetail) {
+        document.querySelectorAll("[data-notice-status]").forEach((button) => button.addEventListener("click", () => { document.querySelectorAll("[data-notice-status]").forEach((item) => item.classList.toggle("active", item === button)); }));
+        document.querySelectorAll("[data-notice-type]").forEach((button) => button.addEventListener("click", () => { document.querySelectorAll("[data-notice-type]").forEach((item) => item.classList.toggle("active", item === button)); }));
+      }
+    }
+
+    function filtered() {
+      const filters = Object.fromEntries([...document.querySelectorAll("[data-filter]")].map((input) => [input.dataset.filter, input.value.trim()]));
+      return notices.filter((item) => (!filters.type || item.type === filters.type) && (!filters.title || item.title.includes(filters.title)) && (!filters.publisher || item.publisher.includes(filters.publisher)));
+    }
+
+    render();
+    document.addEventListener("click", (event) => {
+      const action = event.target.closest("[data-action]")?.dataset.action;
+      if (action === "create") openNoticeDrawer();
+      if (action === "refresh") render(filtered());
+      if (action === "reset") { document.querySelectorAll("[data-filter]").forEach((input) => { input.value = ""; }); render(); }
+      if (action === "search") render(filtered());
+      if (action === "delete-selected") { const ids = [...document.querySelectorAll("[data-check]:checked")].map((input) => Number(input.dataset.id)); if (ids.length) window.openAppConfirm({ title: "提示", message: `确认删除选中的【${ids.length}】条公告吗？`, onConfirm: () => { ids.forEach((id) => { const index = notices.findIndex((item) => item.id === id); if (index >= 0) notices.splice(index, 1); }); render(filtered()); } }); }
+      const detail = event.target.closest("[data-detail]");
+      if (detail) openNoticeDrawer("detail", notices.find((item) => item.id === Number(detail.dataset.detail)));
+      const edit = event.target.closest("[data-edit]");
+      if (edit) openNoticeDrawer("edit", notices.find((item) => item.id === Number(edit.dataset.edit)));
+      const del = event.target.closest("[data-delete]");
+      if (del) { const item = notices.find((entry) => entry.id === Number(del.dataset.delete)); window.openAppConfirm({ title: "提示", message: `确认删除公告「${item.title}」吗？`, onConfirm: () => { const index = notices.indexOf(item); if (index >= 0) notices.splice(index, 1); render(filtered()); } }); }
+      const command = event.target.closest("[data-editor-command]");
+      if (command) { document.execCommand(command.dataset.editorCommand, false, command.dataset.value || null); document.querySelector(".notice-editor-content")?.focus(); }
+      if (event.target.matches("[data-check]")) render(filtered());
+      if (event.target.matches("[data-select-all]")) { document.querySelectorAll("[data-check]").forEach((input) => { input.checked = event.target.checked; }); render(filtered()); }
+      const save = event.target.closest("[data-save-notice]");
+      if (save) {
+        const title = document.querySelector('[data-notice-field="title"]')?.value.trim();
+        const content = document.querySelector('[data-notice-field="content"]')?.innerHTML.trim();
+        const status = document.querySelector("[data-notice-status].active")?.dataset.noticeStatus || "正常";
+        const type = document.querySelector("[data-notice-type].active")?.dataset.noticeType || "通知";
+        if (!title) { window.openAppConfirm({ title: "提示", message: "请输入公告标题。", confirmText: "知道了" }); return; }
+        const editingTitle = document.querySelector('[data-notice-field="title"]')?.dataset.editing;
+        if (editingTitle) { const item = notices.find((entry) => entry.id === Number(editingTitle)); if (item) Object.assign(item, { title, content, status, type }); }
+        else notices.unshift({ id: Date.now(), title, content: content || "", status, type, publisher: "admin", publishedAt: "2026-08-11 16:20:00" });
+        window.closeAppDrawer();
+        render(filtered());
+      }
+    });
+    document.addEventListener("change", (event) => { if (event.target.matches("[data-select-all]")) { document.querySelectorAll("[data-check]").forEach((input) => { input.checked = event.target.checked; }); render(filtered()); } });
+  </script>
+</body>
+</html>
+
+
+
+
+

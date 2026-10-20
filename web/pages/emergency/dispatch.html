@@ -1,0 +1,74 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>应急调度台 - 科学岛管廊监控中心</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/tob-ui.css">
+  <link rel="stylesheet" href="../../assets/css/inspection.css">
+  <link rel="stylesheet" href="../../assets/css/emergency.css?v=6">
+  <link rel="stylesheet" href="../../assets/css/base-map.css?v=1">
+  <link rel="stylesheet" href="../../assets/vendor/leaflet/leaflet.css">
+</head>
+<body class="emergency-page emergency-dispatch-page" data-menu-key="emergency.dispatch" data-page-section="应急管理系统" data-page-title="应急调度台">
+  <div class="app-shell">
+    <aside id="app-sidebar" class="sidebar"></aside>
+    <header id="app-header" class="header"></header>
+    <main class="main">
+      <div class="ds-root">
+        <section class="ds-stage" id="dispatchStage">
+          <div id="dispatchMap" class="ds-map" aria-label="应急调度 GIS 地图"></div>
+
+          <button class="ds-side-toggle ds-side-toggle--left" type="button" data-ds-collapse="left" title="收起面板" aria-label="收起左侧面板"><i class="fa-solid fa-chevron-left"></i></button>
+          <button class="ds-side-toggle ds-side-toggle--right" type="button" data-ds-collapse="right" title="收起面板" aria-label="收起右侧面板"><i class="fa-solid fa-chevron-right"></i></button>
+
+          <aside class="ds-panel ds-left" aria-label="应急事件">
+            <div class="ds-left-head">
+              <h2>应急事件</h2>
+              <label class="dispatch-search">
+                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                <input class="form-control" id="dispatchEventKeyword" type="search" placeholder="搜索事件">
+              </label>
+              <div class="ds-status-chips" id="dispatchStatusFilter" aria-label="事件状态筛选"></div>
+            </div>
+            <div class="dispatch-event-list" id="dispatchEventList"></div>
+            <nav class="dispatch-mode-bar" id="dispatchModeBar" aria-label="事件操作">
+              <button type="button" class="dispatch-mode-btn" data-right-mode="video" disabled><i class="fa-solid fa-video"></i><span>视频监控</span></button>
+              <button type="button" class="dispatch-mode-btn" data-right-mode="resources" disabled><i class="fa-solid fa-box-open"></i><span>应急物资</span></button>
+              <button type="button" class="dispatch-mode-btn" data-right-mode="personnel" disabled><i class="fa-solid fa-user-group"></i><span>应急人员</span></button>
+              <button type="button" class="dispatch-mode-btn" data-right-mode="command" disabled><i class="fa-solid fa-headset"></i><span>指挥调度</span></button>
+              <button type="button" class="dispatch-mode-btn" data-right-mode="plan" disabled><i class="fa-solid fa-file-shield"></i><span>应急预案</span></button>
+            </nav>
+          </aside>
+
+          <aside class="ds-panel ds-right" id="dispatchRightPanel" aria-label="处置面板"></aside>
+
+          <aside class="ds-layer-panel" id="dispatchLayerPanel"></aside>
+          <nav class="ds-map-tools" aria-label="地图工具">
+            <button class="map-tool-btn" type="button" data-dispatch-action="zoom-in" title="放大地图"><i class="fa-solid fa-plus"></i><span>放大</span></button>
+            <button class="map-tool-btn" type="button" data-dispatch-action="zoom-out" title="缩小地图"><i class="fa-solid fa-minus"></i><span>缩小</span></button>
+            <button class="map-tool-btn" type="button" data-dispatch-action="zoom-reset" title="复位地图"><i class="fa-solid fa-crosshairs"></i><span>复位</span></button>
+            <button class="map-tool-btn" type="button" data-dispatch-action="toggle-fullscreen" title="切换全屏"><i class="fa-solid fa-expand"></i><span>全屏</span></button>
+          </nav>
+        </section>
+      </div>
+    </main>
+  </div>
+  <script src="../../assets/vendor/leaflet/leaflet.js"></script>
+  <script src="../../../app/components/base-map.js"></script>
+  <script src="../../../app/config/menu.js?v=nav-hide-1"></script>
+  <script src="../../../app/data/emergency-data.js"></script>
+  <script src="../../../app/data/work-order-data.js"></script>
+  <script src="../../../app/components/sidebar.js?v=nav-home-1"></script>
+  <script src="../../../app/components/header.js?v=nav-home-1"></script>
+  <script src="../../../app/components/drawer.js"></script>
+  <script src="../../../app/components/requirement.js"></script>
+  <script src="../../../app/components/emergency-common.js"></script>
+  <script src="../../../app/components/emergency-map.js"></script>
+  <script src="../../../app/components/emergency-events.js"></script>
+  <script src="../../../app/components/safety-plans.js"></script>
+  <script src="../../../app/components/command-dispatch-panel.js"></script>
+  <script src="../../../app/components/emergency-dispatch.js?v=console-7"></script>
+</body>
+</html>

@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>网络设备 - 科学岛管廊监控中心</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/tob-ui.css">
+  <link rel="stylesheet" href="../../assets/css/service-center.css?v=3">
+  <link rel="stylesheet" href="../../assets/css/network.css">
+</head>
+<body class="service-center-page" data-menu-key="network.devices" data-page-section="网络管理" data-page-title="网络设备">
+  <div class="app-shell">
+    <aside id="app-sidebar" class="sidebar"></aside>
+    <header id="app-header" class="header"></header>
+    <main class="main">
+      <div class="screen-frame stack">
+        <section class="card filters">
+          <div class="filter-actions">
+            <label class="form-field">
+              <span class="form-label">关键词</span>
+              <input class="form-control" data-filter="keyword" placeholder="设备名称 / IP">
+            </label>
+            <label class="form-field">
+              <span class="form-label">类型</span>
+              <select class="form-control" data-filter="type">
+                <option value="">全部</option>
+                <option>路由器</option>
+                <option>交换机</option>
+                <option>服务器</option>
+                <option>无线接入点</option>
+              </select>
+            </label>
+            <label class="form-field">
+              <span class="form-label">状态</span>
+              <select class="form-control" data-filter="status">
+                <option value="">全部</option>
+                <option value="normal">正常</option>
+                <option value="warn">高负载</option>
+                <option value="offline">离线</option>
+              </select>
+            </label>
+            <button class="btn btn-secondary" type="button" data-action="reset">重置</button>
+            <button class="btn btn-primary" type="button" data-action="search">搜索</button>
+          </div>
+        </section>
+
+        <section class="card device-list-card">
+          <div class="card-title-row device-toolbar">
+            <h1 class="card-title">网络设备</h1>
+            <div class="btn-row">
+              <button class="btn btn-secondary" type="button" data-action="export"><i class="fa-solid fa-file-export"></i> 导出</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="table" aria-label="网络设备列表">
+              <thead>
+                <tr>
+                  <th>设备名称</th>
+                  <th>IP</th>
+                  <th>类型</th>
+                  <th>区域</th>
+                  <th>状态</th>
+                  <th>流量</th>
+                  <th>延迟</th>
+                  <th>丢包</th>
+                  <th>CPU</th>
+                  <th>更新时间</th>
+                </tr>
+              </thead>
+              <tbody id="deviceTableBody"></tbody>
+            </table>
+          </div>
+          <div class="pagination" id="devicePagination"></div>
+        </section>
+      </div>
+    </main>
+  </div>
+  <script src="../../../app/config/menu.js?v=nav-hide-1"></script>
+  <script src="../../../app/components/sidebar.js?v=nav-home-1"></script>
+  <script src="../../../app/components/header.js?v=nav-home-1"></script>
+  <script src="../../../app/components/drawer.js"></script>
+  <script src="../../../app/components/requirement.js"></script>
+  <script src="../../assets/vendor/xlsx.full.min.js"></script>
+  <script src="../../../app/data/network-data.js"></script>
+  <script>
+    const PAGE_SIZE = 10;
+    let page = 1;
+    let filtered = [];
+    const STATUS_MAP = {
+      normal: { cls: "good", label: "正常" },
+      warn: { cls: "warn", label: "高负载" },
+      offline: { cls: "warn", label: "离线" },
+    };
+    const filters = Object.fromEntries(
+      [...document.querySelectorAll("[data-filter]")].map((el) => [el.dataset.filter, el])
+    );
+
+    function readFilters() {
+      return Object.fromEntries(Object.entries(filters).map(([k, el]) => [k, el.value.trim()]));
+    }
+
+    function applyFilter() {
+      const { keyword, type, status } = readFilters();
+      const kw = keyword.toLowerCase();
+      filtered = NETWORK_STORE.listDevices().filter((d) => {
+        const matchKeyword = !kw || d.name.toLowerCase().includes(kw) || d.ip.includes(kw);
+        return matchKeyword && (!type || d.type === type) && (!status || d.status === status);
+      });
+      page = 1;
+      render();
+    }
+
+    function renderPager(total) {
+      const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+      if (page > pages) page = pages;
+      const items = [];
+      items.push(`<span>共 <strong>${total}</strong> 条，每页显示 ${PAGE_SIZE} 条</span>`);
+      items.push(`<span class="page-item ${page <= 1 ? "disabled" : ""}" data-page="${page - 1}">‹</span>`);
+      for (let i = 1; i <= pages; i += 1) {
+        items.push(`<span class="page-item ${i === page ? "active" : ""}" data-page="${i}">${i}</span>`);
+      }
+      items.push(`<span class="page-item ${page >= pages ? "disabled" : ""}" data-page="${page + 1}">›</span>`);
+      document.getElementById("devicePagination").innerHTML = items.join("");
+    }
+
+    function render() {
+      const total = filtered.length;
+      const start = (page - 1) * PAGE_SIZE;
+      const rows = filtered.slice(start, start + PAGE_SIZE);
+      document.getElementById("deviceTableBody").innerHTML = rows.map((d) => {
+        const st = STATUS_MAP[d.status] || STATUS_MAP.normal;
+        const latency = d.status === "offline" ? "—" : d.latencyMs + " ms";
+        return `<tr>
+          <td><strong>${d.name}</strong></td>
+          <td>${d.ip}</td>
+          <td>${d.type}</td>
+          <td>${d.zone}</td>
+          <td><span class="device-status ${st.cls}">${st.label}</span></td>
+          <td>${d.traffic}</td>
+          <td>${latency}</td>
+          <td>${d.loss}</td>
+          <td>${d.status === "offline" ? "—" : d.cpu + "%"}</td>
+          <td>${d.updatedAt}</td>
+        </tr>`;
+      }).join("") || '<tr><td colspan="10" class="service-muted" style="text-align:center">暂无匹配设备</td></tr>';
+      renderPager(total);
+    }
+
+    function ensureXlsx() {
+      if (window.XLSX) return true;
+      window.openAppConfirm?.({ title: "提示", message: "Excel 组件加载失败，请刷新页面后重试。", confirmText: "知道了" });
+      return false;
+    }
+
+    function downloadWorkbook(book, name) {
+      const content = XLSX.write(book, { bookType: "xlsx", type: "array" });
+      const blob = new Blob([content], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = name;
+      document.body.append(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    function exportDevices() {
+      if (!ensureXlsx()) return;
+      const rows = filtered.map((d) => ({
+        设备名称: d.name,
+        IP: d.ip,
+        类型: d.type,
+        区域: d.zone,
+        状态: (STATUS_MAP[d.status] || STATUS_MAP.normal).label,
+        流量: d.traffic,
+        延迟: d.status === "offline" ? "—" : d.latencyMs + " ms",
+        丢包: d.loss,
+        CPU: d.status === "offline" ? "—" : d.cpu + "%",
+        更新时间: d.updatedAt,
+      }));
+      const sheet = XLSX.utils.json_to_sheet(rows.length ? rows : [{ 设备名称: "" }]);
+      const book = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(book, sheet, "网络设备");
+      downloadWorkbook(book, "网络设备.xlsx");
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      applyFilter();
+      document.querySelector("[data-action=search]").addEventListener("click", applyFilter);
+      document.querySelector("[data-action=reset]").addEventListener("click", () => {
+        Object.values(filters).forEach((el) => { el.value = ""; });
+        applyFilter();
+      });
+      document.querySelector("[data-action=export]").addEventListener("click", exportDevices);
+      document.getElementById("devicePagination").addEventListener("click", (event) => {
+        const item = event.target.closest("[data-page]");
+        if (!item || item.classList.contains("disabled")) return;
+        const next = Number(item.dataset.page);
+        if (!Number.isFinite(next) || next < 1) return;
+        page = next;
+        render();
+      });
+    });
+  </script>
+</body>
+</html>

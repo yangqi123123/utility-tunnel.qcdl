@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>通信值班台 - 科学岛管廊监控中心</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/tob-ui.css">
+  <link rel="stylesheet" href="../../assets/css/home-monitor.css?v=5">
+  <link rel="stylesheet" href="../../assets/css/emergency.css?v=6">
+  <link rel="stylesheet" href="../../assets/css/base-map.css?v=1">
+  <link rel="stylesheet" href="../../assets/vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="../../assets/css/communication.css">
+</head>
+<body class="monitoring-page communication-page emergency-page" data-menu-key="communication.desk" data-page-section="通信系统" data-page-title="通信值班台">
+  <div class="app-shell">
+    <aside id="app-sidebar" class="sidebar"></aside>
+    <header id="app-header" class="header"></header>
+    <main class="main">
+      <div class="screen-frame stack communication-shell communication-desk-shell">
+        <section class="dm-metrics communication-desk-metrics" aria-label="通信统计">
+          <article class="dm-metric">
+            <span class="dm-metric-icon"><i class="fa-solid fa-phone"></i></span>
+            <div class="dm-metric-label">今日通话 <i class="fa-regular fa-circle-question" title="今日通话记录条数"></i></div>
+            <strong class="dm-metric-value" id="statTodayCalls">—</strong>
+            <p class="dm-metric-sub">通话记录汇总</p>
+          </article>
+          <article class="dm-metric dm-metric--online">
+            <span class="dm-metric-icon"><i class="fa-solid fa-phone-volume"></i></span>
+            <div class="dm-metric-label">已接通 <i class="fa-regular fa-circle-question" title="今日结果为已接通的通话"></i></div>
+            <strong class="dm-metric-value" id="statConnected">—</strong>
+            <p class="dm-metric-sub"><b id="statConnectRate">—</b> 接通率</p>
+          </article>
+          <article class="dm-metric dm-metric--online">
+            <span class="dm-metric-icon"><i class="fa-solid fa-signal"></i></span>
+            <div class="dm-metric-label">设备在线 <i class="fa-regular fa-circle-question" title="通信设备在线数量"></i></div>
+            <strong class="dm-metric-value" id="statOnline">—</strong>
+            <p class="dm-metric-sub"><b id="statOnlineRate">—</b> 在线率</p>
+          </article>
+          <article class="dm-metric dm-metric--fault">
+            <span class="dm-metric-icon"><i class="fa-solid fa-plug-circle-xmark"></i></span>
+            <div class="dm-metric-label">离线 / 故障 <i class="fa-regular fa-circle-question" title="离线与故障设备合计"></i></div>
+            <strong class="dm-metric-value" id="statFault">—</strong>
+            <p class="dm-metric-sub">需处理</p>
+          </article>
+        </section>
+
+        <section class="communication-desk-main">
+          <section class="communication-card communication-desk-command" aria-labelledby="commandTitle">
+            <h2 id="commandTitle" class="sr-only">指挥调度</h2>
+            <div id="deskCommandHost"></div>
+          </section>
+          <section class="communication-card communication-desk-map" id="deskMapStage" aria-labelledby="mapTitle">
+            <div class="communication-card-head">
+              <h2 id="mapTitle">GIS地图</h2>
+              <div class="communication-desk-layer-toggles">
+                <label><input type="checkbox" id="layerDevices" checked> 通信设备</label>
+                <label><input type="checkbox" id="layerPersonnel" checked> 人员</label>
+                <label><input type="checkbox" id="layerResources" checked> 物资</label>
+                <label><input type="checkbox" id="layerEvents" checked> 事件</label>
+              </div>
+            </div>
+            <div id="deskMap" class="communication-desk-map-canvas" aria-label="通信值班台 GIS 地图"></div>
+            <nav class="communication-desk-map-tools" aria-label="地图工具">
+              <button type="button" data-desk-map="zoom-in" title="放大"><i class="fa-solid fa-plus"></i></button>
+              <button type="button" data-desk-map="zoom-out" title="缩小"><i class="fa-solid fa-minus"></i></button>
+              <button type="button" data-desk-map="reset" title="复位"><i class="fa-solid fa-crosshairs"></i></button>
+              <button type="button" data-desk-map="fullscreen" title="全屏"><i class="fa-solid fa-expand"></i></button>
+            </nav>
+          </section>
+        </section>
+
+        <section class="communication-card communication-record-card" aria-labelledby="recordsTitle">
+          <div class="communication-card-head">
+            <h2 id="recordsTitle">近期通话</h2>
+            <a class="btn btn-link communication-all-records" href="../communication/logs.html?tab=calls">全部记录</a>
+          </div>
+          <div class="communication-table-wrap">
+            <table class="table communication-table">
+              <thead>
+                <tr>
+                  <th>通话时间</th>
+                  <th>事件编号</th>
+                  <th>主叫人</th>
+                  <th>被叫人</th>
+                  <th>通话类型</th>
+                  <th>通话结果</th>
+                  <th>时长</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="recordBody"></tbody>
+            </table>
+          </div>
+          <div class="pagination" id="recordPager"></div>
+        </section>
+      </div>
+    </main>
+  </div>
+  <script src="../../assets/vendor/leaflet/leaflet.js"></script>
+  <script src="../../../app/components/base-map.js"></script>
+  <script src="../../../app/config/menu.js?v=comm-desk-opt-2"></script>
+  <script src="../../../app/data/mock-data.js"></script>
+  <script src="../../../app/data/emergency-data.js"></script>
+  <script src="../../../app/data/communication-data.js"></script>
+  <script src="../../../app/components/sidebar.js?v=nav-home-1"></script>
+  <script src="../../../app/components/header.js?v=nav-home-1"></script>
+  <script src="../../../app/components/drawer.js"></script>
+  <script src="../../../app/components/emergency-common.js"></script>
+  <script src="../../../app/components/emergency-map.js"></script>
+  <script src="../../../app/components/emergency-events.js"></script>
+  <script src="../../../app/components/command-dispatch-panel.js"></script>
+  <script src="../../../app/components/communication-desk.js"></script>
+  <script src="../../../app/components/requirement.js"></script>
+</body>
+</html>

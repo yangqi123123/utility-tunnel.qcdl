@@ -1,0 +1,1381 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>安全防范系统 - 科学岛管廊监控中心</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/tob-ui.css">
+  <link rel="stylesheet" href="../../assets/css/home-monitor.css?v=5">
+  <link rel="stylesheet" href="../../assets/css/alarm-center.css">
+  <link rel="stylesheet" href="../../assets/css/environment-monitor.css">
+  <link rel="stylesheet" href="../../assets/css/inspection.css">
+  <link rel="stylesheet" href="../../assets/css/communication.css">
+  <link rel="stylesheet" href="../../assets/css/base-map.css?v=1">
+  <link rel="stylesheet" href="../../assets/css/security-monitor.css">
+  <link rel="stylesheet" href="../../assets/vendor/leaflet/leaflet.css">
+</head>
+<body class="monitoring-page security-page" data-menu-key="security-prevention" data-page-section="安全防范系统" data-page-title="安全防范系统">
+  <div class="app-shell">
+    <aside id="app-sidebar" class="sidebar"></aside>
+    <header id="app-header" class="header"></header>
+    <main class="main">
+      <div class="screen-frame stack security-desk-shell">
+        <section class="dm-metrics security-desk-metrics" aria-label="安防统计">
+          <article class="dm-metric dm-metric--fault">
+            <span class="dm-metric-icon"><i class="fa-solid fa-bell"></i></span>
+            <div class="dm-metric-label">入侵报警事件</div>
+            <strong class="dm-metric-value" id="secMetricAlarm">—</strong>
+            <p class="dm-metric-sub"><b id="secAlarmOpen">—</b> 未处理 · <b id="secAlarmDoing">—</b> 处理中 · <b id="secAlarmDone">—</b> 已处理</p>
+          </article>
+          <article class="dm-metric dm-metric--online">
+            <span class="dm-metric-icon"><i class="fa-solid fa-phone-volume"></i></span>
+            <div class="dm-metric-label">通信系统设备</div>
+            <strong class="dm-metric-value" id="secMetricComm">—</strong>
+            <p class="dm-metric-sub"><b id="secCommOnline">—</b> 在线 · <b id="secCommOffline">—</b> 离线 · <b id="secCommAlarm">—</b> 报警</p>
+          </article>
+          <article class="dm-metric">
+            <span class="dm-metric-icon"><i class="fa-solid fa-video"></i></span>
+            <div class="dm-metric-label">视频监控设备</div>
+            <strong class="dm-metric-value" id="secMetricVideo">—</strong>
+            <p class="dm-metric-sub"><b id="secVideoOnline">—</b> 在线 · <b id="secVideoOffline">—</b> 离线 · <b id="secVideoAlarm">—</b> 报警</p>
+          </article>
+          <article class="dm-metric dm-metric--warn">
+            <span class="dm-metric-icon"><i class="fa-solid fa-clipboard-check"></i></span>
+            <div class="dm-metric-label">电子巡更记录</div>
+            <strong class="dm-metric-value" id="secMetricPatrol">—</strong>
+            <p class="dm-metric-sub"><b id="secPatrolPending">—</b> 未巡检 · <b id="secPatrolDone">—</b> 已完成</p>
+          </article>
+        </section>
+
+        <section class="security-desk-main">
+          <section class="security-card" aria-labelledby="secEventTitle">
+            <div class="security-card-head">
+              <h2 id="secEventTitle">入侵报警事件</h2>
+            </div>
+            <div class="security-event-filters">
+              <label class="form-field">
+                <span class="form-label">报警等级</span>
+                <select class="form-control" id="secFilterLevel">
+                  <option value="all">全部</option>
+                  <option value="告警">告警</option>
+                  <option value="预警">预警</option>
+                  <option value="提醒">提醒</option>
+                </select>
+              </label>
+              <label class="form-field">
+                <span class="form-label">报警状态</span>
+                <select class="form-control" id="secFilterStatus">
+                  <option value="all">全部</option>
+                  <option value="未处理">未处理</option>
+                  <option value="处理中">处理中</option>
+                  <option value="已处理">已处理</option>
+                </select>
+              </label>
+              <label class="form-field">
+                <span class="form-label">关键字</span>
+                <input class="form-control" id="secFilterKeyword" type="search" placeholder="设备/描述">
+              </label>
+              <div class="security-filter-btns">
+                <button type="button" class="btn btn-primary" id="secFilterSearch">搜索</button>
+                <button type="button" class="btn btn-secondary" id="secFilterReset">重置</button>
+              </div>
+            </div>
+            <div class="security-event-list" id="secEventList"></div>
+          </section>
+
+          <section class="security-card security-map-card" id="secMapCard" aria-labelledby="secMapTitle">
+            <div class="security-card-head">
+              <h2 id="secMapTitle">GIS地图</h2>
+            </div>
+            <div id="secMap" class="security-map-canvas" aria-label="安全防范 GIS 地图"></div>
+            <nav class="security-map-tools" aria-label="地图工具">
+              <button type="button" data-sec-map="zoom-in" title="放大"><i class="fa-solid fa-plus"></i></button>
+              <button type="button" data-sec-map="zoom-out" title="缩小"><i class="fa-solid fa-minus"></i></button>
+              <button type="button" data-sec-map="reset" title="复位"><i class="fa-solid fa-crosshairs"></i></button>
+              <button type="button" data-sec-map="fullscreen" title="全屏"><i class="fa-solid fa-expand"></i></button>
+            </nav>
+          </section>
+        </section>
+
+        <section class="security-context-bar" id="secContextBar" aria-live="polite">当前：未选择事件</section>
+
+        <section class="security-linkage-grid">
+          <section class="security-card security-block" aria-labelledby="secDetailTitle">
+            <div class="security-card-head">
+              <h2 id="secDetailTitle">入侵报警详情</h2>
+              <div class="security-detail-actions" id="secDetailActions"></div>
+            </div>
+            <div class="security-block-body" id="secDetailBody"></div>
+          </section>
+
+          <section class="security-card security-block" aria-labelledby="secVideoTitle">
+            <div class="security-card-head">
+              <h2 id="secVideoTitle">周边视频</h2>
+              <button type="button" class="btn btn-secondary" id="secVideoGlobal">全局监控</button>
+            </div>
+            <div class="security-block-body" id="secVideoBody"></div>
+          </section>
+
+          <section class="security-card security-block" id="secDoorCard" aria-labelledby="secDoorTitle">
+            <div class="security-card-head">
+              <h2 id="secDoorTitle">门禁状态</h2>
+              <button type="button" class="security-fs-btn" data-sec-module-fs="door" title="全屏" aria-label="门禁状态全屏"><i class="fa-solid fa-expand"></i></button>
+            </div>
+            <div class="security-block-body" id="secDoorBody"></div>
+          </section>
+
+          <section class="security-card security-block" id="secPatrolCard" aria-labelledby="secPatrolTitle">
+            <div class="security-card-head">
+              <h2 id="secPatrolTitle">电子巡更记录</h2>
+              <button type="button" class="security-fs-btn" data-sec-module-fs="patrol" title="全屏" aria-label="电子巡更记录全屏"><i class="fa-solid fa-expand"></i></button>
+            </div>
+            <div class="security-block-body" id="secPatrolBody"></div>
+          </section>
+        </section>
+      </div>
+    </main>
+  </div>
+  <div class="sec-module-fullscreen" id="secModuleFullscreen" hidden>
+    <section class="sec-module-fullscreen-panel" role="dialog" aria-modal="true" aria-labelledby="secFsTitle">
+      <header class="sec-module-fullscreen-head">
+        <h2 id="secFsTitle">全屏</h2>
+        <button type="button" class="security-fs-btn" data-sec-fs-close title="退出全屏" aria-label="退出全屏"><i class="fa-solid fa-compress"></i></button>
+      </header>
+      <div class="sec-module-fullscreen-filters" id="secFsFilters"></div>
+      <div class="sec-module-fullscreen-body" id="secFsBody"></div>
+    </section>
+  </div>
+  <script src="../../assets/vendor/leaflet/leaflet.js"></script>
+  <script src="../../../app/components/base-map.js"></script>
+  <script src="../../../app/config/menu.js"></script>
+  <script src="../../../app/components/sidebar.js"></script>
+  <script src="../../../app/components/header.js"></script>
+  <script src="../../../app/components/drawer.js"></script>
+  <script src="../../../app/components/requirement.js"></script>
+  <script src="../../../app/components/device-detail-info.js"></script>
+  <script src="../../../app/data/intrusion-alarm-data.js"></script>
+  <script src="../../../app/data/access-control-data.js"></script>
+  <script src="../../../app/data/communication-data.js"></script>
+  <script src="../../../app/data/security-prevention-data.js"></script>
+<div class="dm-modal-mask" id="secDoorModal">
+  <section class="dm-modal" role="dialog" aria-modal="true" aria-labelledby="secDoorModalTitle">
+    <header class="dm-modal-head">
+      <h2 id="secDoorModalTitle">设备详情</h2>
+      <button class="dm-modal-close" type="button" data-sec-door-close aria-label="关闭">×</button>
+    </header>
+    <div class="dm-modal-tabs" role="tablist">
+      <button class="dm-modal-tab is-active" type="button" data-sec-door-tab="info">设备信息</button>
+      <button class="dm-modal-tab" type="button" data-sec-door-tab="live">实时数据</button>
+      <button class="dm-modal-tab" type="button" data-sec-door-tab="history">历史数据</button>
+    </div>
+    <div class="dm-modal-body">
+      <div data-sec-door-panel="info"></div>
+      <div data-sec-door-panel="live" hidden></div>
+      <div data-sec-door-panel="history" hidden></div>
+    </div>
+  </section>
+</div>
+<div class="sec-gis-video-modal" id="secGisVideoModal" hidden>
+  <div class="sec-gis-video-panel" role="dialog" aria-modal="true" aria-labelledby="secGisVideoTitle">
+    <div class="sec-gis-video-head">
+      <h2 id="secGisVideoTitle">全局监控</h2>
+      <button type="button" class="sec-gis-video-close" data-sec-close-video aria-label="关闭全局监控"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <iframe id="secGisVideoFrame" title="全局视频监控" src="about:blank"></iframe>
+  </div>
+</div>
+  <script>
+  (function () {
+    "use strict";
+    var RAW = window.SECURITY_PREVENTION_DATA || {};
+    var VIDEO_POSTER = "../../assets/images/corridor-monitor.jpg";
+    var DEFAULT_CENTER = RAW.mapCenter || [30.4665, 114.4205];
+    var state = {
+      level: "all",
+      status: "all",
+      keyword: "",
+      selectedId: null,
+      doorHighlightId: null,
+      mapFocusId: null,
+      videoPage: 1,
+      doorDevice: null,
+      patrolDetailId: null,
+      detailTab: "info",
+      fs: { mode: null, keyword: "", status: "all", result: "all" },
+    };
+    var STATUS_LABEL = { online: "在线", offline: "离线", warn: "报警", alarm: "报警" };
+    var map, baseMap, markerLayer;
+
+    function esc(v) {
+      return String(v == null ? "" : v).replace(/[&<>"']/g, function (ch) {
+        return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch];
+      });
+    }
+    function el(id) { return document.getElementById(id); }
+
+    function levelClass(level) {
+      if (level === "告警") return "high";
+      if (level === "预警") return "medium";
+      return "low";
+    }
+
+    function statusClass(status) {
+      if (status === "未处理") return "is-open";
+      if (status === "处理中") return "is-doing";
+      return "is-done";
+    }
+
+    function alarmStateClass(status) {
+      if (status === "未处理") return "active";
+      if (status === "处理中") return "processing";
+      return "processed";
+    }
+
+    function transferStatusOf(item) {
+      if (!item) return "未转单";
+      if (item.transferStatus) return item.transferStatus;
+      if (item.workOrderNo || (item.transfer && item.transfer.workOrderNo)) return "已转单";
+      return "未转单";
+    }
+
+    function workOrderNoOf(item) {
+      return (item && (item.workOrderNo || (item.transfer && item.transfer.workOrderNo))) || "-";
+    }
+
+    function transferTimeOf(item) {
+      return (item && (item.transferTime || (item.transfer && item.transfer.transferTime))) || "-";
+    }
+
+    function rawAlarmById(id) {
+      var list = (window.INTRUSION_ALARM_DATA && window.INTRUSION_ALARM_DATA.alarms) || [];
+      return list.filter(function (a) { return String(a.id) === String(id); })[0] || null;
+    }
+
+    function selectedRawAlarm() {
+      return state.selectedId == null ? null : rawAlarmById(state.selectedId);
+    }
+
+    function metricAlarm(m) {
+      return m && (m.status === "warning" || m.status === "danger" || m.status === "alarm");
+    }
+
+    function allAlarms() {
+      return RAW.listAlarms ? RAW.listAlarms() : [];
+    }
+
+    function filteredAlarms() {
+      return allAlarms().filter(function (a) {
+        if (state.level !== "all" && a.level !== state.level) return false;
+        if (state.status !== "all" && a.status !== state.status) return false;
+        if (state.keyword) {
+          var k = state.keyword.toLowerCase();
+          var hit = String(a.device || "").toLowerCase().indexOf(k) !== -1
+            || String(a.message || "").toLowerCase().indexOf(k) !== -1;
+          if (!hit) return false;
+        }
+        return true;
+      });
+    }
+
+    function pickDefaultId(list) {
+      var open = list.filter(function (a) { return a.status === "未处理"; })[0];
+      return (open || list[0] || null) ? (open || list[0]).id : null;
+    }
+
+    function ensureSelection(list) {
+      var prev = state.selectedId;
+      if (!list.length) {
+        state.selectedId = null;
+        return prev !== null;
+      }
+      if (!list.some(function (a) { return String(a.id) === String(state.selectedId); })) {
+        state.selectedId = pickDefaultId(list);
+        return String(prev) !== String(state.selectedId);
+      }
+      return false;
+    }
+
+    function selectedAlarm() {
+      if (state.selectedId == null) return null;
+      return allAlarms().filter(function (a) {
+        return String(a.id) === String(state.selectedId);
+      })[0] || null;
+    }
+
+    function currentLink() {
+      if (state.selectedId == null || !RAW.linkageForAlarm) return null;
+      return RAW.linkageForAlarm(state.selectedId);
+    }
+
+    function findAlarmByPointId(pointId) {
+      if (!pointId) return null;
+      var list = allAlarms();
+      var byCode = list.filter(function (a) {
+        return a.deviceCode === pointId;
+      })[0];
+      if (byCode) return byCode;
+      var point = (RAW.points || []).filter(function (p) { return p.id === pointId; })[0];
+      if (!point) return null;
+      return list.filter(function (a) {
+        var sec = RAW.resolveSection ? RAW.resolveSection(a) : null;
+        return sec
+          && sec.corridor === point.corridor
+          && sec.room === point.room
+          && sec.section === point.section;
+      })[0] || null;
+    }
+
+    function scrollSelectedEventIntoView() {
+      var host = el("secEventList");
+      if (!host || state.selectedId == null) return;
+      var cards = host.querySelectorAll("[data-sec-alarm]");
+      for (var i = 0; i < cards.length; i += 1) {
+        if (String(cards[i].getAttribute("data-sec-alarm")) === String(state.selectedId)) {
+          if (cards[i].scrollIntoView) cards[i].scrollIntoView({ block: "nearest", behavior: "smooth" });
+          break;
+        }
+      }
+    }
+
+    function setText(id, value) {
+      var node = el(id);
+      if (node) node.textContent = String(value);
+    }
+
+    function renderMetrics() {
+      var alarms = allAlarms();
+      var openN = 0, doingN = 0, doneN = 0;
+      alarms.forEach(function (a) {
+        if (a.status === "未处理") openN += 1;
+        else if (a.status === "处理中") doingN += 1;
+        else if (a.status === "已处理") doneN += 1;
+      });
+      setText("secMetricAlarm", alarms.length);
+      setText("secAlarmOpen", openN);
+      setText("secAlarmDoing", doingN);
+      setText("secAlarmDone", doneN);
+
+      var comm = (window.COMMUNICATION_STORE && window.COMMUNICATION_STORE.deviceStats)
+        ? window.COMMUNICATION_STORE.deviceStats()
+        : { total: 0, online: 0, offline: 0, fault: 0 };
+      setText("secMetricComm", comm.total);
+      setText("secCommOnline", comm.online);
+      setText("secCommOffline", comm.offline);
+      setText("secCommAlarm", comm.fault);
+
+      var videos = (RAW.points || []).filter(function (p) { return p.system === "视频监控"; });
+      var vOnline = 0, vOffline = 0, vAlarm = 0;
+      videos.forEach(function (p) {
+        if (p.status === "alarm" || p.status === "warn") vAlarm += 1;
+        else if (p.status === "offline") vOffline += 1;
+        else vOnline += 1;
+      });
+      setText("secMetricVideo", videos.length);
+      setText("secVideoOnline", vOnline);
+      setText("secVideoOffline", vOffline);
+      setText("secVideoAlarm", vAlarm);
+
+      var tasks = RAW.patrolTasks || [];
+      var pending = 0, finished = 0;
+      tasks.forEach(function (t) {
+        if (t.result === "正常" || t.status === "已完成") finished += 1;
+        else pending += 1;
+      });
+      setText("secMetricPatrol", tasks.length);
+      setText("secPatrolPending", pending);
+      setText("secPatrolDone", finished);
+    }
+
+    function renderEvents() {
+      var list = filteredAlarms();
+      var host = el("secEventList");
+      if (!list.length) {
+        host.innerHTML = '<div class="security-empty">暂无入侵报警事件</div>';
+        return;
+      }
+      host.innerHTML = list.map(function (a) {
+        var active = String(a.id) === String(state.selectedId) ? " is-active" : "";
+        return '<button type="button" class="security-event-card' + active + '" data-sec-alarm="' + esc(a.id) + '">'
+          + '<div class="nm">' + esc(a.device) + "</div>"
+          + '<div class="meta">'
+          + '<span class="alarm-level ' + levelClass(a.level) + '">' + esc(a.level) + "</span>"
+          + "<span>" + esc(a.time) + "</span>"
+          + '<span class="security-status-dot ' + statusClass(a.status) + '"><i></i>' + esc(a.status) + "</span>"
+          + "</div></button>";
+      }).join("");
+    }
+
+    function renderContext(link) {
+      var bar = el("secContextBar");
+      if (!bar) return;
+      if (!link || !link.alarm) {
+        bar.className = "security-context-bar is-empty";
+        bar.textContent = "当前：未选择事件";
+        return;
+      }
+      var a = link.alarm;
+      var path = a.property || "区段未知";
+      bar.className = "security-context-bar";
+      bar.innerHTML = '<span class="sec-context-label">当前：</span>'
+        + '<span class="sec-context-device">' + esc(a.device) + "</span>"
+        + '<span class="sec-context-sep">·</span>'
+        + "<span>" + esc(path) + "</span>";
+    }
+
+    function alarmInfoMarkup(item) {
+      var transfer = transferStatusOf(item);
+      var rule = item.type === "设备离线" ? "设备离线监测规则" : "设备属性异常规则";
+      return '<section class="detail-section"><h3 class="detail-title">报警信息</h3>'
+        + '<div class="detail-grid alarm-detail-grid security-detail-grid">'
+        + '<div class="info-item"><span class="info-label">报警设备</span><span class="info-value">' + esc(item.device) + "</span></div>"
+        + '<div class="info-item"><span class="info-label">设备编码</span><span class="info-value">' + esc(item.deviceCode || "—") + "</span></div>"
+        + '<div class="info-item"><span class="info-label">所属系统</span><span class="info-value">' + esc(item.system || "入侵报警") + "</span></div>"
+        + '<div class="info-item"><span class="info-label">设备分类</span><span class="info-value">' + esc(item.category || (item.type === "设备离线" ? "网关" : "防区")) + "</span></div>"
+        + '<div class="info-item"><span class="info-label">所属房源</span><span class="info-value">' + esc(item.property || "—") + "</span></div>"
+        + '<div class="info-item"><span class="info-label">安装位置</span><span class="info-value">' + esc(item.location || "—") + "</span></div>"
+        + '<div class="info-item"><span class="info-label">报警类型</span><span class="info-value">' + esc(item.type || "—") + "</span></div>"
+        + '<div class="info-item"><span class="info-label">报警等级</span><span class="info-value"><span class="alarm-level ' + levelClass(item.level) + '">' + esc(item.level) + "</span></span></div>"
+        + '<div class="info-item"><span class="info-label">报警状态</span><span class="info-value"><span class="alarm-state ' + alarmStateClass(item.status) + '">' + esc(item.status) + "</span></span></div>"
+        + '<div class="info-item"><span class="info-label">报警时间</span><span class="info-value">' + esc(item.time || "—") + "</span></div>"
+        + '<div class="info-item"><span class="info-label">转单状态</span><span class="info-value"><span class="alarm-transfer-state ' + (transfer === "已转单" ? "is-transferred" : "is-pending") + '">' + esc(transfer) + "</span></span></div>"
+        + '<div class="info-item"><span class="info-label">工单编号</span><span class="info-value">' + esc(workOrderNoOf(item)) + "</span></div>"
+        + '<div class="info-item"><span class="info-label">转工单时间</span><span class="info-value">' + esc(transferTimeOf(item)) + "</span></div>"
+        + '<div class="info-item"><span class="info-label">关联规则</span><span class="info-value">' + esc(rule) + "</span></div>"
+        + '<div class="info-item form-span-2"><span class="info-label">报警描述</span><span class="info-value">' + esc(item.message || "—") + "</span></div>"
+        + "</div></section>";
+    }
+
+    function historyMarkup(item) {
+      var history = item.history || [];
+      if (!history.length) return "";
+      return '<section class="detail-section"><h3 class="detail-title">处理记录</h3><div class="alarm-history">'
+        + history.map(function (entry) {
+          return '<div class="alarm-history-item"><span class="alarm-history-time">' + esc(entry.time) + "</span><strong>"
+            + esc(entry.operator) + "</strong><span>" + esc(entry.action) + "</span></div>";
+        }).join("") + "</div></section>";
+    }
+
+    function transferMarkup(item) {
+      var transfer = item.transfer || null;
+      if (!item.workOrderNo && !(transfer && transfer.workOrderNo)) return "";
+      transfer = transfer || {};
+      return '<section class="detail-section"><h3 class="detail-title">转工单信息</h3><div class="detail-grid alarm-detail-grid security-detail-grid">'
+        + '<div class="info-item"><span class="info-label">工单标题</span><span class="info-value">' + esc(transfer.title || "—") + "</span></div>"
+        + '<div class="info-item"><span class="info-label">工单编号</span><span class="info-value">' + esc(workOrderNoOf(item)) + "</span></div>"
+        + '<div class="info-item"><span class="info-label">联系人</span><span class="info-value">' + esc(transfer.contact || "—") + "</span></div>"
+        + '<div class="info-item"><span class="info-label">联系电话</span><span class="info-value">' + esc(transfer.phone || "—") + "</span></div>"
+        + '<div class="info-item"><span class="info-label">工单类型</span><span class="info-value">' + esc(transfer.workOrderType || "—") + "</span></div>"
+        + '<div class="info-item"><span class="info-label">工单分类</span><span class="info-value">' + esc(transfer.workOrderCategory || "—") + "</span></div>"
+        + '<div class="info-item form-span-2"><span class="info-label">报修内容</span><span class="info-value">' + esc(transfer.reportContent || "—") + "</span></div>"
+        + "</div></section>";
+    }
+
+    function closeMarkup(item) {
+      if (!(item.closeReason || item.closeRemark || item.processedBy || item.processedAt)) return "";
+      return '<section class="detail-section"><h3 class="detail-title">报警解除信息</h3><div class="detail-grid alarm-detail-grid security-detail-grid">'
+        + '<div class="info-item"><span class="info-label">处理人</span><span class="info-value">' + esc(item.processedBy || "—") + "</span></div>"
+        + '<div class="info-item"><span class="info-label">处理时间</span><span class="info-value">' + esc(item.processedAt || "—") + "</span></div>"
+        + '<div class="info-item form-span-2"><span class="info-label">备注</span><span class="info-value">' + esc(item.processRemark || item.closeRemark || "—") + "</span></div>"
+        + "</div></section>";
+    }
+
+    function detailRecordsMarkup(item) {
+      var content = transferMarkup(item) + closeMarkup(item) + historyMarkup(item);
+      return content || '<div class="alarm-detail-empty">暂无处理记录</div>';
+    }
+
+    function renderDetailActions(item) {
+      var host = el("secDetailActions");
+      if (!host) return;
+      if (!item || item.status !== "未处理") {
+        host.innerHTML = "";
+        return;
+      }
+      host.innerHTML = '<button type="button" class="btn btn-secondary btn-sm" data-sec-alarm-action="false">误报</button>'
+        + '<button type="button" class="btn btn-secondary btn-sm" data-sec-alarm-action="process">处理</button>'
+        + '<button type="button" class="btn btn-primary btn-sm" data-sec-alarm-action="transfer">转工单</button>';
+    }
+
+    function renderDetail(link) {
+      var host = el("secDetailBody");
+      var item = selectedRawAlarm() || (link && link.alarm) || null;
+      if (!item) {
+        renderDetailActions(null);
+        host.innerHTML = '<div class="security-empty">暂无入侵报警事件</div>';
+        return;
+      }
+      renderDetailActions(item);
+      var tab = state.detailTab === "records" ? "records" : "info";
+      host.innerHTML = '<div class="alarm-detail-tabs security-detail-tabs" role="tablist">'
+        + '<button class="alarm-detail-tab' + (tab === "info" ? " active" : "") + '" type="button" role="tab" data-sec-detail-tab="info">报警信息</button>'
+        + '<button class="alarm-detail-tab' + (tab === "records" ? " active" : "") + '" type="button" role="tab" data-sec-detail-tab="records">处理记录</button>'
+        + "</div>"
+        + '<div data-sec-detail-pane="info" class="' + (tab === "info" ? "" : "hidden") + '">' + alarmInfoMarkup(item) + "</div>"
+        + '<div data-sec-detail-pane="records" class="' + (tab === "records" ? "" : "hidden") + '">' + detailRecordsMarkup(item) + "</div>";
+    }
+
+    function videoCardsHtml(cameras, padTo) {
+      var live = new Date().toTimeString().slice(0, 8);
+      if (!cameras.length && !padTo) return '<div class="security-empty">本区段暂无视频</div>';
+      var cards = cameras.map(function (c) {
+        var offline = c.status === "offline";
+        return '<div class="security-video-feed' + (offline ? " is-offline" : "") + '">'
+          + '<div class="security-video-feed-title"><span>' + esc(c.name) + "</span><b>"
+          + esc(c.statusLabel || (offline ? "离线" : "在线")) + "</b></div>"
+          + (offline
+            ? '<div class="security-video-feed-screen is-offline"><i class="fa-solid fa-video-slash"></i><em>信号中断</em></div>'
+            : '<div class="security-video-feed-screen"><img src="' + VIDEO_POSTER + '" alt="">'
+              + '<span class="security-video-live">LIVE</span><span class="security-video-time">' + live + "</span></div>")
+          + "</div>";
+      });
+      var target = Math.max(padTo || 0, cards.length);
+      while (cards.length < target) {
+        cards.push('<div class="security-video-feed is-empty"><div class="security-video-feed-title"><span>暂无视频</span><b>—</b></div>'
+          + '<div class="security-video-feed-screen is-empty"><i class="fa-solid fa-video"></i></div></div>');
+      }
+      return '<div class="security-video-grid">' + cards.join("") + "</div>";
+    }
+
+    function sectionCameras(link) {
+      if (!link || !link.alarm || !RAW.resolveSection) return link ? (link.cameras || []) : [];
+      var alarm = selectedAlarm();
+      var sec = alarm ? RAW.resolveSection(alarm) : null;
+      if (!sec || !sec.corridor) return link.cameras || [];
+      return (RAW.points || []).filter(function (p) {
+        return p.system === "视频监控"
+          && p.corridor === sec.corridor
+          && p.room === sec.room
+          && p.section === sec.section;
+      }).sort(function (a, b) {
+        if (a.name < b.name) return -1;
+        if (a.name > b.name) return 1;
+        return 0;
+      });
+    }
+
+    function renderVideo(link) {
+      var host = el("secVideoBody");
+      if (!link) {
+        host.innerHTML = '<div class="security-empty">暂无入侵报警事件</div>';
+        return;
+      }
+      var cameras = sectionCameras(link);
+      var pageSize = 4;
+      var pages = Math.max(1, Math.ceil(Math.max(cameras.length, 1) / pageSize));
+      if (!cameras.length) {
+        host.innerHTML = videoCardsHtml([], 4);
+        return;
+      }
+      state.videoPage = Math.min(Math.max(1, state.videoPage), pages);
+      var slice = cameras.slice((state.videoPage - 1) * pageSize, state.videoPage * pageSize);
+      var pager = cameras.length > pageSize
+        ? '<div class="security-video-pager"><span>共 <b>' + cameras.length + '</b> 路，每页 <b>4</b> 路</span>'
+          + '<button type="button" data-sec-video-page="prev"' + (state.videoPage <= 1 ? " disabled" : "") + ">‹</button>"
+          + '<span class="is-current">' + state.videoPage + "</span>"
+          + '<button type="button" data-sec-video-page="next"' + (state.videoPage >= pages ? " disabled" : "") + ">›</button></div>"
+        : "";
+      host.innerHTML = videoCardsHtml(slice, 4) + pager;
+    }
+
+    function doorCardHtml(d) {
+      var device = accessDeviceById(d.id) || d;
+      var st = d.status === "online" ? "online" : d.status === "warn" || d.status === "alarm" ? "warn" : "offline";
+      var metrics = device.metrics || [];
+      var doorMetric = metrics.filter(function (m) { return m.name === "门状态"; })[0];
+      var deviceMetric = metrics.filter(function (m) { return m.name === "设备状态"; })[0];
+      var passMetric = metrics.filter(function (m) { return m.name === "今日通行"; })[0];
+      var abnormalMetric = metrics.filter(function (m) { return m.name === "今日异常"; })[0];
+      var doorLabel = doorMetric ? String(doorMetric.value) : (d.doorLabel || "—");
+      var deviceLabel = deviceMetric ? String(deviceMetric.value) : (d.statusLabel || STATUS_LABEL[st] || "—");
+      var passCount = passMetric ? passMetric.value : "—";
+      var abnormalCount = abnormalMetric ? Number(abnormalMetric.value) || 0 : 0;
+      var doorAlarm = doorLabel === "开启" || metricAlarm(doorMetric);
+      var deviceAlarm = deviceLabel === "故障" || deviceLabel === "离线" || metricAlarm(deviceMetric);
+      var hi = state.doorHighlightId === d.id ? " is-active" : "";
+      var tone = st === "offline" ? " is-offline" : (st === "warn" ? " is-alarm" : "");
+      return '<button type="button" class="env-device-card security-door-card' + tone + hi + '" data-sec-door="' + esc(d.id) + '">'
+        + '<div class="env-device-card-head"><div>'
+        + '<strong class="env-device-card-name">' + esc(d.name) + "</strong>"
+        + "<small>" + esc(d.code) + "</small></div>"
+        + '<span class="dm-state ' + st + '"><i></i>' + esc(STATUS_LABEL[st] || d.statusLabel || "—") + "</span></div>"
+        + '<div class="env-device-card-metrics">'
+        + '<div class="env-device-metric' + (doorAlarm ? " is-alarm" : "") + '"><span class="env-device-metric-name">门状态</span><strong>' + esc(doorLabel) + "</strong></div>"
+        + '<div class="env-device-metric' + (deviceAlarm ? " is-alarm" : "") + '"><span class="env-device-metric-name">设备状态</span><strong>' + esc(deviceLabel) + "</strong></div>"
+        + "</div>"
+        + '<div class="security-door-stats"><span>今日通行 <b>' + esc(passCount) + "</b></span>"
+        + '<span>今日异常 <b class="' + (abnormalCount > 0 ? "is-alarm" : "") + '">' + esc(abnormalCount) + "</b></span></div>"
+        + '<div class="env-device-card-foot"><span><i class="fa-regular fa-clock"></i> 上报时间 ' + esc(device.time || "—") + "</span><em>查看</em></div>"
+        + "</button>";
+    }
+
+    function filterDoors(doors, options) {
+      options = options || {};
+      var keyword = String(options.keyword || "").trim().toLowerCase();
+      var status = options.status || "all";
+      return (doors || []).filter(function (d) {
+        if (status !== "all" && d.status !== status) return false;
+        if (!keyword) return true;
+        return String(d.name || "").toLowerCase().indexOf(keyword) !== -1
+          || String(d.code || "").toLowerCase().indexOf(keyword) !== -1;
+      });
+    }
+
+    function doorsHtml(doors, emptyText) {
+      if (!doors.length) return '<div class="security-empty">' + esc(emptyText || "本区段暂无门禁") + "</div>";
+      return '<div class="security-door-grid">' + doors.map(doorCardHtml).join("") + "</div>";
+    }
+
+    function renderDoors(link) {
+      var host = el("secDoorBody");
+      if (!link) {
+        host.innerHTML = '<div class="security-empty">暂无入侵报警事件</div>';
+        return;
+      }
+      host.innerHTML = doorsHtml(link.doors || [], "本区段暂无门禁");
+      if (state.fs.mode === "door") renderModuleFullscreen();
+    }
+
+    function filterPatrolTasks(tasks, options) {
+      options = options || {};
+      var keyword = String(options.keyword || "").trim().toLowerCase();
+      var result = options.result || "all";
+      return (tasks || []).filter(function (t) {
+        if (result !== "all" && String(t.result || "") !== result) return false;
+        if (!keyword) return true;
+        return String(t.code || "").toLowerCase().indexOf(keyword) !== -1
+          || String(t.name || "").toLowerCase().indexOf(keyword) !== -1
+          || String(t.inspector || "").toLowerCase().indexOf(keyword) !== -1
+          || String(t.planName || "").toLowerCase().indexOf(keyword) !== -1;
+      });
+    }
+
+    function patrolTableHtml(tasks, emptyText) {
+      if (!tasks.length) return '<div class="security-empty">' + esc(emptyText || "本区段暂无巡更记录") + "</div>";
+      return '<div class="table-wrap security-patrol-wrap"><table class="security-table table-actions-sticky"><thead><tr>'
+        + "<th>任务编码</th><th>任务名称</th><th>计划</th><th>等级</th><th>巡检人</th><th>负责人</th>"
+        + "<th>结果</th><th>超期状态</th><th>设备/检查项</th><th>异常项</th><th>计划执行</th>"
+        + "<th>截止时间</th><th>开始时间</th><th>提交时间</th><th>巡检时长</th><th>操作</th>"
+        + "</tr></thead><tbody>" + tasks.map(function (t) {
+          return "<tr>"
+            + "<td>" + esc(t.code) + "</td><td>" + esc(t.name) + "</td><td>" + esc(t.planName) + "</td>"
+            + "<td>" + esc(t.level) + "</td><td>" + esc(t.inspector) + "</td><td>" + esc(t.owner) + "</td>"
+            + "<td>" + esc(t.result) + "</td><td>" + esc(t.overdue) + "</td>"
+            + "<td>" + esc(t.deviceCount + "/" + t.itemCount) + "</td><td>" + esc(t.abnormalCount) + "</td>"
+            + "<td>" + esc(t.plannedAt) + "</td><td>" + esc(t.deadline) + "</td>"
+            + "<td>" + esc(t.startedAt) + "</td><td>" + esc(t.submittedAt) + "</td><td>" + esc(t.duration) + "</td>"
+            + '<td class="security-patrol-actions"><button type="button" class="table-action" data-sec-patrol="' + esc(t.id) + '">详情</button></td>'
+            + "</tr>";
+        }).join("") + "</tbody></table></div>";
+    }
+
+    function renderPatrol(link) {
+      var host = el("secPatrolBody");
+      if (!link) {
+        host.innerHTML = '<div class="security-empty">暂无入侵报警事件</div>';
+        return;
+      }
+      host.innerHTML = patrolTableHtml(link.patrolTasks || [], "本区段暂无巡更记录");
+      if (state.fs.mode === "patrol") renderModuleFullscreen();
+    }
+
+    function openModuleFullscreen(mode) {
+      state.fs.mode = mode === "patrol" ? "patrol" : "door";
+      state.fs.keyword = "";
+      state.fs.status = "all";
+      state.fs.result = "all";
+      renderModuleFullscreen();
+    }
+
+    function closeModuleFullscreen() {
+      state.fs.mode = null;
+      var modal = el("secModuleFullscreen");
+      if (modal) modal.hidden = true;
+      document.body.classList.remove("sec-module-fs-open");
+    }
+
+    function renderModuleFullscreen() {
+      var modal = el("secModuleFullscreen");
+      var title = el("secFsTitle");
+      var filters = el("secFsFilters");
+      var body = el("secFsBody");
+      if (!modal || !filters || !body || !state.fs.mode) return;
+      var link = currentLink();
+      var mode = state.fs.mode;
+      title.textContent = mode === "patrol" ? "电子巡更记录" : "门禁状态";
+      if (mode === "door") {
+        filters.innerHTML = '<div class="sec-fs-filter-grid">'
+          + '<label class="form-field"><span class="form-label">设备状态</span>'
+          + '<select class="form-control" id="secFsDoorStatus">'
+          + '<option value="all"' + (state.fs.status === "all" ? " selected" : "") + ">全部</option>"
+          + '<option value="online"' + (state.fs.status === "online" ? " selected" : "") + ">在线</option>"
+          + '<option value="warn"' + (state.fs.status === "warn" ? " selected" : "") + ">报警</option>"
+          + '<option value="offline"' + (state.fs.status === "offline" ? " selected" : "") + ">离线</option>"
+          + "</select></label>"
+          + '<label class="form-field"><span class="form-label">关键字</span>'
+          + '<input class="form-control" id="secFsKeyword" type="search" value="' + esc(state.fs.keyword) + '" placeholder="设备名称/编码"></label>'
+          + '<div class="security-filter-btns">'
+          + '<button type="button" class="btn btn-primary" data-sec-fs-search>搜索</button>'
+          + '<button type="button" class="btn btn-secondary" data-sec-fs-reset>重置</button></div></div>';
+        if (!link) body.innerHTML = '<div class="security-empty">暂无入侵报警事件</div>';
+        else {
+          var doors = filterDoors(link.doors || [], { keyword: state.fs.keyword, status: state.fs.status });
+          body.innerHTML = doorsHtml(doors, "当前筛选条件下暂无门禁");
+        }
+      } else {
+        filters.innerHTML = '<div class="sec-fs-filter-grid">'
+          + '<label class="form-field"><span class="form-label">巡检结果</span>'
+          + '<select class="form-control" id="secFsPatrolResult">'
+          + '<option value="all"' + (state.fs.result === "all" ? " selected" : "") + ">全部</option>"
+          + '<option value="正常"' + (state.fs.result === "正常" ? " selected" : "") + ">正常</option>"
+          + '<option value="异常"' + (state.fs.result === "异常" ? " selected" : "") + ">异常</option>"
+          + '<option value="待巡检"' + (state.fs.result === "待巡检" ? " selected" : "") + ">待巡检</option>"
+          + "</select></label>"
+          + '<label class="form-field"><span class="form-label">关键字</span>'
+          + '<input class="form-control" id="secFsKeyword" type="search" value="' + esc(state.fs.keyword) + '" placeholder="任务编码/名称/巡检人"></label>'
+          + '<div class="security-filter-btns">'
+          + '<button type="button" class="btn btn-primary" data-sec-fs-search>搜索</button>'
+          + '<button type="button" class="btn btn-secondary" data-sec-fs-reset>重置</button></div></div>';
+        if (!link) body.innerHTML = '<div class="security-empty">暂无入侵报警事件</div>';
+        else {
+          var tasks = filterPatrolTasks(link.patrolTasks || [], { keyword: state.fs.keyword, result: state.fs.result });
+          body.innerHTML = patrolTableHtml(tasks, "当前筛选条件下暂无巡更记录");
+        }
+      }
+      modal.hidden = false;
+      document.body.classList.add("sec-module-fs-open");
+    }
+
+    function applyFsSearch() {
+      var kw = el("secFsKeyword");
+      state.fs.keyword = kw ? kw.value.trim() : "";
+      if (state.fs.mode === "door") {
+        var st = el("secFsDoorStatus");
+        state.fs.status = st ? st.value : "all";
+      } else {
+        var rs = el("secFsPatrolResult");
+        state.fs.result = rs ? rs.value : "all";
+      }
+      renderModuleFullscreen();
+    }
+
+    function resetFsSearch() {
+      state.fs.keyword = "";
+      state.fs.status = "all";
+      state.fs.result = "all";
+      renderModuleFullscreen();
+    }
+
+    function renderLinkage() {
+      var link = currentLink();
+      renderContext(link);
+      renderDetail(link);
+      renderVideo(link);
+      renderDoors(link);
+      renderPatrol(link);
+    }
+
+    function addMarker(p, activeId) {
+      if (!p || p.lat == null || p.lng == null) return;
+      var cls = "dm-marker";
+      if (p.system === "入侵报警" && p.status === "alarm") cls += " is-fault is-alarm";
+      else if (p.status !== "online") cls += " is-" + (p.status === "alarm" ? "fault" : p.status);
+      if (activeId && p.id === activeId) cls += " is-active";
+      var icon = L.divIcon({
+        className: "dm-marker-wrap",
+        html: '<span class="' + cls + '" style="--dm-c:' + esc(p.color || "#9359E3") + '"><i class="fa-solid ' + esc(p.icon || "fa-shield-halved") + '"></i></span>',
+        iconSize: [24, 24],
+        iconAnchor: [12, 12],
+      });
+      var marker = L.marker([p.lat, p.lng], { icon: icon, riseOnHover: true });
+      if (window.BASE_MAP) window.BASE_MAP.bindTip(marker, p.name);
+      if (p.system === "入侵报警") {
+        marker.on("click", function () {
+          var alarm = findAlarmByPointId(p.id);
+          if (!alarm) return;
+          selectAlarm(alarm.id, { fromMap: true, focusPointId: p.id });
+        });
+      }
+      marker.addTo(markerLayer);
+    }
+
+    function renderMapMarkers(activeId) {
+      if (!map || !markerLayer) return;
+      markerLayer.clearLayers();
+      var link = currentLink();
+      var alarmLoc = null;
+      var alarm = selectedAlarm();
+      if (alarm && RAW.locatePoint) alarmLoc = RAW.locatePoint(alarm);
+      var focusId = activeId || state.mapFocusId || (alarmLoc && alarmLoc.id) || null;
+
+      (RAW.points || []).filter(function (p) {
+        return p.system === "入侵报警" && p.lat != null;
+      }).forEach(function (p) { addMarker(p, focusId); });
+
+      if (link) {
+        (link.doors || []).forEach(function (d) { addMarker(d, focusId); });
+        (link.cameras || []).forEach(function (c) { addMarker(c, focusId); });
+      }
+    }
+
+    function focusOnMap(latlng, pointId) {
+      if (!map || !latlng) return;
+      state.mapFocusId = pointId || null;
+      map.setView([latlng.lat, latlng.lng], Math.max(map.getZoom(), 15));
+      renderMapMarkers(pointId);
+    }
+
+    function focusSelectedAlarm(options) {
+      options = options || {};
+      var alarm = selectedAlarm();
+      if (!map) return;
+      if (!alarm || !RAW.locatePoint) {
+        state.mapFocusId = null;
+        renderMapMarkers(null);
+        return;
+      }
+      var loc = RAW.locatePoint(alarm);
+      if (!loc) {
+        state.mapFocusId = null;
+        renderMapMarkers(null);
+        return;
+      }
+      if (options.skipPan) {
+        state.mapFocusId = loc.id;
+        renderMapMarkers(loc.id);
+        return;
+      }
+      focusOnMap(loc, loc.id);
+    }
+
+    function resetMapToAlarm() {
+      var alarm = selectedAlarm();
+      if (!alarm || !RAW.locatePoint) {
+        if (map) map.setView(DEFAULT_CENTER, 14);
+        return;
+      }
+      var loc = RAW.locatePoint(alarm);
+      if (loc && map) {
+        state.doorHighlightId = null;
+        renderDoors(currentLink());
+        map.setView([loc.lat, loc.lng], 15);
+        focusOnMap(loc, loc.id);
+      }
+    }
+
+    function selectAlarm(id, options) {
+      options = options || {};
+      var next = id == null ? null : String(id);
+      var changed = String(state.selectedId) !== String(next);
+      state.selectedId = next;
+      state.videoPage = 1;
+      if (changed) state.detailTab = "info";
+      if (!options.keepDoor) state.doorHighlightId = null;
+      renderEvents();
+      if (!options.fromMap) scrollSelectedEventIntoView();
+      if (changed || options.forceLinkage) renderLinkage();
+      if (options.focusPointId) {
+        var focusPoint = (RAW.points || []).filter(function (x) { return x.id === options.focusPointId; })[0];
+        if (focusPoint) focusOnMap(focusPoint, focusPoint.id);
+        else focusSelectedAlarm();
+      } else if (changed || options.forceLinkage) {
+        focusSelectedAlarm();
+      } else {
+        renderMapMarkers(state.mapFocusId);
+      }
+      if (!options.fromMap) scrollSelectedEventIntoView();
+    }
+
+    function refreshAfterAlarmAction() {
+      renderMetrics();
+      applyFilter();
+      renderLinkage();
+      focusSelectedAlarm({ skipPan: true });
+    }
+
+    function openFalseAlarmPanel(ids) {
+      if (!window.openAppDrawer) return;
+      window.openAppDrawer({
+        title: "误报确认",
+        body: '<label class="form-field form-item"><span class="form-label form-required">误报说明</span>'
+          + '<textarea class="form-control textarea" data-sec-false-remark placeholder="请输入误报说明"></textarea></label>',
+        footer: '<button class="btn btn-secondary" type="button" data-drawer-close>取消</button>'
+          + '<button class="btn btn-primary" type="button" data-sec-false-save="' + esc(ids.join(",")) + '">确认</button>',
+      });
+    }
+
+    function openProcessPanel(ids) {
+      if (!window.openAppDrawer) return;
+      window.openAppDrawer({
+        title: "处理确认",
+        body: '<div class="form-grid-2 alarm-process-form">'
+          + '<label class="form-field form-item"><span class="form-label form-required">处理人</span>'
+          + '<select class="form-control" data-sec-process-field="handler"><option value="">请选择处理人</option>'
+          + "<option>管理员</option><option>张三</option><option>李四</option></select></label>"
+          + '<label class="form-field form-item"><span class="form-label form-required">处理时间</span>'
+          + '<input class="form-control" type="datetime-local" data-sec-process-field="handledAt"></label>'
+          + '<label class="form-field form-item form-span-2"><span class="form-label form-required">备注</span>'
+          + '<textarea class="form-control textarea" data-sec-process-field="remark" placeholder="请输入处理备注"></textarea></label></div>',
+        footer: '<button class="btn btn-secondary" type="button" data-drawer-close>取消</button>'
+          + '<button class="btn btn-primary" type="button" data-sec-process-save="' + esc(ids.join(",")) + '">确认</button>',
+      });
+    }
+
+    function openTransferPanel(item, ids) {
+      if (!window.openAppDrawer || !item) return;
+      ids = ids || [item.id];
+      var transfer = item.transfer || {};
+      var defaultCategory = item.type === "设备离线" ? "设备离线" : "设备故障";
+      var cats = ["设备故障", "设备离线", "燃气泄漏", "火灾报警", "积水报警", "温湿度异常", "其他"];
+      window.openAppDrawer({
+        title: ids.length > 1 ? "批量转工单" : "告警转工单",
+        body: '<div class="form-grid-2 alarm-transfer-form">'
+          + '<label class="form-field form-item form-span-2"><span class="form-label form-required">工单标题</span>'
+          + '<input class="form-control" data-sec-transfer-field="title" value="' + esc(transfer.title || (item.device + " " + (item.type || ""))) + '" placeholder="请输入工单标题"></label>'
+          + '<label class="form-field form-item"><span class="form-label form-required">联系人</span>'
+          + '<input class="form-control" data-sec-transfer-field="contact" value="' + esc(transfer.contact || "") + '" placeholder="请输入联系人"></label>'
+          + '<label class="form-field form-item"><span class="form-label form-required">联系电话</span>'
+          + '<input class="form-control" data-sec-transfer-field="phone" value="' + esc(transfer.phone || "") + '" placeholder="请输入联系电话"></label>'
+          + '<label class="form-field form-item"><span class="form-label form-required">工单类型</span>'
+          + '<select class="form-control" data-sec-transfer-field="workOrderType"><option value="">请选择工单类型</option>'
+          + '<option selected>设备异常</option><option>环境异常</option><option>安全事故</option><option>消防事件</option></select></label>'
+          + '<label class="form-field form-item"><span class="form-label form-required">工单分类</span>'
+          + '<select class="form-control" data-sec-transfer-field="workOrderCategory"><option value="">请选择工单分类</option>'
+          + cats.map(function (c) {
+            return "<option" + (c === (transfer.workOrderCategory || defaultCategory) ? " selected" : "") + ">" + c + "</option>";
+          }).join("") + "</select></label>"
+          + '<label class="form-field form-item"><span class="form-label form-required">紧急程度</span>'
+          + '<select class="form-control" data-sec-transfer-field="urgency"><option value="">请选择紧急程度</option>'
+          + "<option>一般</option><option>紧急</option></select></label>"
+          + '<label class="form-field form-item form-span-2"><span class="form-label form-required">报修内容</span>'
+          + '<textarea class="form-control textarea alarm-transfer-textarea" data-sec-transfer-field="reportContent" placeholder="请输入报修内容">'
+          + esc(transfer.reportContent || item.message || "") + "</textarea></label></div>",
+        footer: '<button class="btn btn-secondary" type="button" data-drawer-close>取消</button>'
+          + '<button class="btn btn-primary" type="button" data-sec-transfer-save="' + esc(ids.join(",")) + '">确认</button>',
+      });
+    }
+
+    function saveFalseAlarm(ids, remark) {
+      var processedAt = "2026-10-14 11:00:00";
+      ids.forEach(function (id) {
+        var item = rawAlarmById(id);
+        if (!item) return;
+        item.status = "已处理";
+        item.processedBy = "当前用户";
+        item.processedAt = processedAt;
+        item.processRemark = remark;
+        item.closeReason = "误报无问题";
+        item.closeRemark = remark;
+        item.history = (item.history || []).concat([{ time: processedAt, operator: "当前用户", action: "确认误报：" + remark }]);
+      });
+      if (window.closeAppDrawer) window.closeAppDrawer();
+      refreshAfterAlarmAction();
+    }
+
+    function saveProcessAlarm(ids, values) {
+      ids.forEach(function (id) {
+        var item = rawAlarmById(id);
+        if (!item) return;
+        item.status = "已处理";
+        item.processedBy = values.handler;
+        item.processedAt = values.handledAt;
+        item.processRemark = values.remark;
+        item.history = (item.history || []).concat([{ time: values.handledAt, operator: values.handler, action: values.remark }]);
+      });
+      if (window.closeAppDrawer) window.closeAppDrawer();
+      refreshAfterAlarmAction();
+    }
+
+    function saveTransferAlarm(ids, fields) {
+      var transferTime = new Date().toISOString().slice(0, 19).replace("T", " ");
+      ids.forEach(function (id) {
+        var item = rawAlarmById(id);
+        if (!item) return;
+        var workOrderNo = "WO" + transferTime.slice(0, 10).replace(/-/g, "") + String(item.id).padStart(3, "0");
+        var title = ids.length > 1 ? fields.title + "（" + item.device + "）" : fields.title;
+        item.status = "处理中";
+        item.transferStatus = "已转单";
+        item.workOrderNo = workOrderNo;
+        item.transferTime = transferTime;
+        item.transfer = Object.assign({}, fields, {
+          title: title,
+          workOrderNo: workOrderNo,
+          transferTime: transferTime,
+          reportContent: ids.length > 1 ? item.message : fields.reportContent,
+        });
+        item.history = (item.history || []).concat([{
+          time: transferTime,
+          operator: "当前用户",
+          action: "已转工单，工单编号 " + workOrderNo,
+        }]);
+      });
+      if (window.closeAppDrawer) window.closeAppDrawer();
+      refreshAfterAlarmAction();
+    }
+
+    function applyFilter() {
+      var list = filteredAlarms();
+      var selectionChanged = ensureSelection(list);
+      renderEvents();
+      scrollSelectedEventIntoView();
+      if (selectionChanged) {
+        state.doorHighlightId = null;
+        renderLinkage();
+        focusSelectedAlarm();
+      }
+    }
+
+    function openGlobalVideo() {
+      var modal = el("secGisVideoModal");
+      var frame = el("secGisVideoFrame");
+      if (!modal || !frame) return;
+      if (!frame.getAttribute("src") || frame.getAttribute("src") === "about:blank") {
+        frame.setAttribute("src", "video-monitor.html?embedded=1");
+      }
+      modal.hidden = false;
+      document.body.classList.add("sec-video-modal-open");
+    }
+
+    function closeGlobalVideo() {
+      var modal = el("secGisVideoModal");
+      if (!modal) return;
+      modal.hidden = true;
+      document.body.classList.remove("sec-video-modal-open");
+    }
+
+    function accessDeviceById(id) {
+      var list = (window.ACCESS_CONTROL_DATA && window.ACCESS_CONTROL_DATA.monitorDevices) || [];
+      var raw = list.filter(function (d) { return d.id === id; })[0];
+      var point = (RAW.points || []).filter(function (p) { return p.id === id; })[0];
+      if (!raw && point) raw = point;
+      if (!raw) return null;
+      return Object.assign({}, raw, point || {}, {
+        lng: (point && point.lng) || raw.lng,
+        lat: (point && point.lat) || raw.lat,
+      });
+    }
+
+    function renderDoorPanels(tab) {
+      var d = state.doorDevice;
+      if (!d) return;
+      var info = el("secDoorModal").querySelector('[data-sec-door-panel="info"]');
+      var live = el("secDoorModal").querySelector('[data-sec-door-panel="live"]');
+      var history = el("secDoorModal").querySelector('[data-sec-door-panel="history"]');
+      if (window.DEVICE_DETAIL_INFO) info.innerHTML = window.DEVICE_DETAIL_INFO.html(d, esc);
+      var metrics = d.metrics || [];
+      live.innerHTML = metrics.length
+        ? '<div class="dm-live-grid">' + metrics.map(function (m) {
+            return '<div class="dm-live-card"><span class="dm-live-name">' + esc(m.name) + '</span><div class="dm-live-value">'
+              + esc(m.value) + (m.unit ? '<span class="dm-live-unit">' + esc(m.unit) + "</span>" : "")
+              + '</div><span class="dm-live-time">' + esc(d.time || "") + "</span></div>";
+          }).join("") + "</div>"
+        : '<div class="security-empty">暂无实时数据</div>';
+      history.innerHTML = '<table class="security-table"><thead><tr><th>时间</th><th>门状态</th><th>设备状态</th></tr></thead><tbody>'
+        + '<tr><td>' + esc(d.time || "—") + "</td><td>" + esc(d.doorLabel || "—") + "</td><td>" + esc(d.statusLabel || d.status || "—") + "</td></tr>"
+        + "</tbody></table>";
+      el("secDoorModal").querySelectorAll("[data-sec-door-tab]").forEach(function (btn) {
+        btn.classList.toggle("is-active", btn.getAttribute("data-sec-door-tab") === tab);
+      });
+      el("secDoorModal").querySelectorAll("[data-sec-door-panel]").forEach(function (panel) {
+        panel.hidden = panel.getAttribute("data-sec-door-panel") !== tab;
+      });
+    }
+
+    function openDoorDetail(id) {
+      state.doorDevice = accessDeviceById(id);
+      if (!state.doorDevice) return;
+      el("secDoorModalTitle").textContent = "设备详情";
+      renderDoorPanels("info");
+      el("secDoorModal").classList.add("is-open");
+    }
+
+    function closeDoorDetail() {
+      var mask = el("secDoorModal");
+      if (mask) mask.classList.remove("is-open");
+    }
+
+    function patrolStatusTag(text, kind) {
+      var map = { success: "normal", warning: "warning", danger: "danger" };
+      return '<span class="inspection-status inspection-status-' + (map[kind] || "muted") + '">' + esc(text || "—") + "</span>";
+    }
+
+    function patrolDetailBody(t, tab) {
+      var basic = [
+        ["任务编号", esc(t.code)],
+        ["任务状态", patrolStatusTag(t.result === "正常" ? "已完成" : "待巡检", t.result === "正常" ? "success" : "warning")],
+        ["任务名称", esc(t.name)],
+        ["所属项目", esc(t.project || "光谷科学岛综合开发项目")],
+        ["关联计划", esc(t.planName)],
+        ["巡检等级", patrolStatusTag(t.level, "warning")],
+        ["巡检人员", esc(t.inspector)],
+        ["验收人", esc(t.owner)],
+        ["逾期状态", patrolStatusTag(t.overdue, t.overdue === "未逾期" ? "success" : "danger")],
+        ["任务开始时间", esc(t.plannedAt)],
+        ["任务截止时间", esc(t.deadline)],
+        ["实际开始时间", esc(t.startedAt)],
+        ["结果提交时间", esc(t.submittedAt)],
+        ["巡检时长", esc(t.duration)],
+        ["设备数量", esc(t.deviceCount)],
+        ["异常数量", esc(t.abnormalCount)],
+        ["创建时间", "2026-10-14 08:10:00"],
+        ["备注", esc(t.exception || "—")],
+      ];
+      var tabs = '<div class="inspection-task-tabs">'
+        + '<button type="button" class="' + (tab === "basic" ? "active" : "") + '" data-sec-patrol-tab="basic">基本信息</button>'
+        + '<button type="button" class="' + (tab === "devices" ? "active" : "") + '" data-sec-patrol-tab="devices">设备列表</button>'
+        + '<button type="button" class="' + (tab === "abnormal" ? "active" : "") + '" data-sec-patrol-tab="abnormal">设备异常</button>'
+        + '<button type="button" class="' + (tab === "records" ? "active" : "") + '" data-sec-patrol-tab="records">处理记录</button>'
+        + "</div>";
+      var basicHtml = '<section class="' + (tab === "basic" ? "" : "hidden") + '" data-sec-patrol-panel="basic"><div class="detail-grid">'
+        + basic.map(function (pair) {
+          return '<div class="info-item"><span class="info-label">' + pair[0] + '</span><span class="info-value">' + pair[1] + "</span></div>";
+        }).join("") + "</div></section>";
+      var deviceHtml = '<section class="' + (tab === "devices" ? "" : "hidden") + '" data-sec-patrol-panel="devices"><div class="inspection-empty">本任务暂未关联设备台账</div></section>';
+      var abnormalHtml = '<section class="' + (tab === "abnormal" ? "" : "hidden") + '" data-sec-patrol-panel="abnormal"><div class="inspection-empty">'
+        + (t.exception ? esc(t.exception) : "暂无设备异常") + "</div></section>";
+      var recordHtml = '<section class="' + (tab === "records" ? "" : "hidden") + '" data-sec-patrol-panel="records"><div class="inspection-records"><h3>处理记录</h3>'
+        + '<div class="inspection-record"><span class="inspection-record-dot"></span><div><strong>' + esc(t.inspector || "系统") + "</strong><p>创建巡更任务</p><time>" + esc(t.plannedAt) + "</time></div></div>"
+        + '<div class="inspection-record"><span class="inspection-record-dot done"></span><div><strong>' + esc(t.owner || "负责人") + "</strong><p>"
+        + (t.result === "正常" ? "巡更完成" : "等待巡更结果") + "</p><time>" + esc(t.submittedAt || "—") + "</time></div></div></div></section>";
+      return tabs + basicHtml + deviceHtml + abnormalHtml + recordHtml;
+    }
+
+    function openPatrolDetail(id, tab) {
+      var link = currentLink();
+      var tasks = (link && link.patrolTasks) || [];
+      var t = tasks.filter(function (x) { return x.id === id; })[0];
+      if (!t || !window.openAppDrawer) return;
+      state.patrolDetailId = id;
+      window.openAppDrawer({
+        title: "巡检任务详情",
+        body: patrolDetailBody(t, tab || "basic"),
+        footer: '<button class="btn btn-secondary" type="button" data-drawer-close>关闭</button>',
+        className: "inspection-task-drawer",
+      });
+    }
+
+    function initMap() {
+      var host = el("secMap");
+      if (!host || !window.BASE_MAP) return;
+      baseMap = window.BASE_MAP.create(host, { center: DEFAULT_CENTER, zoom: 14 });
+      map = baseMap.map;
+      if (!map) return;
+      markerLayer = L.layerGroup().addTo(map);
+      focusSelectedAlarm();
+    }
+
+    document.addEventListener("click", function (e) {
+      var fsOpen = e.target.closest("[data-sec-module-fs]");
+      if (fsOpen) {
+        openModuleFullscreen(fsOpen.getAttribute("data-sec-module-fs"));
+        return;
+      }
+      if (e.target.closest("[data-sec-fs-close]") || e.target.id === "secModuleFullscreen") {
+        closeModuleFullscreen();
+        return;
+      }
+      if (e.target.closest("[data-sec-fs-search]")) {
+        applyFsSearch();
+        return;
+      }
+      if (e.target.closest("[data-sec-fs-reset]")) {
+        resetFsSearch();
+        return;
+      }
+      if (e.target.closest("#secFilterSearch")) {
+        var kw = el("secFilterKeyword");
+        state.level = (el("secFilterLevel") && el("secFilterLevel").value) || "all";
+        state.status = (el("secFilterStatus") && el("secFilterStatus").value) || "all";
+        state.keyword = kw ? kw.value.trim() : "";
+        applyFilter();
+        return;
+      }
+      if (e.target.closest("#secFilterReset")) {
+        if (el("secFilterLevel")) el("secFilterLevel").value = "all";
+        if (el("secFilterStatus")) el("secFilterStatus").value = "all";
+        if (el("secFilterKeyword")) el("secFilterKeyword").value = "";
+        state.level = "all";
+        state.status = "all";
+        state.keyword = "";
+        applyFilter();
+        return;
+      }
+      var detailTab = e.target.closest("[data-sec-detail-tab]");
+      if (detailTab) {
+        state.detailTab = detailTab.getAttribute("data-sec-detail-tab") || "info";
+        renderDetail(currentLink());
+        return;
+      }
+      var alarmAction = e.target.closest("[data-sec-alarm-action]");
+      if (alarmAction) {
+        var raw = selectedRawAlarm();
+        if (!raw || raw.status !== "未处理") return;
+        var act = alarmAction.getAttribute("data-sec-alarm-action");
+        if (act === "false") openFalseAlarmPanel([raw.id]);
+        if (act === "process") openProcessPanel([raw.id]);
+        if (act === "transfer") openTransferPanel(raw, [raw.id]);
+        return;
+      }
+      var falseSave = e.target.closest("[data-sec-false-save]");
+      if (falseSave) {
+        var remarkNode = document.querySelector("[data-sec-false-remark]");
+        var remark = remarkNode ? remarkNode.value.trim() : "";
+        if (!remark) {
+          if (remarkNode) remarkNode.classList.add("error");
+          return;
+        }
+        saveFalseAlarm(falseSave.getAttribute("data-sec-false-save").split(","), remark);
+        return;
+      }
+      var processSave = e.target.closest("[data-sec-process-save]");
+      if (processSave) {
+        var values = {};
+        document.querySelectorAll("[data-sec-process-field]").forEach(function (field) {
+          values[field.getAttribute("data-sec-process-field")] = field.value.trim();
+        });
+        document.querySelectorAll(".alarm-process-form .form-error").forEach(function (n) { n.remove(); });
+        document.querySelectorAll(".alarm-process-form .error").forEach(function (n) { n.classList.remove("error"); });
+        var processOk = true;
+        [["handler", "请选择处理人"], ["handledAt", "请选择处理时间"], ["remark", "请输入备注"]].forEach(function (pair) {
+          var field = document.querySelector('[data-sec-process-field="' + pair[0] + '"]');
+          if (!values[pair[0]]) {
+            processOk = false;
+            if (field) {
+              field.classList.add("error");
+              var err = document.createElement("span");
+              err.className = "form-error";
+              err.textContent = pair[1];
+              if (field.closest(".form-field")) field.closest(".form-field").appendChild(err);
+            }
+          }
+        });
+        if (processOk) saveProcessAlarm(processSave.getAttribute("data-sec-process-save").split(","), values);
+        return;
+      }
+      var transferSave = e.target.closest("[data-sec-transfer-save]");
+      if (transferSave) {
+        var fields = {};
+        document.querySelectorAll("[data-sec-transfer-field]").forEach(function (field) {
+          fields[field.getAttribute("data-sec-transfer-field")] = field.value.trim();
+        });
+        document.querySelectorAll(".alarm-transfer-form .form-error").forEach(function (n) { n.remove(); });
+        document.querySelectorAll(".alarm-transfer-form .error").forEach(function (n) { n.classList.remove("error"); });
+        var transferOk = true;
+        [
+          ["title", "请输入工单标题"], ["contact", "请输入联系人"], ["phone", "请输入联系电话"],
+          ["workOrderType", "请选择工单类型"], ["workOrderCategory", "请选择工单分类"],
+          ["urgency", "请选择紧急程度"], ["reportContent", "请输入报修内容"],
+        ].forEach(function (pair) {
+          var field = document.querySelector('[data-sec-transfer-field="' + pair[0] + '"]');
+          if (!fields[pair[0]]) {
+            transferOk = false;
+            if (field) {
+              field.classList.add("error");
+              var err = document.createElement("span");
+              err.className = "form-error";
+              err.textContent = pair[1];
+              if (field.closest(".form-field")) field.closest(".form-field").appendChild(err);
+            }
+          }
+        });
+        if (transferOk) saveTransferAlarm(transferSave.getAttribute("data-sec-transfer-save").split(","), fields);
+        return;
+      }
+      var card = e.target.closest("[data-sec-alarm]");
+      if (card) {
+        selectAlarm(card.getAttribute("data-sec-alarm"), { forceLinkage: true });
+        return;
+      }
+      var door = e.target.closest("[data-sec-door]");
+      if (door) {
+        var doorId = door.getAttribute("data-sec-door");
+        state.doorHighlightId = doorId;
+        renderDoors(currentLink());
+        var p = (RAW.points || []).filter(function (x) { return x.id === doorId; })[0];
+        if (p) focusOnMap(p, p.id);
+        else renderMapMarkers(state.mapFocusId);
+        openDoorDetail(doorId);
+        return;
+      }
+      var doorTab = e.target.closest("[data-sec-door-tab]");
+      if (doorTab) {
+        renderDoorPanels(doorTab.getAttribute("data-sec-door-tab"));
+        return;
+      }
+      if (e.target.closest("[data-sec-door-close]") || e.target.id === "secDoorModal") {
+        closeDoorDetail();
+        return;
+      }
+      var patrol = e.target.closest("[data-sec-patrol]");
+      if (patrol) { openPatrolDetail(patrol.getAttribute("data-sec-patrol")); return; }
+      var patrolTab = e.target.closest("[data-sec-patrol-tab]");
+      if (patrolTab && state.patrolDetailId) {
+        openPatrolDetail(state.patrolDetailId, patrolTab.getAttribute("data-sec-patrol-tab"));
+        return;
+      }
+      if (e.target.closest("#secVideoGlobal")) { openGlobalVideo(); return; }
+      if (e.target.closest("[data-sec-close-video]") || e.target.id === "secGisVideoModal") {
+        closeGlobalVideo();
+        return;
+      }
+      var videoPage = e.target.closest("[data-sec-video-page]");
+      if (videoPage) {
+        if (videoPage.disabled) return;
+        var dir = videoPage.getAttribute("data-sec-video-page");
+        if (dir === "prev") state.videoPage -= 1;
+        if (dir === "next") state.videoPage += 1;
+        renderVideo(currentLink());
+        return;
+      }
+      var tool = e.target.closest("[data-sec-map]");
+      if (tool && map) {
+        var act = tool.getAttribute("data-sec-map");
+        if (act === "zoom-in") map.zoomIn();
+        if (act === "zoom-out") map.zoomOut();
+        if (act === "reset") resetMapToAlarm();
+        if (act === "fullscreen") {
+          el("secMapCard").classList.toggle("is-fullscreen");
+          window.setTimeout(function () {
+            if (map) map.invalidateSize();
+          }, 120);
+        }
+      }
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" && e.target && e.target.id === "secFsKeyword") {
+        applyFsSearch();
+        return;
+      }
+      if (e.key !== "Escape") return;
+      if (state.fs.mode) { closeModuleFullscreen(); return; }
+      closeDoorDetail();
+      closeGlobalVideo();
+    });
+
+    ["secFilterLevel", "secFilterStatus"].forEach(function (id) {
+      var node = el(id);
+      if (!node) return;
+      node.addEventListener("change", function () {
+        if (id === "secFilterLevel") state.level = node.value;
+        if (id === "secFilterStatus") state.status = node.value;
+        applyFilter();
+      });
+    });
+    var keywordNode = el("secFilterKeyword");
+    if (keywordNode) {
+      keywordNode.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+          state.keyword = keywordNode.value.trim();
+          applyFilter();
+        }
+      });
+    }
+
+    renderMetrics();
+    applyFilter();
+    initMap();
+    scrollSelectedEventIntoView();
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>网络安全 - 科学岛管廊监控中心</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/tob-ui.css">
+  <link rel="stylesheet" href="../../assets/css/service-center.css?v=3">
+  <link rel="stylesheet" href="../../assets/css/network.css">
+</head>
+<body class="service-center-page" data-menu-key="network.security" data-page-section="网络管理" data-page-title="网络安全">
+  <div class="app-shell">
+    <aside id="app-sidebar" class="sidebar"></aside>
+    <header id="app-header" class="header"></header>
+    <main class="main">
+      <div class="screen-frame stack">
+        <section class="analysis-kpi-grid network-overview-kpis network-sec-kpis" id="secKpis"></section>
+
+        <section class="network-sec-stack">
+          <section class="card device-list-card">
+            <div class="card-title-row device-toolbar">
+              <h1 class="card-title">访问控制策略</h1>
+            </div>
+            <div class="table-wrap">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>策略编号</th>
+                    <th>策略名称</th>
+                    <th>类型</th>
+                    <th>适用范围</th>
+                    <th>状态</th>
+                    <th>责任人</th>
+                    <th>更新时间</th>
+                  </tr>
+                </thead>
+                <tbody id="policyBody"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="card device-list-card">
+            <div class="card-title-row device-toolbar">
+              <h1 class="card-title">异常安全事件</h1>
+            </div>
+            <div class="table-wrap">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>事件编号</th>
+                    <th>时间</th>
+                    <th>类型</th>
+                    <th>级别</th>
+                    <th>来源</th>
+                    <th>目标</th>
+                    <th>处理结果</th>
+                    <th>处理人</th>
+                  </tr>
+                </thead>
+                <tbody id="secEventBody"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="card device-list-card">
+            <div class="card-title-row device-toolbar">
+              <h1 class="card-title">合规检查清单</h1>
+            </div>
+            <div class="table-wrap">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>检查编号</th>
+                    <th>检查项</th>
+                    <th>分类</th>
+                    <th>结果</th>
+                    <th>检查时间</th>
+                    <th>责任人</th>
+                  </tr>
+                </thead>
+                <tbody id="checkBody"></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+      </div>
+    </main>
+  </div>
+  <script src="../../../app/config/menu.js?v=nav-hide-1"></script>
+  <script src="../../../app/components/sidebar.js?v=nav-home-1"></script>
+  <script src="../../../app/components/header.js?v=nav-home-1"></script>
+  <script src="../../../app/components/drawer.js"></script>
+  <script src="../../../app/components/requirement.js"></script>
+  <script src="../../../app/data/network-data.js"></script>
+  <script>
+    function statusTag(text) {
+      if (text === "已启用" || text === "通过" || text === "已阻断" || text === "已确认") return `<span class="network-tag ok">${text}</span>`;
+      if (text === "未启用" || text === "待整改" || text === "已记录") return `<span class="network-tag warn">${text}</span>`;
+      if (text === "高") return `<span class="network-tag danger">${text}</span>`;
+      if (text === "中" || text === "低") return `<span class="network-tag muted">${text}</span>`;
+      return `<span class="network-tag muted">${text}</span>`;
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const data = NETWORK_STORE.listSecurityItems();
+      const s = data.summary;
+      const kpis = [
+        { tone: "is-blue", icon: "fa-solid fa-shield-halved", label: "已启用策略", value: `${s.policyEnabled}/${s.policyTotal}` },
+        { tone: "is-amber", icon: "fa-solid fa-triangle-exclamation", label: "待处理异常", value: String(s.openEvents) },
+        { tone: "is-green", icon: "fa-solid fa-circle-check", label: "合规通过项", value: String(s.passChecks) },
+        { tone: "is-red", icon: "fa-solid fa-circle-xmark", label: "待整改项", value: String(s.failChecks) },
+      ];
+      document.getElementById("secKpis").innerHTML = kpis.map((item) => `<article class="analysis-kpi ${item.tone}">
+        <div class="analysis-kpi-icon"><i class="${item.icon}"></i></div>
+        <div class="analysis-kpi-body">
+          <span class="analysis-kpi-label">${item.label}</span>
+          <strong class="analysis-kpi-value">${item.value}</strong>
+        </div>
+      </article>`).join("");
+
+      document.getElementById("policyBody").innerHTML = data.policies.map((p) => `<tr>
+        <td>${p.id}</td><td>${p.name}</td><td>${p.type}</td><td>${p.scope}</td>
+        <td>${statusTag(p.status)}</td><td>${p.owner}</td><td>${p.updatedAt}</td>
+      </tr>`).join("");
+
+      document.getElementById("secEventBody").innerHTML = data.events.map((e) => `<tr>
+        <td>${e.id}</td><td>${e.time}</td><td>${e.type}</td><td>${statusTag(e.level)}</td>
+        <td>${e.source}</td><td>${e.target}</td><td>${statusTag(e.result)}</td><td>${e.handler}</td>
+      </tr>`).join("");
+
+      document.getElementById("checkBody").innerHTML = data.checklist.map((c) => `<tr>
+        <td>${c.id}</td><td>${c.item}</td><td>${c.category}</td>
+        <td>${statusTag(c.result)}</td><td>${c.checkedAt}</td><td>${c.owner}</td>
+      </tr>`).join("");
+    });
+  </script>
+</body>
+</html>

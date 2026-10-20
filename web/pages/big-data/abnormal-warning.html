@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>异常预警分析 - 科学岛管廊监控中心</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/tob-ui.css">
+  <link rel="stylesheet" href="../../assets/css/emergency.css">
+  <link rel="stylesheet" href="../../assets/css/big-data.css">
+</head>
+<body class="emergency-page" data-menu-key="big-data.warning" data-page-section="大数据分析" data-page-title="异常预警分析">
+  <div class="app-shell"><aside id="app-sidebar" class="sidebar"></aside><header id="app-header" class="header"></header>
+    <main class="main"><div class="screen-frame emergency-stack">
+      <section class="page-head emergency-page-head">
+        <div>
+          <h1 class="page-title">异常预警分析</h1>
+          <p class="page-desc">基于报警中心与设备监测数据的异常预警统计分析（只读）。</p>
+        </div>
+      </section>
+
+      <section class="emergency-panel analysis-filter-panel">
+        <div class="analysis-filter-row" id="bdWarnFilters">
+          <label class="form-field"><span class="form-label">所属项目</span>
+            <select class="form-control" id="bwProject"><option value="">全部项目</option></select>
+          </label>
+          <label class="form-field"><span class="form-label">所属管廊</span>
+            <select class="form-control" id="bwCorridor" disabled><option value="">请先选择所属项目</option></select>
+          </label>
+          <label class="form-field"><span class="form-label">所属舱室</span>
+            <select class="form-control" id="bwRoom" disabled><option value="">请先选择所属管廊</option></select>
+          </label>
+          <label class="form-field"><span class="form-label">所属区段</span>
+            <select class="form-control" id="bwSection" disabled><option value="">请先选择所属舱室</option></select>
+          </label>
+          <label class="form-field"><span class="form-label">所属管线</span>
+            <select class="form-control" id="bwPipeline" disabled><option value="">请先选择所属区段</option></select>
+          </label>
+          <label class="form-field"><span class="form-label">开始时间</span>
+            <input class="form-control" id="bwStart" type="date">
+          </label>
+          <label class="form-field"><span class="form-label">结束时间</span>
+            <input class="form-control" id="bwEnd" type="date">
+          </label>
+          <div class="filter-actions">
+            <button class="btn btn-primary" type="button" data-bw-action="query">查询</button>
+            <button class="btn btn-secondary" type="button" data-bw-action="reset">重置</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="analysis-chart-grid bd-warning-grid">
+        <!-- 1 报警状态统计 -->
+        <article class="analysis-chart-panel bd-trend-panel">
+          <div class="emergency-panel-head"><h2 class="emergency-panel-title">报警状态统计</h2></div>
+          <div class="bd-donut-layout bd-trend-top">
+            <div class="bd-donut-chart-wrap">
+              <div class="analysis-chart-canvas-wrap" id="wrapAlarmStatus"><canvas id="chartAlarmStatus"></canvas></div>
+              <div class="bd-donut-center" id="centerAlarmStatus"></div>
+            </div>
+            <div class="bd-donut-legend" id="legendAlarmStatus"></div>
+          </div>
+          <div class="bd-trend-line">
+            <div class="bd-chart-unit">单位：次</div>
+            <div class="bd-scroll-chart">
+              <div class="analysis-chart-canvas-wrap" id="wrapAlarmStatusBar"><canvas id="chartAlarmStatusBar"></canvas></div>
+            </div>
+          </div>
+        </article>
+
+        <!-- 2 报警趋势分析 -->
+        <article class="analysis-chart-panel bd-trend-panel">
+          <div class="emergency-panel-head">
+            <h2 class="emergency-panel-title">报警趋势分析</h2>
+          </div>
+          <div class="bd-donut-layout bd-trend-top">
+            <div class="bd-donut-chart-wrap">
+              <div class="analysis-chart-canvas-wrap" id="wrapAlarmLevel"><canvas id="chartAlarmLevel"></canvas></div>
+              <div class="bd-donut-center" id="centerAlarmLevel"></div>
+            </div>
+            <div class="bd-donut-legend" id="legendAlarmLevel"></div>
+          </div>
+          <div class="bd-trend-line">
+            <div class="bd-chart-unit">单位：次</div>
+            <div class="bd-scroll-chart">
+              <div class="analysis-chart-canvas-wrap" id="wrapAlarmTrend"><canvas id="chartAlarmTrend"></canvas></div>
+            </div>
+          </div>
+        </article>
+
+        <!-- 3 设备数量及状态统计 -->
+        <article class="analysis-chart-panel">
+          <div class="emergency-panel-head"><h2 class="emergency-panel-title">设备数量及状态统计</h2></div>
+          <div class="bd-mini-cards" id="deviceStatCards"></div>
+          <div class="bd-donut-layout">
+            <div class="bd-donut-chart-wrap">
+              <div class="analysis-chart-canvas-wrap" id="wrapDeviceStatus"><canvas id="chartDeviceStatus"></canvas></div>
+              <div class="bd-donut-center" id="centerDeviceStatus"></div>
+            </div>
+            <div class="bd-donut-legend" id="legendDeviceStatus"></div>
+          </div>
+        </article>
+
+        <!-- 4 实时/历史运行监测 -->
+        <article class="analysis-chart-panel">
+          <div class="emergency-panel-head">
+            <h2 class="emergency-panel-title">实时 / 历史运行监测</h2>
+          </div>
+          <div class="bd-trend-line">
+            <div class="bd-chart-unit">单位 (%)</div>
+            <div class="bd-scroll-chart">
+              <div class="analysis-chart-canvas-wrap" id="wrapRuntime"><canvas id="chartRuntime"></canvas></div>
+            </div>
+          </div>
+        </article>
+
+        <!-- 5 设备预警排名 -->
+        <article class="analysis-chart-panel">
+          <div class="emergency-panel-head">
+            <h2 class="emergency-panel-title">设备预警排名</h2>
+            <div class="bd-range-tabs" id="rankTabs">
+              <button type="button" class="bd-range-tab is-active" data-rank="space">空间</button>
+              <button type="button" class="bd-range-tab" data-rank="system">系统</button>
+            </div>
+          </div>
+          <div class="bd-rank-list" id="rankList"></div>
+        </article>
+
+        <!-- 6 处理方式统计 -->
+        <article class="analysis-chart-panel">
+          <div class="emergency-panel-head"><h2 class="emergency-panel-title">处理方式统计</h2></div>
+          <div class="bd-donut-layout">
+            <div class="bd-donut-chart-wrap">
+              <div class="analysis-chart-canvas-wrap" id="wrapHandleMethod"><canvas id="chartHandleMethod"></canvas></div>
+              <div class="bd-donut-center" id="centerHandleMethod"></div>
+            </div>
+            <div class="bd-donut-legend" id="legendHandleMethod"></div>
+          </div>
+        </article>
+      </section>
+    </div></main>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="../../../app/config/menu.js?v=nav-hide-1"></script>
+  <script src="../../../app/data/work-order-data.js"></script>
+  <script src="../../../app/data/device-monitor-data.js"></script>
+  <script src="../../../app/data/big-data-warning-data.js"></script>
+  <script src="../../../app/components/sidebar.js?v=nav-home-1"></script>
+  <script src="../../../app/components/header.js?v=nav-home-1"></script>
+  <script src="../../../app/components/drawer.js"></script>
+  <script src="../../../app/components/emergency-common.js"></script>
+  <script src="../../../app/components/big-data-filters.js"></script>
+  <script src="../../../app/components/big-data-warning.js"></script>
+  <script src="../../../app/components/requirement.js"></script>
+</body>
+</html>

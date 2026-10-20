@@ -1,0 +1,1008 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>环境质量监测 - 环境与设备监控 - 科学岛管廊监控中心</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/tob-ui.css">
+  <link rel="stylesheet" href="../../assets/css/home-monitor.css?v=5">
+  <link rel="stylesheet" href="../../assets/css/monitoring.css">
+  <link rel="stylesheet" href="../../assets/css/environment-monitor.css">
+  <link rel="stylesheet" href="../../assets/css/base-map.css?v=1">
+  <link rel="stylesheet" href="../../assets/css/intrusion-monitor.css">
+  <link rel="stylesheet" href="../../assets/vendor/leaflet/leaflet.css">
+</head>
+<body class="dm-page" data-menu-key="environment-monitoring.quality" data-page-section="环境与设备监控" data-page-title="环境质量监测">
+  <div class="app-shell">
+    <aside id="app-sidebar" class="sidebar"></aside>
+    <header id="app-header" class="header"></header>
+    <main class="main">
+      <div class="ias-view-switch" id="eqViewSwitch">
+        <div class="ias-view-tabs" role="tablist" aria-label="视图切换">
+          <button type="button" class="is-active" data-eq-view="map" role="tab" aria-selected="true">地图视图</button>
+          <button type="button" data-eq-view="list" role="tab" aria-selected="false">列表视图</button>
+        </div>
+      </div>
+
+      <div id="eqMapView" class="dm-root ias-map-view">
+        <section class="dm-metrics">
+          <article class="dm-metric">
+            <span class="dm-metric-icon"><i class="fa-solid fa-server"></i></span>
+            <div class="dm-metric-label">设备总数 <i class="fa-regular fa-circle-question" title="已接入的环境质量监测设备数量"></i></div>
+            <strong class="dm-metric-value" id="dmMetricTotal">—</strong>
+            <p class="dm-metric-sub">环境质量监测点位</p>
+          </article>
+          <article class="dm-metric dm-metric--online">
+            <span class="dm-metric-icon"><i class="fa-solid fa-circle-check"></i></span>
+            <div class="dm-metric-label">在线 / 正常 <i class="fa-regular fa-circle-question" title="通信正常且未预警的设备数量"></i></div>
+            <strong class="dm-metric-value" id="dmMetricOnline">—</strong>
+            <p class="dm-metric-sub"><b id="dmMetricOnlineRate">—</b> 在线率</p>
+          </article>
+          <article class="dm-metric dm-metric--warn">
+            <span class="dm-metric-icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
+            <div class="dm-metric-label">预警 <i class="fa-regular fa-circle-question" title="指标越限或状态预警的设备"></i></div>
+            <strong class="dm-metric-value" id="dmMetricWarn">—</strong>
+            <p class="dm-metric-sub dm-metric-sub--clip" id="dmMetricWarnSystems">—</p>
+          </article>
+          <article class="dm-metric dm-metric--fault">
+            <span class="dm-metric-icon"><i class="fa-solid fa-plug-circle-xmark"></i></span>
+            <div class="dm-metric-label">离线 <i class="fa-regular fa-circle-question" title="通信中断的监测设备"></i></div>
+            <strong class="dm-metric-value" id="dmMetricFault">—</strong>
+            <p class="dm-metric-sub"><b id="dmMetricFaultRate">—</b> 需处理</p>
+          </article>
+        </section>
+        <section class="dm-stage" id="dmStage">
+          <div class="dm-map" id="dmMap" aria-label="环境质量态势地图"></div>
+          <button class="dm-side-toggle dm-side-toggle--left" type="button" data-dm-collapse="left" title="收起面板" aria-label="收起左侧面板"><i class="fa-solid fa-chevron-left"></i></button>
+          <button class="dm-side-toggle dm-side-toggle--right" type="button" data-dm-collapse="right" title="收起面板" aria-label="收起右侧面板"><i class="fa-solid fa-chevron-right"></i></button>
+          <aside class="dm-panel dm-left">
+            <div class="dm-statusbar" id="dmStatusBar">
+              <button class="dm-chip is-active" type="button" data-dm-status="all"><i></i>全部</button>
+              <button class="dm-chip" type="button" data-dm-status="online"><i></i>在线</button>
+              <button class="dm-chip" type="button" data-dm-status="offline"><i></i>离线</button>
+              <button class="dm-chip" type="button" data-dm-status="warn"><i></i>预警</button>
+            </div>
+            <div class="dm-tabs">
+              <button class="dm-tab is-active" type="button" data-dm-mode="system">系统类型</button>
+              <button class="dm-tab" type="button" data-dm-mode="space">空间类型</button>
+            </div>
+            <div class="dm-tree" id="dmTree" role="tree" aria-label="系统类型 / 空间类型"></div>
+          </aside>
+          <aside class="dm-panel dm-right">
+            <div class="dm-panel-head">
+              <h2>环境质量明细</h2>
+              <p id="dmScope">所属系统：环境监测</p>
+            </div>
+            <div class="dm-table-wrap" id="dmTableWrap">
+              <table class="dm-table dm-point-table">
+                <thead>
+                  <tr>
+                    <th class="dm-col-index">序号</th>
+                    <th>设备名称</th>
+                    <th>设备编码</th>
+                    <th>设备状态</th>
+                    <th>设备分类</th>
+                    <th class="dm-col-op">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="dmTableBody"></tbody>
+              </table>
+            </div>
+            <div class="dm-panel-foot dm-panel-foot--pager">
+              <span class="dm-pager-total">共 <b id="dmPointCount">0</b> 个监测点位</span>
+              <span class="dm-page-list" id="dmPointPager"></span>
+            </div>
+          </aside>
+          <div class="dm-legend" id="dmLegend">
+            <div class="dm-legend-head">图例 <span id="dmLegendScope">环境监测</span></div>
+            <div class="dm-legend-body" id="dmLegendBody"></div>
+          </div>
+          <div class="dm-map-tools">
+            <button type="button" data-dm-map="zoom-in"><i class="fa-solid fa-plus"></i> 放大</button>
+            <button type="button" data-dm-map="zoom-out"><i class="fa-solid fa-minus"></i> 缩小</button>
+            <button type="button" data-dm-map="reset"><i class="fa-solid fa-crosshairs"></i> 复位</button>
+            <button type="button" data-dm-map="fullscreen"><i class="fa-solid fa-expand"></i> 全屏</button>
+          </div>
+        </section>
+      </div>
+
+      <div id="eqListView" class="ias-list-view ias-view-hidden" hidden>
+      <div class="screen-frame stack">
+        <section class="env-quality-kpi-grid" id="qualityKpis" aria-label="环境质量设备概览"></section>
+
+        <section class="env-quality-workspace">
+          <aside class="dm-panel dm-left env-quality-side" aria-label="空间类型筛选">
+            <div class="dm-statusbar" id="eqStatusBar">
+              <button class="dm-chip is-active" type="button" data-eq-status="all"><i></i>全部</button>
+              <button class="dm-chip" type="button" data-eq-status="online"><i></i>在线</button>
+              <button class="dm-chip" type="button" data-eq-status="offline"><i></i>离线</button>
+              <button class="dm-chip" type="button" data-eq-status="warn"><i></i>预警</button>
+            </div>
+            <div class="dm-tree" id="eqTree" role="tree" aria-label="空间类型"></div>
+          </aside>
+
+          <div class="env-quality-main">
+            <section class="env-quality-scope-bar" id="eqScopeBar">
+              <div class="env-quality-scope-path" id="eqScopePath"></div>
+              <div class="env-quality-scope-filters">
+                <label class="form-field">
+                  <span class="form-label">设备名称</span>
+                  <input class="form-control" data-eq-filter="name" placeholder="请输入设备名称">
+                </label>
+                <label class="form-field">
+                  <span class="form-label">设备编码</span>
+                  <input class="form-control" data-eq-filter="code" placeholder="请输入设备编码">
+                </label>
+                <label class="form-field">
+                  <span class="form-label">开始时间</span>
+                  <input class="form-control" type="date" data-eq-filter="from">
+                </label>
+                <label class="form-field">
+                  <span class="form-label">结束时间</span>
+                  <input class="form-control" type="date" data-eq-filter="to">
+                </label>
+                <div class="env-quality-scope-actions">
+                  <button class="btn btn-primary" type="button" data-eq-action="search">搜索</button>
+                  <button class="btn btn-secondary" type="button" data-eq-action="reset">重置</button>
+                </div>
+              </div>
+            </section>
+
+            <div class="env-quality-card-grid" id="eqCardGrid"></div>
+            <div class="env-quality-card-foot">
+              <span>共 <strong id="eqCardCount">0</strong> 台设备</span>
+            </div>
+          </div>
+        </section>
+      </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="dm-modal-mask" id="dmModalMask">
+    <section class="dm-modal" role="dialog" aria-modal="true" aria-labelledby="dmModalTitle">
+      <header class="dm-modal-head">
+        <h2 id="dmModalTitle">设备详情</h2>
+        <button class="dm-modal-close" type="button" data-dm-close aria-label="关闭">×</button>
+      </header>
+      <div class="dm-modal-tabs" role="tablist">
+        <button class="dm-modal-tab is-active" type="button" role="tab" data-dm-tab="info">设备信息</button>
+        <button class="dm-modal-tab" type="button" role="tab" data-dm-tab="live">实时数据</button>
+        <button class="dm-modal-tab" type="button" role="tab" data-dm-tab="history">历史数据</button>
+      </div>
+      <div class="dm-modal-body">
+        <div data-dm-panel="info"></div>
+        <div data-dm-panel="live" hidden></div>
+        <div data-dm-panel="history" hidden></div>
+      </div>
+    </section>
+  </div>
+
+  <script src="../../assets/vendor/leaflet/leaflet.js"></script>
+  <script src="../../../app/components/base-map.js"></script>
+  <script src="../../../app/components/device-detail-info.js"></script>
+  <script src="../../../app/config/menu.js?v=nav-hide-1"></script>
+  <script src="../../../app/components/sidebar.js?v=nav-home-1"></script>
+  <script src="../../../app/components/header.js?v=nav-home-1"></script>
+  <script src="../../../app/components/drawer.js"></script>
+  <script src="../../../app/components/requirement.js"></script>
+  <script src="../../../app/data/environment-data.js"></script>
+  <script>
+    (function () {
+      const data = window.ENVIRONMENT_DATA;
+      if (!data) return;
+
+      const devices = (ENVIRONMENT_DATA.qualityDevices || []).map((item) => ({
+        ...item,
+        status: item.status === "danger" ? "warn" : item.status,
+      }));
+      const spatialTree = ENVIRONMENT_DATA.qualitySpatialTree || [];
+      const STATUS_CHIP = {
+        all: null,
+        online: ["online"],
+        offline: ["offline"],
+        warn: ["warn"],
+      };
+      const STATUS_LABEL = {
+        online: "在线",
+        offline: "离线",
+        warn: "预警",
+      };
+
+      const emptyPath = () => ({ project: "", corridor: "", room: "", section: "" });
+      const MAP_CENTER = [30.4665, 114.4205];
+      const TYPE_STYLE = {
+        "室内环境传感器": { color: "#14C9BA", icon: "fa-temperature-half" },
+        "枪式摄像机": { color: "#135AFA", icon: "fa-video" },
+      };
+      const state = {
+        status: "all",
+        spacePath: emptyPath(),
+        collapsed: {},
+        filters: { name: "", code: "", from: "", to: "" },
+        detailTab: "info",
+        detailId: "",
+        historyPeriod: "today",
+        historyPage: 1,
+      };
+      const mapState = {
+        mode: "system",
+        system: "all",
+        spacePath: emptyPath(),
+        status: "all",
+        hidden: {},
+        collapsed: {},
+        panels: { left: false, right: false },
+        tablePage: 1,
+      };
+      let view = "map";
+      let map = null;
+      let markerLayer = null;
+      let mapReady = false;
+      const PAGE_SIZE = 10;
+      const POINT_PAGE_SIZE = 10;
+      const CHART_COLORS = ["#135AFA", "#14C9BA", "#F7BA1E", "#F53F57", "#9359E3", "#2E9BD6"];
+      const LIVE_IMAGE = "../../assets/images/corridor-monitor.jpg";
+
+      function esc(value) {
+        return String(value ?? "").replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+      }
+      function dec(value, decimals) {
+        const n = Number(value);
+        if (Number.isNaN(n)) return esc(value);
+        return n.toFixed(decimals == null ? 1 : decimals);
+      }
+      function pathKey(path) {
+        return [path.project || "", path.corridor || "", path.room || "", path.section || ""].join("\u0001");
+      }
+      function samePath(a, b) {
+        return pathKey(a) === pathKey(b);
+      }
+      function isVideoDevice(item) {
+        return !!(item && (item.video || item.system === "视频监控系统" || /摄像|视频/.test(item.type || "")));
+      }
+      function deviceStatus(item) {
+        if (item.status === "offline" || !item.online) return "offline";
+        if (item.status === "warn" || item.status === "danger") return "warn";
+        return "online";
+      }
+      function hasAlarm(item) {
+        if (isVideoDevice(item)) return deviceStatus(item) === "warn";
+        return deviceStatus(item) === "warn" ||
+          (item.metrics || []).some((m) => m.status === "warning" || m.status === "danger");
+      }
+      function metricAlarm(m) {
+        return m && (m.status === "warning" || m.status === "danger");
+      }
+      function posterOf(item) {
+        return item.poster || LIVE_IMAGE;
+      }
+      function matchSpacePath(device, path) {
+        if (path.project && device.project !== path.project) return false;
+        if (path.corridor && device.corridor !== path.corridor) return false;
+        if (path.room && device.room !== path.room) return false;
+        if (path.section && device.section !== path.section) return false;
+        return true;
+      }
+      function matches(device) {
+        const statusList = STATUS_CHIP[state.status];
+        const status = deviceStatus(device);
+        if (statusList && !statusList.includes(status)) return false;
+        if (!matchSpacePath(device, state.spacePath)) return false;
+        const nameQ = state.filters.name.toLowerCase();
+        const codeQ = state.filters.code.toLowerCase();
+        if (nameQ && !(device.name || "").toLowerCase().includes(nameQ)) return false;
+        if (codeQ && !(device.code || "").toLowerCase().includes(codeQ)) return false;
+        const day = (device.time || "").slice(0, 10);
+        if (state.filters.from && day && day < state.filters.from) return false;
+        if (state.filters.to && day && day > state.filters.to) return false;
+        return true;
+      }
+      function visibleDevices() {
+        return devices.filter(matches);
+      }
+      function countOfPath(path) {
+        return devices.filter((d) => {
+          const statusList = STATUS_CHIP[state.status];
+          if (statusList && !statusList.includes(deviceStatus(d))) return false;
+          return matchSpacePath(d, path);
+        }).length;
+      }
+
+      function renderKpis() {
+        const total = devices.length;
+        const online = devices.filter((d) => deviceStatus(d) === "online").length;
+        const offline = devices.filter((d) => deviceStatus(d) === "offline").length;
+        const warn = devices.filter((d) => deviceStatus(d) === "warn").length;
+        const cards = [
+          ["设备总数", total, "fa-solid fa-server", "is-blue"],
+          ["在线数", online, "fa-solid fa-link", "is-green"],
+          ["离线数", offline, "fa-solid fa-plug-circle-xmark", "is-amber"],
+          ["预警数", warn, "fa-solid fa-bell", "is-red"],
+        ];
+        document.getElementById("qualityKpis").innerHTML = cards.map(([label, value, icon, tone]) => `
+          <article class="analysis-kpi ${tone}">
+            <div class="analysis-kpi-icon"><i class="${icon}"></i></div>
+            <div class="analysis-kpi-body">
+              <span class="analysis-kpi-label">${esc(label)}</span>
+              <strong class="analysis-kpi-value">${esc(value)}</strong>
+            </div>
+          </article>
+        `).join("");
+      }
+
+      function treeRow(level, path, name, count, options) {
+        options = options || {};
+        const active = samePath(state.spacePath, path);
+        const key = options.collapseKey || "";
+        const hasToggle = !!key;
+        const expanded = hasToggle && !state.collapsed[key];
+        const toggle = hasToggle
+          ? `<button class="dm-tree-toggle" type="button" data-eq-toggle="${esc(key)}" aria-label="${expanded ? "收起" : "展开"}">${expanded ? "−" : "+"}</button>`
+          : `<button class="dm-tree-toggle is-leaf" type="button" tabindex="-1" aria-hidden="true"></button>`;
+        return `<div class="dm-tree-row${active ? " is-active" : ""}" data-eq-project="${esc(path.project || "")}" data-eq-corridor="${esc(path.corridor || "")}" data-eq-room="${esc(path.room || "")}" data-eq-section="${esc(path.section || "")}" role="treeitem" style="padding-left:${level * 14 + 6}px">${toggle}<span class="dm-tree-name" title="${esc(name)}">${esc(name)}</span><span class="dm-tree-count">${count}</span></div>`;
+      }
+
+      function renderTree() {
+        const host = document.getElementById("eqTree");
+        if (!host) return;
+        let html = "";
+        spatialTree.forEach((project) => {
+          const projectPath = { project: project.name, corridor: "", room: "", section: "" };
+          const projectKey = "project:" + project.name;
+          html += treeRow(0, projectPath, project.name, countOfPath(projectPath), { collapseKey: projectKey });
+          if (state.collapsed[projectKey]) return;
+          (project.corridors || []).forEach((corridor) => {
+            const corridorPath = { project: project.name, corridor: corridor.name, room: "", section: "" };
+            const corridorKey = "corridor:" + pathKey(corridorPath);
+            html += treeRow(1, corridorPath, corridor.name, countOfPath(corridorPath), { collapseKey: corridorKey });
+            if (state.collapsed[corridorKey]) return;
+            (corridor.cabins || []).forEach((cabin) => {
+              const roomPath = { project: project.name, corridor: corridor.name, room: cabin.name, section: "" };
+              const cabinKey = "cabin:" + pathKey(roomPath);
+              html += treeRow(2, roomPath, cabin.name, countOfPath(roomPath), { collapseKey: cabinKey });
+              if (state.collapsed[cabinKey]) return;
+              (cabin.sections || []).forEach((section) => {
+                const sectionPath = { project: project.name, corridor: corridor.name, room: cabin.name, section };
+                html += treeRow(3, sectionPath, section, countOfPath(sectionPath));
+              });
+            });
+          });
+        });
+        host.innerHTML = html || `<div class="dm-tree-empty">暂无可选空间</div>`;
+      }
+
+      function scopeLabel() {
+        const path = state.spacePath;
+        if (!path.project) return "全部空间";
+        const parts = [path.project, path.corridor, path.room, path.section].filter(Boolean);
+        return parts.join(" / ");
+      }
+
+      function renderScopeBar() {
+        const path = document.getElementById("eqScopePath");
+        path.innerHTML = `<i class="fa-solid fa-location-dot"></i><strong>${esc(scopeLabel())}</strong>`;
+      }
+
+      function renderCards() {
+        const list = visibleDevices();
+        document.getElementById("eqCardCount").textContent = list.length;
+        document.getElementById("eqCardGrid").innerHTML = list.map((item) => {
+          const status = deviceStatus(item);
+          const alarm = status === "warn" || hasAlarm(item);
+          const video = isVideoDevice(item);
+          const metrics = item.metrics || [];
+          let bodyHtml = "";
+          if (video) {
+            bodyHtml = status === "offline"
+              ? `<div class="env-device-video is-offline">
+                  <div class="env-device-video-offline"><i class="fa-solid fa-video-slash"></i><span>视频信号中断</span></div>
+                </div>`
+              : `<div class="env-device-video">
+                  <img src="${esc(posterOf(item))}" alt="${esc(item.name)}实时监控画面">
+                  <span class="env-device-video-live">LIVE</span>
+                </div>`;
+          } else if (metrics.length) {
+            bodyHtml = `<div class="env-device-card-metrics">${metrics.map((m) => `
+              <div class="env-device-metric${metricAlarm(m) ? " is-alarm" : ""}">
+                <span class="env-device-metric-name">${esc(m.name)}</span>
+                <strong>${dec(m.value, m.decimals)}<small>${esc(m.unit || "")}</small></strong>
+              </div>
+            `).join("")}</div>`;
+          } else {
+            bodyHtml = `<div class="env-device-card-metrics">
+              <div class="env-device-metric-empty">
+                <i class="fa-regular fa-folder-open"></i>
+                <strong>暂无数据</strong>
+                <span>当前设备未上报监测指标</span>
+              </div>
+            </div>`;
+          }
+          const cardTone = [
+            video ? " is-video" : "",
+            status === "offline" ? " is-offline" : (alarm ? " is-alarm" : ""),
+          ].join("");
+          return `
+            <button type="button" class="env-device-card${cardTone}" data-eq-card="${esc(item.id)}">
+              <div class="env-device-card-head">
+                <div>
+                  <strong class="env-device-card-name">${esc(item.name)}</strong>
+                  <small>${esc(item.code)}</small>
+                </div>
+                <span class="dm-state ${status}"><i></i>${esc(STATUS_LABEL[status])}</span>
+              </div>
+              ${bodyHtml}
+              <div class="env-device-card-foot">
+                <span><i class="fa-regular fa-clock"></i> 上报时间 ${esc(item.time)}</span>
+                <em>查看详情</em>
+              </div>
+            </button>
+          `;
+        }).join("") || `<div class="env-quality-empty">当前筛选条件下暂无监测设备</div>`;
+      }
+
+      function videoFeedHtml(device) {
+        const status = deviceStatus(device);
+        const offline = status === "offline";
+        const statusText = STATUS_LABEL[status] || status;
+        const screen = offline
+          ? `<div class="video-screen is-offline" data-dm-live-time="${esc(device.time)}">
+              <div class="dm-feed-offline"><i class="fa-solid fa-video-slash"></i><span>视频信号中断</span><em>${device.lastOnline ? `最后在线 ${esc(device.lastOnline)}` : "该点位当前离线"}</em></div>
+            </div>`
+          : `<div class="video-screen" data-dm-live-time="${esc(device.time)}">
+              <img src="${esc(posterOf(device))}" alt="${esc(device.name)}实时监控画面">
+            </div>`;
+        return `
+          <div class="dm-live-video">
+            <div class="video-feed">
+              <div class="video-feed-title">
+                <span>${esc(device.name)}</span>
+                <span class="dm-feed-status is-${esc(status)}">${esc(statusText)}</span>
+              </div>
+              ${screen}
+            </div>
+            <div class="dm-video-meta">
+              <span class="dm-video-meta-title">视频流信息</span>
+              <span><em>视频通道</em><b>${esc(device.channel || "—")}</b></span>
+              <span><em>分辨率</em><b>${esc(device.resolution || "—")}</b></span>
+              <span><em>云台</em><b>${device.ptz ? "支持" : "不支持"}</b></span>
+            </div>
+          </div>
+        `;
+      }
+
+      function buildHistory(device) {
+        const rows = [];
+        for (let i = 0; i < 11; i += 1) {
+          const hour = 12 - Math.floor(i / 2);
+          const minute = i % 2 === 0 ? "00" : "30";
+          const values = (device.metrics || []).map((m, mi) => {
+            const base = Number(m.value) || 0;
+            const wave = Math.sin((i + mi) / 3) * (base * 0.03 || 0.2);
+            return Number((base + wave).toFixed(m.decimals == null ? 1 : m.decimals));
+          });
+          rows.push({ time: `2026-09-30 ${String(Math.max(0, hour)).padStart(2, "0")}:${minute}:00`, values });
+        }
+        return rows;
+      }
+
+      function currentDevice() {
+        return devices.find((item) => item.id === state.detailId) || null;
+      }
+
+      function renderModalInfo(device) {
+        document.getElementById("dmModalTitle").textContent = "设备详情";
+        document.querySelector('[data-dm-panel="info"]').innerHTML = window.DEVICE_DETAIL_INFO.html(device, esc);
+      }
+
+      function renderModalLive(device) {
+        const host = document.querySelector('[data-dm-panel="live"]');
+        if (!host) return;
+        if (isVideoDevice(device)) {
+          host.innerHTML = videoFeedHtml(device);
+          return;
+        }
+        const metrics = device.metrics || [];
+        host.innerHTML = metrics.length
+          ? `<div class="dm-live-grid">${metrics.map((m) => `
+              <div class="dm-live-card${metricAlarm(m) ? " is-alarm" : ""}">
+                <span class="dm-live-name">${esc(m.name)}</span>
+                <div class="dm-live-value">${dec(m.value, m.decimals)}${m.unit ? `<span class="dm-live-unit">${esc(m.unit)}</span>` : ""}</div>
+                <span class="dm-live-time">${esc(device.time)}</span>
+              </div>
+            `).join("")}</div>`
+          : `<div class="env-device-metric-empty is-block">
+              <i class="fa-regular fa-folder-open"></i>
+              <strong>暂无数据</strong>
+              <span>当前设备未上报监测指标</span>
+            </div>`;
+      }
+
+      function renderModalHistory(device) {
+        const host = document.querySelector('[data-dm-panel="history"]');
+        if (!host) return;
+        const history = buildHistory(device);
+        const start = (state.historyPage - 1) * PAGE_SIZE;
+        const pageRows = history.slice(start, start + PAGE_SIZE);
+        const pages = Math.max(1, Math.ceil(history.length / PAGE_SIZE));
+        host.innerHTML = `
+          <h3 class="dm-block-title">历史数据</h3>
+          <div class="dm-filter-bar">
+            <span class="dm-filter-label">数据接收时间</span>
+            <input type="date" data-eq-history-from>
+            <span class="dm-filter-sep">-</span>
+            <input type="date" data-eq-history-to>
+            <button class="btn btn-primary" type="button" data-eq-history-search>搜索</button>
+            <button class="btn btn-secondary" type="button" data-eq-history-reset>重置</button>
+          </div>
+          <div class="dm-history-table-wrap">
+            <table class="dm-table dm-history-table">
+              <thead><tr><th>数据接收时间</th>${(device.metrics || []).map((m) => `<th>${esc(m.name)}</th>`).join("")}</tr></thead>
+              <tbody>
+                ${pageRows.map((row) => `<tr><td>${esc(row.time)}</td>${row.values.map((v, i) => `<td>${dec(v, device.metrics[i].decimals)}</td>`).join("")}</tr>`).join("") || `<tr><td colspan="${(device.metrics || []).length + 1}" class="dm-empty">暂无历史数据</td></tr>`}
+              </tbody>
+            </table>
+          </div>
+          <div class="dm-pager">
+            <span class="dm-pager-total">共 <b>${history.length}</b> 条，每页显示 ${PAGE_SIZE} 条</span>
+            ${Array.from({ length: pages }, (_, i) => `<button class="dm-page-btn${state.historyPage === i + 1 ? " is-active" : ""}" type="button" data-eq-history-page="${i + 1}">${i + 1}</button>`).join("")}
+          </div>
+          <div class="dm-chart-head">
+            <h3 class="dm-block-title">历史曲线</h3>
+            <div class="dm-period-switch">
+              <button type="button" data-eq-period="today"${state.historyPeriod === "today" ? ' class="is-active"' : ""}>今日</button>
+              <button type="button" data-eq-period="month"${state.historyPeriod === "month" ? ' class="is-active"' : ""}>本月</button>
+              <button type="button" data-eq-period="year"${state.historyPeriod === "year" ? ' class="is-active"' : ""}>本年</button>
+            </div>
+          </div>
+          <div class="dm-chart-legend">
+            ${(device.metrics || []).map((m, i) => `
+              <span style="--dm-c:${CHART_COLORS[i % CHART_COLORS.length]}"><i></i>${esc(m.name)} <em>${dec(m.value, m.decimals)}${esc(m.unit || "")}</em></span>
+            `).join("")}
+          </div>
+          <div class="dm-chart env-history-chart">
+            <svg viewBox="0 0 640 220" preserveAspectRatio="none" aria-label="历史曲线">
+              ${[40, 90, 140, 190].map((y) => `<line x1="20" y1="${y}" x2="620" y2="${y}" stroke="#EDF1F7"/>`).join("")}
+              ${(device.metrics || []).map((m, mi) => {
+                const color = CHART_COLORS[mi % CHART_COLORS.length];
+                const pts = history.slice(0, 7).map((row, i) => {
+                  const x = 20 + i * 100;
+                  const base = Number(m.value) || 1;
+                  const y = 180 - ((row.values[mi] / (base * 1.2 || 1)) * 120);
+                  return `${x},${Math.max(30, Math.min(190, y))}`;
+                }).join(" ");
+                return `<polyline fill="none" stroke="${color}" stroke-width="2.5" points="${pts}"/>`;
+              }).join("")}
+            </svg>
+          </div>
+        `;
+      }
+
+      function setDetailTab(tab) {
+        const device = currentDevice();
+        if (!device) return;
+        if (tab === "history" && isVideoDevice(device)) tab = "info";
+        state.detailTab = tab;
+        document.querySelectorAll("[data-dm-tab]").forEach((btn) => {
+          btn.classList.toggle("is-active", btn.dataset.dmTab === tab);
+        });
+        document.querySelectorAll("[data-dm-panel]").forEach((panel) => {
+          panel.hidden = panel.dataset.dmPanel !== tab;
+        });
+        if (tab === "history") renderModalHistory(device);
+      }
+
+      function closeDetail() {
+        const mask = document.getElementById("dmModalMask");
+        const modal = document.querySelector(".dm-modal");
+        const historyTab = document.querySelector('[data-dm-tab="history"]');
+        if (mask) mask.classList.remove("is-open");
+        if (modal) modal.classList.remove("is-video");
+        if (historyTab) historyTab.hidden = false;
+        document.body.style.overflow = "";
+        state.detailId = "";
+      }
+
+      function openDetail(id) {
+        const device = devices.find((item) => item.id === id);
+        if (!device) return;
+        state.detailId = id;
+        state.detailTab = "info";
+        state.historyPage = 1;
+        state.historyPeriod = "today";
+        const mask = document.getElementById("dmModalMask");
+        const modal = document.querySelector(".dm-modal");
+        const historyTab = document.querySelector('[data-dm-tab="history"]');
+        const video = isVideoDevice(device);
+        if (modal) modal.classList.toggle("is-video", video);
+        if (historyTab) historyTab.hidden = video;
+        if (mask) mask.classList.add("is-open");
+        document.body.style.overflow = "hidden";
+        renderModalInfo(device);
+        renderModalLive(device);
+        renderModalHistory(device);
+        setDetailTab("info");
+      }
+
+      function refreshDetail() {
+        const device = currentDevice();
+        if (!device) return;
+        if (state.detailTab === "info") renderModalInfo(device);
+        else if (state.detailTab === "live") renderModalLive(device);
+        else renderModalHistory(device);
+        setDetailTab(state.detailTab);
+      }
+
+      function render() {
+        renderKpis();
+        renderTree();
+        renderScopeBar();
+        renderCards();
+      }
+
+      function mapMatches(device, opts) {
+        opts = opts || {};
+        const status = deviceStatus(device);
+        if (!opts.ignoreStatus && mapState.status !== "all" && status !== mapState.status) return false;
+        if (!opts.ignoreSystem && mapState.system !== "all" && device.system !== mapState.system) return false;
+        if (!opts.ignoreHidden && mapState.hidden[device.type]) return false;
+        if (!opts.ignoreSpace && mapState.mode === "space" && !matchSpacePath(device, mapState.spacePath)) return false;
+        return true;
+      }
+      function mapVisible() { return devices.filter((d) => mapMatches(d)); }
+      function mapLegendPool() { return devices.filter((d) => mapMatches(d, { ignoreHidden: true })); }
+      function mapTreePool() { return devices.filter((d) => mapMatches(d, { ignoreSystem: true })); }
+      function mapCountPath(path) {
+        return mapTreePool().filter((d) => matchSpacePath(d, path)).length;
+      }
+      function mapTreeRow(level, path, name, count, options) {
+        options = options || {};
+        const active = options.systemValue != null
+          ? mapState.system === options.systemValue
+          : (mapState.mode === "space" && samePath(mapState.spacePath, path));
+        const key = options.collapseKey || "";
+        const hasToggle = !!key;
+        const expanded = hasToggle && !mapState.collapsed[key];
+        const toggle = hasToggle
+          ? `<button class="dm-tree-toggle" type="button" data-dm-toggle="${esc(key)}" aria-label="${expanded ? "收起" : "展开"}">${expanded ? "−" : "+"}</button>`
+          : `<button class="dm-tree-toggle is-leaf" type="button" tabindex="-1" aria-hidden="true"></button>`;
+        const attrs = options.systemValue != null
+          ? `data-dm-kind="system" data-dm-value="${esc(options.systemValue)}"`
+          : `data-dm-kind="space" data-dm-project="${esc(path.project || "")}" data-dm-corridor="${esc(path.corridor || "")}" data-dm-room="${esc(path.room || "")}" data-dm-section="${esc(path.section || "")}"`;
+        return `<div class="dm-tree-row${active ? " is-active" : ""}" ${attrs} role="treeitem" style="padding-left:${level * 14 + 6}px">${toggle}<span class="dm-tree-name" title="${esc(name)}">${esc(name)}</span><span class="dm-tree-count">${count}</span></div>`;
+      }
+      function renderMapTree() {
+        const host = document.getElementById("dmTree");
+        if (!host) return;
+        if (mapState.mode === "system") {
+          const pool = mapTreePool();
+          const systems = [];
+          pool.forEach((d) => { if (systems.indexOf(d.system) < 0) systems.push(d.system); });
+          let html = mapTreeRow(0, emptyPath(), "全部系统", pool.length, { collapseKey: "systemRoot", systemValue: "all" });
+          if (!mapState.collapsed.systemRoot) {
+            systems.forEach((name) => {
+              html += mapTreeRow(1, emptyPath(), name, pool.filter((d) => d.system === name).length, { systemValue: name });
+            });
+          }
+          host.innerHTML = html;
+          return;
+        }
+        let html = "";
+        spatialTree.forEach((project) => {
+          const projectPath = { project: project.name, corridor: "", room: "", section: "" };
+          const projectKey = "project:" + project.name;
+          html += mapTreeRow(0, projectPath, project.name, mapCountPath(projectPath), { collapseKey: projectKey });
+          if (mapState.collapsed[projectKey]) return;
+          (project.corridors || []).forEach((corridor) => {
+            const corridorPath = { project: project.name, corridor: corridor.name, room: "", section: "" };
+            const corridorKey = "corridor:" + pathKey(corridorPath);
+            html += mapTreeRow(1, corridorPath, corridor.name, mapCountPath(corridorPath), { collapseKey: corridorKey });
+            if (mapState.collapsed[corridorKey]) return;
+            (corridor.cabins || []).forEach((cabin) => {
+              const roomPath = { project: project.name, corridor: corridor.name, room: cabin.name, section: "" };
+              const cabinKey = "cabin:" + pathKey(roomPath);
+              html += mapTreeRow(2, roomPath, cabin.name, mapCountPath(roomPath), { collapseKey: cabinKey });
+              if (mapState.collapsed[cabinKey]) return;
+              (cabin.sections || []).forEach((section) => {
+                const sectionPath = { project: project.name, corridor: corridor.name, room: cabin.name, section };
+                html += mapTreeRow(3, sectionPath, section, mapCountPath(sectionPath));
+              });
+            });
+          });
+        });
+        host.innerHTML = html || `<div class="dm-tree-empty">暂无可选空间</div>`;
+      }
+      function renderMapMetrics() {
+        const total = devices.length;
+        const online = devices.filter((d) => deviceStatus(d) === "online").length;
+        const offline = devices.filter((d) => deviceStatus(d) === "offline").length;
+        const warn = devices.filter((d) => deviceStatus(d) === "warn").length;
+        document.getElementById("dmMetricTotal").textContent = String(total);
+        document.getElementById("dmMetricOnline").textContent = String(online);
+        document.getElementById("dmMetricWarn").textContent = String(warn);
+        document.getElementById("dmMetricFault").textContent = String(offline);
+        document.getElementById("dmMetricOnlineRate").textContent = total ? `${(online / total * 100).toFixed(1)}%` : "0%";
+        document.getElementById("dmMetricFaultRate").textContent = total ? `${(offline / total * 100).toFixed(1)}%` : "0%";
+        const sub = document.getElementById("dmMetricWarnSystems");
+        if (sub) sub.textContent = `预警 ${warn} · 离线 ${offline}`;
+      }
+      function renderMapLegend() {
+        const host = document.getElementById("dmLegendBody");
+        if (!host) return;
+        const names = [];
+        mapLegendPool().forEach((d) => { if (names.indexOf(d.type) < 0) names.push(d.type); });
+        document.getElementById("dmLegendScope").textContent = mapState.system === "all" ? "环境监测" : mapState.system;
+        if (!names.length) { host.innerHTML = `<div class="dm-legend-empty">当前系统暂无设备分类</div>`; return; }
+        host.innerHTML = names.map((name) => {
+          const style = TYPE_STYLE[name] || { color: "#6B7B8C" };
+          const off = !!mapState.hidden[name];
+          return `<button class="dm-legend-item${off ? " is-off" : ""}" type="button" data-dm-cat="${esc(name)}" title="${off ? "点击显示" : "点击隐藏"}"><i class="fa-solid ${off ? "fa-square" : "fa-square-check"}"></i><i class="dm-legend-swatch" style="--dm-c:${esc(style.color)}"></i><span>${esc(name)}</span></button>`;
+        }).join("");
+      }
+      function renderMapTable() {
+        const list = mapVisible();
+        const pages = Math.max(1, Math.ceil(list.length / POINT_PAGE_SIZE) || 1);
+        mapState.tablePage = Math.min(Math.max(1, mapState.tablePage), pages);
+        const rows = list.slice((mapState.tablePage - 1) * POINT_PAGE_SIZE, mapState.tablePage * POINT_PAGE_SIZE);
+        document.getElementById("dmTableBody").innerHTML = rows.length ? rows.map((d, index) => {
+          const status = deviceStatus(d);
+          return `<tr data-dm-id="${esc(d.id)}"><td class="dm-col-index">${(mapState.tablePage - 1) * POINT_PAGE_SIZE + index + 1}</td><td class="dm-cell-name" title="${esc(d.name)}">${esc(d.name)}</td><td class="dm-cell-code" title="${esc(d.code)}">${esc(d.code)}</td><td><span class="dm-state ${status}"><i></i>${esc(STATUS_LABEL[status])}</span></td><td title="${esc(d.type)}">${esc(d.type)}</td><td class="dm-col-op"><button class="dm-link" type="button" data-dm-view="${esc(d.id)}">查看</button></td></tr>`;
+        }).join("") : `<tr><td class="dm-empty" colspan="6">当前筛选条件下暂无监测点位</td></tr>`;
+        document.getElementById("dmPointCount").textContent = String(list.length);
+        const scope = mapState.system === "all" ? "环境监测" : mapState.system;
+        const path = mapState.mode === "space" ? [mapState.spacePath.project, mapState.spacePath.corridor, mapState.spacePath.room, mapState.spacePath.section].filter(Boolean).join(" / ") : "";
+        document.getElementById("dmScope").textContent = `所属系统：${scope}${path ? "　空间维度：" + path : ""}`;
+        const pager = document.getElementById("dmPointPager");
+        if (!list.length) { pager.innerHTML = ""; return; }
+        let html = `<button class="dm-page-btn" type="button" data-dm-point-page="prev"${mapState.tablePage <= 1 ? " disabled" : ""} aria-label="上一页"><i class="fa-solid fa-angle-left"></i></button>`;
+        for (let i = 1; i <= pages; i += 1) html += `<button class="dm-page-btn${i === mapState.tablePage ? " is-active" : ""}" type="button" data-dm-point-page="${i}">${i}</button>`;
+        html += `<button class="dm-page-btn" type="button" data-dm-point-page="next"${mapState.tablePage >= pages ? " disabled" : ""} aria-label="下一页"><i class="fa-solid fa-angle-right"></i></button><span class="dm-pager-size">每页 ${POINT_PAGE_SIZE} 条</span>`;
+        pager.innerHTML = html;
+      }
+      function renderMapMarkers() {
+        if (!map || !markerLayer || !window.L) return;
+        markerLayer.clearLayers();
+        mapVisible().forEach((d) => {
+          if (d.lat == null || d.lng == null) return;
+          const status = deviceStatus(d);
+          const style = TYPE_STYLE[d.type] || { color: "#6B7B8C", icon: "fa-location-dot" };
+          let cls = "dm-marker";
+          if (status !== "online") cls += ` is-${status === "warn" ? "warn" : status}`;
+          const icon = L.divIcon({
+            className: "dm-marker-wrap",
+            html: `<span class="${cls}" style="--dm-c:${esc(style.color)}"><i class="fa-solid ${esc(style.icon)}"></i></span>`,
+            iconSize: [24, 24], iconAnchor: [12, 12],
+          });
+          const marker = L.marker([d.lat, d.lng], { icon, riseOnHover: true, keyboard: false });
+          window.BASE_MAP && window.BASE_MAP.bindTip(marker, d.name);
+          marker.on("click", () => openDetail(d.id));
+          marker.addTo(markerLayer);
+        });
+      }
+      function renderMap() {
+        renderMapMetrics();
+        renderMapTree();
+        renderMapLegend();
+        renderMapTable();
+        renderMapMarkers();
+      }
+      function initMap() {
+        if (mapReady) return;
+        const host = document.getElementById("dmMap");
+        if (!host || !window.L) return;
+        const baseMap = window.BASE_MAP ? window.BASE_MAP.create(host, { center: MAP_CENTER, zoom: 14 }) : null;
+        map = baseMap ? baseMap.map : null;
+        if (!map) return;
+        markerLayer = L.layerGroup().addTo(map);
+        mapReady = true;
+        renderMap();
+        window.setTimeout(() => map.invalidateSize(), 150);
+      }
+      function syncViewTabs(next) {
+        document.querySelectorAll("[data-eq-view]").forEach((btn) => {
+          const active = btn.dataset.eqView === next;
+          btn.classList.toggle("is-active", active);
+          btn.setAttribute("aria-selected", active ? "true" : "false");
+        });
+      }
+      function setView(next) {
+        view = next === "map" ? "map" : "list";
+        const mapView = document.getElementById("eqMapView");
+        const listView = document.getElementById("eqListView");
+        const showMap = view === "map";
+        mapView.hidden = !showMap;
+        listView.hidden = showMap;
+        mapView.classList.toggle("ias-view-hidden", !showMap);
+        listView.classList.toggle("ias-view-hidden", showMap);
+        document.body.classList.toggle("dm-page", showMap);
+        document.body.classList.toggle("ias-list-mode", !showMap);
+        document.body.classList.toggle("environment-page", !showMap);
+        syncViewTabs(view);
+        if (showMap) {
+          initMap();
+          if (map) window.setTimeout(() => map.invalidateSize(), 80);
+          renderMap();
+        } else {
+          render();
+        }
+      }
+
+      document.addEventListener("click", (event) => {
+        const viewBtn = event.target.closest("[data-eq-view]");
+        if (viewBtn) { setView(viewBtn.dataset.eqView); return; }
+
+        const dmStatus = event.target.closest("[data-dm-status]");
+        if (dmStatus) {
+          mapState.status = dmStatus.dataset.dmStatus;
+          mapState.tablePage = 1;
+          document.querySelectorAll("[data-dm-status]").forEach((btn) => btn.classList.toggle("is-active", btn === dmStatus));
+          renderMap();
+          return;
+        }
+        const dmMode = event.target.closest("[data-dm-mode]");
+        if (dmMode) {
+          mapState.mode = dmMode.dataset.dmMode;
+          mapState.spacePath = emptyPath();
+          mapState.tablePage = 1;
+          document.querySelectorAll("[data-dm-mode]").forEach((btn) => btn.classList.toggle("is-active", btn.dataset.dmMode === mapState.mode));
+          renderMap();
+          return;
+        }
+        const dmToggle = event.target.closest("[data-dm-toggle]");
+        if (dmToggle) {
+          event.stopPropagation();
+          const key = dmToggle.dataset.dmToggle;
+          mapState.collapsed[key] = !mapState.collapsed[key];
+          renderMapTree();
+          return;
+        }
+        const dmRow = event.target.closest("#dmTree [data-dm-kind]");
+        if (dmRow) {
+          if (dmRow.dataset.dmKind === "system") {
+            mapState.system = dmRow.dataset.dmValue;
+          } else {
+            const next = {
+              project: dmRow.dataset.dmProject || "",
+              corridor: dmRow.dataset.dmCorridor || "",
+              room: dmRow.dataset.dmRoom || "",
+              section: dmRow.dataset.dmSection || "",
+            };
+            mapState.spacePath = samePath(mapState.spacePath, next) ? emptyPath() : next;
+          }
+          mapState.tablePage = 1;
+          renderMap();
+          return;
+        }
+        const dmCat = event.target.closest("[data-dm-cat]");
+        if (dmCat) {
+          const name = dmCat.dataset.dmCat;
+          if (mapState.hidden[name]) delete mapState.hidden[name];
+          else mapState.hidden[name] = true;
+          mapState.tablePage = 1;
+          renderMap();
+          return;
+        }
+        const dmView = event.target.closest("[data-dm-view]");
+        if (dmView) { openDetail(dmView.dataset.dmView); return; }
+        const dmPage = event.target.closest("[data-dm-point-page]");
+        if (dmPage && !dmPage.disabled) {
+          const pages = Math.max(1, Math.ceil(mapVisible().length / POINT_PAGE_SIZE));
+          const action = dmPage.dataset.dmPointPage;
+          if (action === "prev") mapState.tablePage = Math.max(1, mapState.tablePage - 1);
+          else if (action === "next") mapState.tablePage = Math.min(pages, mapState.tablePage + 1);
+          else mapState.tablePage = Number(action);
+          renderMapTable();
+          return;
+        }
+        const collapse = event.target.closest("[data-dm-collapse]");
+        if (collapse) {
+          const side = collapse.dataset.dmCollapse;
+          mapState.panels[side] = !mapState.panels[side];
+          document.getElementById("dmStage").classList.toggle(`is-${side}-collapsed`, mapState.panels[side]);
+          collapse.classList.toggle("is-collapsed", mapState.panels[side]);
+          if (map) window.setTimeout(() => map.invalidateSize(), 220);
+          return;
+        }
+        const mapTool = event.target.closest("[data-dm-map]");
+        if (mapTool && map) {
+          const action = mapTool.dataset.dmMap;
+          if (action === "zoom-in") map.zoomIn();
+          else if (action === "zoom-out") map.zoomOut();
+          else if (action === "reset") map.setView(MAP_CENTER, 14);
+          else if (action === "fullscreen") {
+            const stage = document.querySelector(".dm-stage");
+            if (document.fullscreenElement) document.exitFullscreen();
+            else stage && stage.requestFullscreen && stage.requestFullscreen();
+          }
+          return;
+        }
+
+        const statusBtn = event.target.closest("[data-eq-status]");
+        if (statusBtn) {
+          state.status = statusBtn.dataset.eqStatus;
+          document.querySelectorAll("[data-eq-status]").forEach((btn) => btn.classList.toggle("is-active", btn === statusBtn));
+          render();
+          return;
+        }
+
+        const toggle = event.target.closest("[data-eq-toggle]");
+        if (toggle) {
+          event.stopPropagation();
+          const key = toggle.dataset.eqToggle;
+          state.collapsed[key] = !state.collapsed[key];
+          renderTree();
+          return;
+        }
+
+        const row = event.target.closest("[data-eq-project]");
+        if (row && row.closest("#eqTree")) {
+          const next = {
+            project: row.dataset.eqProject || "",
+            corridor: row.dataset.eqCorridor || "",
+            room: row.dataset.eqRoom || "",
+            section: row.dataset.eqSection || "",
+          };
+          state.spacePath = samePath(state.spacePath, next) ? emptyPath() : next;
+          render();
+          return;
+        }
+
+        const action = event.target.closest("[data-eq-action]")?.dataset.eqAction;
+        if (action === "search") {
+          document.querySelectorAll("[data-eq-filter]").forEach((field) => {
+            state.filters[field.dataset.eqFilter] = field.value.trim();
+          });
+          renderCards();
+          return;
+        }
+        if (action === "reset") {
+          state.filters = { name: "", code: "", from: "", to: "" };
+          document.querySelectorAll("[data-eq-filter]").forEach((field) => { field.value = ""; });
+          renderCards();
+          return;
+        }
+
+        const card = event.target.closest("[data-eq-card]");
+        if (card) {
+          openDetail(card.dataset.eqCard);
+          return;
+        }
+
+        if (event.target.closest("[data-dm-close]") || event.target.id === "dmModalMask") {
+          closeDetail();
+          return;
+        }
+
+        const detailTab = event.target.closest("[data-dm-tab]");
+        if (detailTab) {
+          setDetailTab(detailTab.dataset.dmTab);
+          return;
+        }
+        const historyPage = event.target.closest("[data-eq-history-page]");
+        if (historyPage) {
+          state.historyPage = Number(historyPage.dataset.eqHistoryPage);
+          const device = currentDevice();
+          if (device) renderModalHistory(device);
+          return;
+        }
+        const period = event.target.closest("[data-eq-period]");
+        if (period) {
+          state.historyPeriod = period.dataset.eqPeriod;
+          const device = currentDevice();
+          if (device) renderModalHistory(device);
+        }
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && document.getElementById("dmModalMask")?.classList.contains("is-open")) {
+          closeDetail();
+        }
+      });
+
+      render();
+      setView("map");
+    })();
+  </script>
+</body>
+</html>

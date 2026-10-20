@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>调度配置 - 科学岛管廊监控中心</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/tob-ui.css">
+  <link rel="stylesheet" href="../../assets/css/inspection.css">
+  <link rel="stylesheet" href="../../assets/css/dispatch-config.css">
+</head>
+<body class="dispatch-page" data-menu-key="work-order.dispatch" data-page-section="工单管理" data-page-title="调度配置">
+  <div class="app-shell">
+    <aside id="app-sidebar" class="sidebar"></aside>
+    <header id="app-header" class="header"></header>
+    <main class="main">
+      <div class="screen-frame stack">
+        <section class="card dispatch-card">
+          <div class="dispatch-tabs" role="tablist" aria-label="业务类型">
+            <button class="tab active" type="button" data-dispatch-tab="repair" role="tab" aria-selected="true">报事报修</button>
+            <button class="tab" type="button" data-dispatch-tab="device" role="tab" aria-selected="false">设备异常</button>
+          </div>
+          <form class="dispatch-form" id="dispatchForm" autocomplete="off">
+            <div class="dispatch-row is-switch">
+              <div class="dispatch-label">调度配置</div>
+              <div class="dispatch-value">
+                <button class="dispatch-toggle on" type="button" data-field="dispatchEnabled" aria-pressed="true" aria-label="调度配置开关"></button>
+              </div>
+            </div>
+            <div class="dispatch-block" data-block="dispatch-body">
+              <div class="dispatch-row">
+                <div class="dispatch-label">工单调度人</div>
+                <div class="dispatch-value">
+                  <div class="dispatch-inline">
+                    <label class="dispatch-choice"><input type="radio" name="dispatcherType" value="role"> <span>角色</span></label>
+                    <label class="dispatch-choice"><input type="radio" name="dispatcherType" value="user" checked> <span>用户</span></label>
+                  </div>
+                  <div class="dispatch-tag-select" data-multi-select="dispatcherIds" data-dispatcher-role-field hidden>
+                    <button class="dispatch-tag-control" type="button" data-multi-trigger="dispatcherIds" aria-expanded="false">
+                      <span data-multi-value="dispatcherIds"></span>
+                      <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+                    </button>
+                    <div class="dispatch-tag-dropdown" data-multi-options="dispatcherIds"></div>
+                  </div>
+                  <div class="dispatch-person-field" data-dispatcher-user-field>
+                    <button class="form-control dispatch-person-trigger" type="button" data-open-dispatcher-picker>
+                      <span data-dispatcher-user-label class="is-placeholder">请选择用户</span>
+                      <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="dispatch-row">
+                <div class="dispatch-label">工单验收人</div>
+                <div class="dispatch-value">
+                  <div class="dispatch-inline">
+                    <label class="dispatch-choice"><input type="radio" name="acceptor" value="dispatcher"> <span>调度人</span></label>
+                    <label class="dispatch-choice"><input type="radio" name="acceptor" value="assignee" checked> <span>指派人</span></label>
+                  </div>
+                </div>
+              </div>
+              <div class="dispatch-row">
+                <div class="dispatch-label">工单抄送人</div>
+                <div class="dispatch-value">
+                  <div class="dispatch-inline">
+                    <label class="dispatch-choice"><input type="checkbox" disabled checked> <span>发起人</span></label>
+                    <span class="dispatch-hint">发起人默认通知，不写入配置</span>
+                  </div>
+                  <div class="dispatch-inline">
+                    <label class="dispatch-choice"><input type="checkbox" data-field="ccDispatcher"> <span>调度人</span></label>
+                    <label class="dispatch-choice"><input type="checkbox" data-field="ccAssignee"> <span>指派人</span></label>
+                  </div>
+                </div>
+              </div>
+              <div class="dispatch-row">
+                <div class="dispatch-label">其他抄送人</div>
+                <div class="dispatch-value">
+                  <div class="dispatch-tag-select" data-multi-select="otherCcIds">
+                    <button class="dispatch-tag-control" type="button" data-multi-trigger="otherCcIds" aria-expanded="false">
+                      <span data-multi-value="otherCcIds"></span>
+                      <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+                    </button>
+                    <div class="dispatch-tag-dropdown" data-multi-options="otherCcIds"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="dispatch-row is-switch">
+                <div class="dispatch-label">自动调度</div>
+                <div class="dispatch-value">
+                  <button class="dispatch-toggle on" type="button" data-field="autoDispatchEnabled" aria-pressed="true" aria-label="自动调度开关"></button>
+                </div>
+              </div>
+              <div class="dispatch-block" data-block="auto-body">
+                <div class="dispatch-row">
+                  <div class="dispatch-label">调度时段</div>
+                  <div class="dispatch-value">
+                    <div class="dispatch-auto-line">
+                      <span>每日</span>
+                      <input class="form-control" type="time" data-field="startTime">
+                      <span>→</span>
+                      <input class="form-control" type="time" data-field="endTime">
+                      <span>期间，未调度的工单指派给</span>
+                    </div>
+                    <div class="dispatch-assign-grid">
+                      <div class="form-field form-item">
+                        <span class="form-label form-required">部门</span>
+                        <div class="dispatch-tag-select" data-multi-select="departmentIds">
+                          <button class="dispatch-tag-control" type="button" data-multi-trigger="departmentIds" aria-expanded="false">
+                            <span data-multi-value="departmentIds"></span>
+                            <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+                          </button>
+                          <div class="dispatch-tag-dropdown" data-multi-options="departmentIds"></div>
+                        </div>
+                      </div>
+                      <div class="form-field form-item">
+                        <span class="form-label form-required">人员</span>
+                        <div class="dispatch-tag-select" data-multi-select="peopleIds">
+                          <button class="dispatch-tag-control" type="button" data-multi-trigger="peopleIds" aria-expanded="false">
+                            <span data-multi-value="peopleIds"></span>
+                            <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+                          </button>
+                          <div class="dispatch-tag-dropdown" data-multi-options="peopleIds"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="dispatch-row">
+              <div class="dispatch-label">备注</div>
+              <div class="dispatch-value">
+                <div class="dispatch-remark-wrap">
+                  <textarea class="form-control textarea" data-field="remark" maxlength="200" placeholder="请输入备注"></textarea>
+                  <span class="dispatch-remark-count" data-remark-count>0 / 200</span>
+                </div>
+              </div>
+            </div>
+          </form>
+          <div class="dispatch-actions">
+            <button class="btn btn-primary" type="button" data-action="save">修改并保存</button>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+  <script src="../../../app/config/menu.js"></script>
+  <script src="../../../app/components/sidebar.js"></script>
+  <script src="../../../app/components/header.js"></script>
+  <script src="../../../app/components/drawer.js"></script>
+  <script src="../../../app/data/dispatch-config-data.js"></script>
+  <script src="../../../app/components/dispatch-config.js"></script>
+  <script src="../../../app/components/requirement.js"></script>
+</body>
+</html>

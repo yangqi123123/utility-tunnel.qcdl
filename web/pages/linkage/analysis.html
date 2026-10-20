@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>联动分析 - 科学岛管廊监控中心</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/tob-ui.css">
+  <link rel="stylesheet" href="../../assets/css/emergency.css">
+  <style>
+    .linkage-analysis-page .analysis-kpi-grid {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+    @media (max-width: 1100px) {
+      .linkage-analysis-page .analysis-kpi-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+    @media (max-width: 720px) {
+      .linkage-analysis-page .analysis-kpi-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body class="emergency-page linkage-analysis-page" data-menu-key="linkage.analysis" data-page-section="联动管理系统" data-page-title="联动分析">
+  <div class="app-shell"><aside id="app-sidebar" class="sidebar"></aside><header id="app-header" class="header"></header>
+    <main class="main"><div class="screen-frame emergency-stack">
+      <section class="page-head emergency-page-head">
+        <div>
+          <h1 class="page-title">联动分析</h1>
+          <p class="page-desc">基于 11 个子系统联动记录的统计分析总览（只读）。</p>
+        </div>
+      </section>
+
+      <section class="emergency-panel analysis-filter-panel">
+        <div class="analysis-filter-row" id="analysisFilters">
+          <label class="form-field"><span class="form-label">时间范围</span>
+            <select class="form-control" id="analysisRange">
+              <option value="7">近7天</option>
+              <option value="30" selected>近30天</option>
+              <option value="90">近90天</option>
+              <option value="custom">自定义</option>
+            </select>
+          </label>
+          <label class="form-field custom-range"><span class="form-label">开始日期</span><input class="form-control" id="analysisStart" type="date"></label>
+          <label class="form-field custom-range"><span class="form-label">结束日期</span><input class="form-control" id="analysisEnd" type="date"></label>
+          <label class="form-field"><span class="form-label">所属项目</span>
+            <select class="form-control" id="analysisProject" data-location-level="project"><option value="">全部项目</option></select>
+          </label>
+          <label class="form-field"><span class="form-label">所属管廊</span>
+            <select class="form-control" id="analysisCorridor" data-location-level="corridor" disabled><option value="">请先选择所属项目</option></select>
+          </label>
+          <label class="form-field"><span class="form-label">所属舱室</span>
+            <select class="form-control" id="analysisRoom" data-location-level="room" disabled><option value="">请先选择所属管廊</option></select>
+          </label>
+          <label class="form-field"><span class="form-label">所属区段</span>
+            <select class="form-control" id="analysisSection" data-location-level="section" disabled><option value="">请先选择所属舱室</option></select>
+          </label>
+          <label class="form-field"><span class="form-label">所属管线</span>
+            <select class="form-control" id="analysisPipeline" data-location-level="pipeline" disabled><option value="">请先选择所属区段</option></select>
+          </label>
+          <div class="filter-actions">
+            <button class="btn btn-primary" type="button" data-analysis-action="query">查询</button>
+            <button class="btn btn-secondary" type="button" data-analysis-action="reset">重置</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="emergency-metric-grid analysis-kpi-grid" id="linkageAnalysisKpis"></section>
+
+      <section class="analysis-chart-grid">
+        <article class="analysis-chart-panel">
+          <div class="emergency-panel-head"><h2 class="emergency-panel-title">子系统联动占比</h2></div>
+          <div class="analysis-chart-body single">
+            <div class="analysis-chart-canvas-wrap" id="wrapSystemShare"><canvas id="chartSystemShare"></canvas></div>
+          </div>
+        </article>
+        <article class="analysis-chart-panel">
+          <div class="emergency-panel-head"><h2 class="emergency-panel-title">联动趋势</h2></div>
+          <div class="analysis-chart-body single">
+            <div class="analysis-chart-canvas-wrap" id="wrapLinkageTrend"><canvas id="chartLinkageTrend"></canvas></div>
+          </div>
+        </article>
+        <article class="analysis-chart-panel">
+          <div class="emergency-panel-head"><h2 class="emergency-panel-title">执行结果分布</h2></div>
+          <div class="analysis-chart-body single">
+            <div class="analysis-chart-canvas-wrap" id="wrapResultShare"><canvas id="chartResultShare"></canvas></div>
+          </div>
+        </article>
+        <article class="analysis-chart-panel">
+          <div class="emergency-panel-head"><h2 class="emergency-panel-title">管廊联动统计</h2></div>
+          <div class="analysis-chart-body single">
+            <div class="analysis-chart-canvas-wrap" id="wrapCorridorShare"><canvas id="chartCorridorShare"></canvas></div>
+          </div>
+        </article>
+      </section>
+    </div></main>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="../../../app/config/menu.js?v=nav-hide-1"></script>
+  <script src="../../../app/data/work-order-data.js"></script>
+  <script src="../../../app/data/linkage-data.js"></script>
+  <script src="../../../app/components/sidebar.js?v=nav-home-1"></script>
+  <script src="../../../app/components/header.js?v=nav-home-1"></script>
+  <script src="../../../app/components/drawer.js"></script>
+  <script src="../../../app/components/requirement.js"></script>
+  <script src="../../../app/components/linkage-analysis-logic.js"></script>
+  <script src="../../../app/components/linkage-analysis.js"></script>
+</body>
+</html>

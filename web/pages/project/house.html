@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>区段管理 - 科学岛管廊监控中心</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/tob-ui.css">
+  <link rel="stylesheet" href="../../assets/css/house-management.css?v=1">
+  <script src="../../assets/vendor/xlsx.full.min.js"></script>
+  <style>
+    .house-import-box { position: relative; min-height: 152px; display: grid; place-items: center; align-content: center; gap: 8px; border: 1px dashed #c9d5eb; border-radius: 4px; color: var(--text-secondary, #86909c); background: #fafcff; cursor: pointer; text-align: center; }
+    .house-import-box.dragover { border-color: var(--primary, #135afa); background: var(--primary-bg, #eaf0ff); }
+    .house-import-box input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+    .house-import-box i { color: var(--primary, #135afa); font-size: 28px; }
+    .house-import-box strong { display: block; }
+    .house-import-box span { font-size: 12px; }
+    .house-import-file { margin: 12px 0 0; color: var(--text-secondary, #86909c); font-size: 13px; }
+    .house-import-actions { margin-top: 12px; display: flex; justify-content: flex-end; }
+    .fire-zone-select { position: relative; }
+    .fire-zone-select .fire-zone-control { position: relative; }
+    .fire-zone-select .fire-zone-control i { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--text-secondary); pointer-events: none; }
+    .fire-zone-select.is-open .fire-zone-control i { transform: translateY(-50%) rotate(180deg); }
+    .fire-zone-panel { position: absolute; z-index: 620; top: calc(100% + 4px); left: 0; right: 0; display: none; max-height: 240px; overflow: auto; padding: 6px; border: 1px solid var(--border, #c9d5eb); border-radius: 4px; background: #fff; box-shadow: 0 12px 32px rgba(26, 28, 31, .12); }
+    .fire-zone-select.is-open .fire-zone-panel { display: block; }
+    .fire-zone-option { width: 100%; min-height: 34px; display: block; padding: 7px 10px; border: 0; border-radius: 2px; background: #fff; color: var(--text-primary); font-size: 14px; text-align: left; cursor: pointer; }
+    .fire-zone-option:hover, .fire-zone-option.is-active, .fire-zone-option.is-selected { background: var(--primary-bg, #eaf0ff); color: var(--primary, #135afa); }
+    .fire-zone-empty { padding: 10px; color: var(--text-secondary); font-size: 13px; text-align: center; }
+    .fire-zone-ledger { display: grid; gap: 16px; }
+    .fire-zone-ledger .filter-actions { display: flex; flex-wrap: nowrap; gap: 12px; align-items: end; }
+    .fire-zone-ledger .filter-actions .form-field { flex: 1 1 0; min-width: 0; }
+    .fire-zone-ledger .filter-actions .btn { flex: 0 0 auto; white-space: nowrap; }
+    .fire-zone-ledger .fire-zone-toolbar { display: flex; justify-content: flex-end; align-items: center; gap: 12px; }
+    .fire-zone-ledger .table-wrap { max-height: 48vh; overflow: auto; border: 1px solid var(--border, #c9d5eb); border-radius: 4px; }
+    .fire-zone-ledger .table { width: 100%; min-width: 0; table-layout: fixed; }
+    .fire-zone-ledger .table th, .fire-zone-ledger .table td { white-space: nowrap; }
+    .fire-zone-ledger .table th:nth-child(3), .fire-zone-ledger .table td.fire-zone-name-cell { width: 28%; }
+    .fire-zone-ledger .table td.fire-zone-name-cell { overflow: hidden; text-overflow: ellipsis; cursor: default; }
+    .fire-zone-ledger .table th:last-child, .fire-zone-ledger .table td:last-child { overflow: visible; text-overflow: clip; }
+    .fire-zone-ledger .pagination { padding: 16px 0 0; }
+    .fire-zone-readonly input { background: #f5f7fa; color: var(--text-secondary); }
+    body.fire-zone-drawer-open #drawer { width: min(960px, 96vw); }
+    .fire-zone-form-mask { position: fixed; inset: 0; z-index: 1400; display: grid; place-items: center; padding: 24px; background: rgba(26, 28, 31, .45); }
+    .fire-zone-form-dialog { width: min(640px, calc(100vw - 48px)); max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; border-radius: 6px; background: #fff; box-shadow: 0 16px 48px rgba(26, 28, 31, .24); }
+    .fire-zone-form-dialog header { min-height: 56px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; border-bottom: 1px solid var(--divider, #e5e6eb); }
+    .fire-zone-form-dialog header h3 { margin: 0; font-size: 16px; font-weight: 600; color: var(--text-title); }
+    .fire-zone-form-dialog header button { width: 28px; height: 28px; border: 0; color: var(--text-secondary); background: transparent; cursor: pointer; font-size: 20px; }
+    .fire-zone-form-dialog .fire-zone-form-body { padding: 20px; overflow: auto; }
+    .fire-zone-form-dialog footer { min-height: 56px; display: flex; justify-content: flex-end; gap: 8px; padding: 12px 20px; border-top: 1px solid var(--divider, #e5e6eb); }
+  </style>
+</head>
+<body class="house-page" data-menu-key="project.house" data-page-section="数据库管理" data-page-title="区段管理">
+  <div class="app-shell"><aside id="app-sidebar" class="sidebar"></aside><header id="app-header" class="header"></header><main class="main"><div class="screen-frame stack">
+    <section class="card filters house-filters"><div class="filter-actions">
+      <label class="form-field"><span class="form-label">关键词</span><input class="form-control" data-filter="keyword" placeholder="搜索区段编码或名称"></label>
+      <label class="form-field"><span class="form-label">分类</span><select class="form-control" data-filter="category"><option value="">请选择</option><option>防火分区</option><option>出入口</option><option>通风口</option><option>吊装口</option></select></label>
+      <label class="form-field"><span class="form-label">状态</span><select class="form-control" data-filter="status"><option value="">请选择</option><option>建设中</option><option>待完善</option><option>已完工</option><option>停用</option></select></label>
+      <label class="form-field"><span class="form-label">所属项目</span><select class="form-control" data-filter="project"><option value="">请选择</option><option>光谷科学岛综合开发项目</option><option>科学岛东区管廊延伸工程</option></select></label>
+      <label class="form-field"><span class="form-label">所属管廊</span><select class="form-control" data-filter="corridor" disabled><option value="">请选择</option></select></label>
+      <label class="form-field"><span class="form-label">所属舱室</span><select class="form-control" data-filter="cabin" disabled><option value="">请选择</option></select></label>
+      <button class="btn btn-secondary" type="button" data-action="reset">重置</button>
+      <button class="btn btn-primary" type="button" data-action="search">搜索</button>
+    </div></section>
+    <section class="card house-list-card"><div class="card-title-row house-toolbar"><h2 class="card-title">区段档案</h2><div class="btn-row"><button class="btn btn-secondary" type="button" data-action="fire-zone"><i class="fa-solid fa-fire-extinguisher"></i> 防火分区</button><button class="btn btn-primary" type="button" data-action="create"><i class="fa-solid fa-plus"></i> 新增区段</button><button class="btn btn-secondary" type="button" data-action="import"><i class="fa-solid fa-file-import"></i> 导入</button><button class="btn btn-secondary" type="button" data-action="export"><i class="fa-solid fa-file-export"></i> 导出</button><button class="btn btn-secondary" type="button" data-action="delete-selected" disabled><i class="fa-solid fa-trash"></i> 删除</button><button class="icon-btn" type="button" title="刷新" aria-label="刷新" data-action="refresh"><i class="fa-solid fa-rotate-right"></i></button><button class="icon-btn" type="button" title="全屏" aria-label="全屏"><i class="fa-solid fa-expand"></i></button><button class="icon-btn" type="button" title="列设置" aria-label="列设置"><i class="fa-solid fa-gear"></i></button></div></div><div class="table-wrap"><table class="table house-table table-actions-sticky" aria-label="区段列表"><thead><tr><th><input type="checkbox" data-select-all></th><th>防火分区编号</th><th>防火分区名称</th><th>防火分区长度</th><th>防火分区起点桩号</th><th>防火分区止点桩号</th><th>区段编码</th><th>区段名称</th><th>所属项目</th><th>所属管廊</th><th>所属舱室</th><th>起始桩号</th><th>结束桩号</th><th>区段长度（m）</th><th>管线数量</th><th>设备数量</th><th>区段状态</th><th>操作</th></tr></thead><tbody id="houseTableBody"></tbody></table></div><div class="pagination"><span>共 <strong id="houseCount">0</strong> 条记录，每页 10 条</span><span class="page-item disabled">‹</span><span class="page-item active">1</span><span class="page-item disabled">›</span></div></section>
+  </div></main></div>
+  <script src="../../../app/config/menu.js?v=nav-hide-1"></script><script src="../../../app/components/sidebar.js?v=nav-home-1"></script><script src="../../../app/components/header.js?v=nav-home-1"></script><script src="../../../app/components/drawer.js"></script><script src="../../../app/components/requirement.js"></script>
+  <script>
+    const houses=[
+      {id:1,code:'FH-01',name:'高新大道综合舱防火一区',project:'',corridor:'',cabin:'',start:'K0+000',end:'K0+600',length:600,pipelines:0,devices:0,category:'防火分区',status:'已完工',note:'',fireZoneId:null},
+      {id:5,code:'FH-02',name:'高新大道燃气舱防火一区',project:'',corridor:'',cabin:'',start:'K0+000',end:'K0+600',length:600,pipelines:0,devices:0,category:'防火分区',status:'已完工',note:'',fireZoneId:null},
+      {id:9,code:'FH-03',name:'科学岛大道燃气舱防火一区',project:'',corridor:'',cabin:'',start:'K1+800',end:'K2+400',length:600,pipelines:0,devices:0,category:'防火分区',status:'已完工',note:'',fireZoneId:null},
+      {id:2,code:'ZN-02',name:'通风口',project:'光谷科学岛综合开发项目',corridor:'高新大道综合管廊',cabin:'综合舱',start:'K0+300',end:'K0+600',length:300,pipelines:1,devices:8,category:'通风口',status:'待完善',note:'',fireZoneId:1},
+      {id:3,code:'ZN-03',name:'出入口',project:'光谷科学岛综合开发项目',corridor:'高新大道综合管廊',cabin:'电力舱',start:'K0+000',end:'K0+300',length:300,pipelines:2,devices:15,category:'出入口',status:'待完善',note:'',fireZoneId:1},
+      {id:4,code:'ZN-04',name:'吊装口',project:'光谷科学岛综合开发项目',corridor:'高新大道综合管廊',cabin:'电力舱',start:'K0+300',end:'K0+600',length:300,pipelines:1,devices:10,category:'吊装口',status:'已完工',note:'',fireZoneId:1},
+      {id:6,code:'ZN-06',name:'通风口',project:'光谷科学岛综合开发项目',corridor:'高新大道综合管廊',cabin:'燃气舱',start:'K0+300',end:'K0+600',length:300,pipelines:1,devices:6,category:'通风口',status:'停用',note:'',fireZoneId:5},
+      {id:7,code:'ZN-07',name:'出入口',project:'光谷科学岛综合开发项目',corridor:'科学岛大道综合管廊',cabin:'电力舱',start:'K1+200',end:'K1+500',length:300,pipelines:1,devices:9,category:'出入口',status:'建设中',note:'',fireZoneId:9},
+      {id:8,code:'ZN-08',name:'吊装口',project:'光谷科学岛综合开发项目',corridor:'科学岛大道综合管廊',cabin:'电力舱',start:'K1+500',end:'K1+800',length:300,pipelines:1,devices:9,category:'吊装口',status:'已完工',note:'',fireZoneId:9},
+      {id:10,code:'ZN-10',name:'通风口',project:'光谷科学岛综合开发项目',corridor:'科学岛大道综合管廊',cabin:'燃气舱',start:'K2+100',end:'K2+400',length:300,pipelines:1,devices:7,category:'通风口',status:'停用',note:'末端设备信息待补录',fireZoneId:9},
+      {id:11,code:'ZN-11',name:'出入口',project:'科学岛东区管廊延伸工程',corridor:'科学岛东区综合管廊',cabin:'综合舱',start:'K0+000',end:'K0+300',length:300,pipelines:1,devices:5,category:'出入口',status:'建设中',note:'',fireZoneId:null},
+      {id:12,code:'ZN-12',name:'吊装口',project:'科学岛东区管廊延伸工程',corridor:'科学岛东区综合管廊',cabin:'综合舱',start:'K0+300',end:'K0+600',length:300,pipelines:1,devices:5,category:'吊装口',status:'待完善',note:'',fireZoneId:null}
+    ];
+    const projectCorridors={"光谷科学岛综合开发项目":["高新大道综合管廊","科学岛大道综合管廊"],"科学岛东区管廊延伸工程":["科学岛东区综合管廊"]};
+    const corridorCabins={"高新大道综合管廊":["综合舱","电力舱","燃气舱"],"科学岛大道综合管廊":["电力舱","燃气舱"],"科学岛东区综合管廊":["综合舱"]};
+    const optionList=(values,selected="")=>values.map((value)=>`<option value="${esc(value)}"${value===selected?" selected":""}>${esc(value)}</option>`).join("");
+    const corridorOptions=(project,selected="")=>optionList(projectCorridors[project]||[],selected);
+    const cabinOptions=(corridor,selected="")=>optionList(corridorCabins[corridor]||[],selected);
+    const selectedHouseIds=new Set();
+    const statusTagClass=(status)=>status==="已完工"?"success":status==="待完善"?"warning":status==="停用"?"danger":"primary";
+    const body=document.getElementById("houseTableBody"),count=document.getElementById("houseCount");const cabinQuery=new URLSearchParams(location.search).get("cabin"),corridorQuery=new URLSearchParams(location.search).get("corridor");let filteredHouses=houses.filter((item)=>(!cabinQuery||item.cabin===cabinQuery)&&(!corridorQuery||item.corridor===corridorQuery));
+    const esc=(value)=>String(value??"").replace(/[&<>\"]/g,(char)=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[char]));
+    const fireZones=()=>houses.filter((item)=>item.category==="防火分区");
+    const fireZoneById=(id)=>fireZones().find((item)=>String(item.id)===String(id));
+    function resolveFireFields(item){
+      if(item.category==="防火分区")return {code:item.code||"",name:item.name||"",length:item.length??"",start:item.start||"",end:item.end||""};
+      const zone=item.fireZoneId!=null?fireZoneById(item.fireZoneId):null;
+      return zone?{code:zone.code||"",name:zone.name||"",length:zone.length??"",start:zone.start||"",end:zone.end||""}:{code:"",name:"",length:"",start:"",end:""};
+    }
+    function renderRows(list=filteredHouses){filteredHouses=list;body.innerHTML=list.map((item)=>{const fire=resolveFireFields(item);return `<tr data-house-id="${item.id}"><td><input type="checkbox" data-house-check="${item.id}"${selectedHouseIds.has(item.id)?" checked":""}></td><td>${esc(fire.code||"-")}</td><td>${esc(fire.name||"-")}</td><td>${esc(fire.length===""?"-":fire.length)}</td><td>${esc(fire.start||"-")}</td><td>${esc(fire.end||"-")}</td><td>${esc(item.code)}</td><td>${esc(item.name)}</td><td>${esc(item.project||"-")}</td><td>${esc(item.corridor||"-")}</td><td>${esc(item.cabin||"-")}</td><td>${esc(item.start||"-")}</td><td>${esc(item.end||"-")}</td><td>${item.length??"-"}</td><td>${item.pipelines??0}</td><td>${item.devices??0}</td><td><span class="tag ${statusTagClass(item.status||"待完善")}">${item.status||"-"}</span></td><td><button class="table-action" data-house-action="detail" data-house-id="${item.id}">详情</button><button class="table-action" data-house-action="edit" data-house-id="${item.id}">编辑</button>${item.category==="防火分区"?"":`<button class="table-action" data-house-action="pipelines" data-house-id="${item.id}">管线管理</button>`}<button class="table-action status-danger" data-house-action="delete" data-house-id="${item.id}">删除</button></td></tr>`;}).join("");count.textContent=list.length;updateSelection();}
+    function houseById(id){return houses.find((item)=>String(item.id)===String(id))||houses[0];}
+    function detailBody(item){const fire=resolveFireFields(item);return `<section class="detail-section"><h3 class="detail-title">区段信息</h3><div class="detail-grid">${[["防火分区编号",fire.code||"-"],["防火分区名称",fire.name||"-"],["防火分区长度",fire.length===""?"-":fire.length],["防火分区起点桩号",fire.start||"-"],["防火分区止点桩号",fire.end||"-"],["区段编码",item.code],["区段名称",item.name],["所属项目",item.project||"-"],["所属管廊",item.corridor||"-"],["所属舱室",item.cabin||"-"],["起始桩号",item.start||"-"],["结束桩号",item.end||"-"],["区段长度",(item.length??"-")+(item.length!=null&&item.length!==""?" m":"")],["管线数量",item.pipelines??0],["设备数量",item.devices??0]].map(([label,value])=>`<div class="info-item"><span class="info-label">${label}</span><span class="info-value">${esc(value)}</span></div>`).join("")}<div class="info-item"><span class="info-label">区段状态</span><span class="info-value"><span class="tag ${statusTagClass(item.status||"待完善")}">${item.status||"-"}</span></span></div></div></section><section class="detail-section"><h3 class="detail-title">备注</h3><p class="detail-text">${esc(item.note||"-")}</p></section>`;}
+    function fireZoneSelectMarkup(item,isCreate){
+      const zone=(!isCreate&&item.fireZoneId!=null)?fireZoneById(item.fireZoneId):null;
+      const label=zone?`${zone.code} - ${zone.name}`:"";
+      const fire=zone?{code:zone.code,length:zone.length,start:zone.start,end:zone.end}:{code:"",length:"",start:"",end:""};
+      return `<label class="form-field form-item"><span class="form-label">所属防火分区</span><div class="fire-zone-select" data-fire-zone-select><div class="fire-zone-control"><input class="form-control" data-fire-zone-input type="text" value="${esc(label)}" placeholder="请选择或搜索防火分区" autocomplete="off" role="combobox" aria-expanded="false"><input type="hidden" data-form-fire-zone-id value="${zone?zone.id:""}"><i class="fa-solid fa-chevron-down"></i></div><div class="fire-zone-panel" data-fire-zone-panel role="listbox"></div></div></label>
+      <label class="form-field form-item fire-zone-readonly"><span class="form-label">防火分区编号</span><input class="form-control" data-fire-echo="code" value="${esc(fire.code)}" readonly placeholder="选择后自动回显"></label>
+      <label class="form-field form-item fire-zone-readonly"><span class="form-label">防火分区长度</span><input class="form-control" data-fire-echo="length" value="${esc(fire.length)}" readonly placeholder="选择后自动回显"></label>
+      <label class="form-field form-item fire-zone-readonly"><span class="form-label">防火分区起点桩号</span><input class="form-control" data-fire-echo="start" value="${esc(fire.start)}" readonly placeholder="选择后自动回显"></label>
+      <label class="form-field form-item fire-zone-readonly"><span class="form-label">防火分区止点桩号</span><input class="form-control" data-fire-echo="end" value="${esc(fire.end)}" readonly placeholder="选择后自动回显"></label>`;
+    }
+    function formBody(item,mode){const isCreate=mode==="create",value=(key)=>isCreate?"":esc(item[key]);const currentProject=isCreate?"":(item.project||""),currentCorridor=isCreate?"":(item.corridor||""),currentCabin=isCreate?"":(item.cabin||"");return `<div class="form-grid-2">${fireZoneSelectMarkup(item,isCreate)}<label class="form-field form-item"><span class="form-label form-required">区段编码</span><input class="form-control" data-form-code value="${value("code")}" placeholder="请输入"></label><label class="form-field form-item"><span class="form-label form-required">区段名称</span><input class="form-control" data-form-name value="${value("name")}" placeholder="请输入"></label><label class="form-field form-item"><span class="form-label form-required">所属项目</span><select class="form-control" data-form-project><option value="">请选择</option>${optionList(Object.keys(projectCorridors),currentProject)}</select></label><label class="form-field form-item"><span class="form-label form-required">所属管廊</span><select class="form-control" data-form-corridor><option value="">请选择</option>${corridorOptions(currentProject,currentCorridor)}</select></label><label class="form-field form-item"><span class="form-label form-required">所属舱室</span><select class="form-control" data-form-cabin><option value="">请选择</option>${cabinOptions(currentCorridor,currentCabin)}</select></label><label class="form-field form-item"><span class="form-label form-required">起始桩号</span><input class="form-control" data-form-start value="${value("start")}" placeholder="如 K0+000"></label><label class="form-field form-item"><span class="form-label form-required">结束桩号</span><input class="form-control" data-form-end value="${value("end")}" placeholder="如 K0+300"></label><label class="form-field form-item"><span class="form-label form-required">区段长度（m）</span><input class="form-control" data-form-length type="number" value="${value("length")}" placeholder="请输入"></label><label class="form-field form-item"><span class="form-label">管线数量</span><input class="form-control" data-form-pipelines type="number" value="${value("pipelines")}" placeholder="请输入"></label><label class="form-field form-item"><span class="form-label">设备数量</span><input class="form-control" data-form-devices type="number" value="${value("devices")}" placeholder="请输入"></label><label class="form-field form-item"><span class="form-label form-required">区段状态</span><select class="form-control" data-form-status>${["建设中","待完善","已完工","停用"].map((name)=>`<option${!isCreate&&item.status===name?" selected":""}>${name}</option>`).join("")}</select></label></div><label class="form-field form-item"><span class="form-label">备注</span><textarea class="form-control textarea" data-form-note maxlength="200" placeholder="请输入">${value("note")}</textarea><span class="field-count">0/200</span></label>`;}
+    let activeHouseDrawerItem=houses[0],activeHouseDrawerMode="detail";
+    let filteredFireZones=fireZones();
+    const selectedFireZoneIds=new Set();
+    function bindFireZoneSelect(){
+      const root=document.querySelector("[data-fire-zone-select]");if(!root)return;
+      const inputNode=root.querySelector("[data-fire-zone-input]");
+      const hidden=root.querySelector("[data-form-fire-zone-id]");
+      const panel=root.querySelector("[data-fire-zone-panel]");
+      const applyEcho=(zone)=>{
+        const map={code:zone?.code||"",length:zone?.length??"",start:zone?.start||"",end:zone?.end||""};
+        document.querySelectorAll("[data-fire-echo]").forEach((node)=>{node.value=map[node.dataset.fireEcho]??"";});
+      };
+      const list=()=>{const keyword=inputNode.value.trim().toLowerCase();return fireZones().filter((z)=>!keyword||(`${z.code} ${z.name}`).toLowerCase().includes(keyword));};
+      const render=()=>{const rows=list();panel.innerHTML=rows.length?rows.map((z)=>`<button class="fire-zone-option${String(hidden.value)===String(z.id)?" is-selected":""}" type="button" data-fire-zone-option="${z.id}">${esc(z.code)} - ${esc(z.name)}</button>`).join(""):'<div class="fire-zone-empty">暂无匹配的防火分区</div>';};
+      const open=()=>{root.classList.add("is-open");inputNode.setAttribute("aria-expanded","true");render();};
+      const close=()=>{root.classList.remove("is-open");inputNode.setAttribute("aria-expanded","false");};
+      inputNode.addEventListener("focus",open);inputNode.addEventListener("click",open);
+      inputNode.addEventListener("input",()=>{hidden.value="";applyEcho(null);open();});
+      panel.addEventListener("mousedown",(event)=>{const option=event.target.closest("[data-fire-zone-option]");if(!option)return;event.preventDefault();const zone=fireZoneById(option.dataset.fireZoneOption);if(!zone)return;hidden.value=zone.id;inputNode.value=`${zone.code} - ${zone.name}`;applyEcho(zone);close();});
+      document.addEventListener("mousedown",(event)=>{if(!root.contains(event.target))close();});
+    }
+    function openHouseDrawer(mode,item=null){
+      const isCreate=mode==="create";
+      const target=isCreate?{id:null,code:"",name:"",project:"",corridor:"",cabin:"",start:"",end:"",length:"",pipelines:"",devices:"",status:"待完善",note:"",category:"",fireZoneId:null}:(item||houses[0]);
+      activeHouseDrawerItem=target;activeHouseDrawerMode=mode;
+      document.body.classList.remove("fire-zone-drawer-open");
+      window.openAppDrawer({title:isCreate?"新增区段":mode==="edit"?"编辑区段":"区段详情",subtitle:`数据库管理 · 区段管理${isCreate||!target.name?"":` · ${target.name}`}`,body:mode==="detail"?detailBody(target):formBody(target,mode),footer:`<button class="btn btn-secondary" type="button" data-drawer-close>${mode==="detail"?"关闭":"取消"}</button>${mode==="detail"?"":`<button class="btn btn-primary" type="button" data-action="save-house">确认</button>`}`});
+      if(mode!=="detail")bindFireZoneSelect();
+    }
+    function saveHouseFromDrawer(){
+      const fireZoneIdRaw=document.querySelector("[data-form-fire-zone-id]")?.value||"";
+      const payload={
+        code:document.querySelector("[data-form-code]")?.value.trim()||"",
+        name:document.querySelector("[data-form-name]")?.value.trim()||"",
+        project:document.querySelector("[data-form-project]")?.value||"",
+        corridor:document.querySelector("[data-form-corridor]")?.value||"",
+        cabin:document.querySelector("[data-form-cabin]")?.value||"",
+        start:document.querySelector("[data-form-start]")?.value.trim()||"",
+        end:document.querySelector("[data-form-end]")?.value.trim()||"",
+        length:Number(document.querySelector("[data-form-length]")?.value)||0,
+        pipelines:Number(document.querySelector("[data-form-pipelines]")?.value)||0,
+        devices:Number(document.querySelector("[data-form-devices]")?.value)||0,
+        status:document.querySelector("[data-form-status]")?.value||"待完善",
+        note:document.querySelector("[data-form-note]")?.value.trim()||"",
+        fireZoneId:fireZoneIdRaw?Number(fireZoneIdRaw):null,
+        category:activeHouseDrawerMode==="create"?(document.querySelector("[data-form-name]")?.value.trim()||"区段"):(activeHouseDrawerItem.category||"区段")
+      };
+      if(!payload.code||!payload.name||!payload.project||!payload.corridor||!payload.cabin){showHouseMessage("提示","请填写区段必填信息。");return;}
+      if(activeHouseDrawerMode==="edit"){Object.assign(activeHouseDrawerItem,payload);}
+      else{houses.unshift({id:Date.now(),...payload});}
+      renderRows(houses);window.closeAppDrawer();
+    }
+    function fireZoneChildren(zoneId){return houses.filter((item)=>item.category!=="防火分区"&&String(item.fireZoneId)===String(zoneId));}
+    function fireZoneLedgerBody(list=filteredFireZones){
+      filteredFireZones=list;
+      return `<div class="fire-zone-ledger" data-fire-zone-ledger>
+        <div class="filter-actions">
+          <label class="form-field"><span class="form-label">防火分区编号</span><input class="form-control" data-fire-filter="code" placeholder="请输入"></label>
+          <label class="form-field"><span class="form-label">防火分区名称</span><input class="form-control" data-fire-filter="name" placeholder="请输入"></label>
+          <button class="btn btn-secondary" type="button" data-fire-action="reset">重置</button>
+          <button class="btn btn-primary" type="button" data-fire-action="search">搜索</button>
+        </div>
+        <div class="fire-zone-toolbar">
+          <div class="btn-row">
+            <button class="btn btn-primary" type="button" data-fire-action="create"><i class="fa-solid fa-plus"></i> 新增</button>
+            <button class="btn btn-secondary" type="button" data-fire-action="delete" ${selectedFireZoneIds.size===0?"disabled":""}>删除</button>
+          </div>
+        </div>
+        <div class="table-wrap"><table class="table"><thead><tr><th style="width:48px"><input type="checkbox" data-fire-select-all></th><th>防火分区编号</th><th>防火分区名称</th><th>防火分区长度</th><th>防火分区起点桩号</th><th>防火分区止点桩号</th><th style="width:120px">操作</th></tr></thead><tbody>${list.length?list.map((item)=>`<tr data-fire-id="${item.id}"><td><input type="checkbox" data-fire-check="${item.id}"${selectedFireZoneIds.has(item.id)?" checked":""}></td><td title="${esc(item.code)}">${esc(item.code)}</td><td class="fire-zone-name-cell" title="${esc(item.name)}">${esc(item.name)}</td><td>${esc(item.length??"")}</td><td>${esc(item.start||"")}</td><td>${esc(item.end||"")}</td><td><button class="table-action" type="button" data-fire-row="edit" data-fire-id="${item.id}">编辑</button><button class="table-action status-danger" type="button" data-fire-row="delete" data-fire-id="${item.id}">删除</button></td></tr>`).join(""):'<tr><td colspan="7" class="empty-cell">暂无防火分区</td></tr>'}</tbody></table></div>
+        <div class="pagination"><span>共 <strong data-fire-count>${list.length}</strong> 条记录，每页 10 条</span><span class="page-item disabled">‹</span><span class="page-item active">1</span><span class="page-item disabled">›</span></div>
+      </div>`;
+    }
+    function openFireZoneLedger(list=fireZones()){
+      selectedFireZoneIds.clear();
+      filteredFireZones=list;
+      document.body.classList.add("fire-zone-drawer-open");
+      window.openAppDrawer({title:"防火分区",subtitle: "数据库管理 · 区段管理",body:fireZoneLedgerBody(list),footer:'<button class="btn btn-secondary" type="button" data-drawer-close>关闭</button>'});
+      const clearWide=()=>document.body.classList.remove("fire-zone-drawer-open");
+      document.getElementById("drawer")?.querySelectorAll(".drawer-close,[data-drawer-close]").forEach((btn)=>btn.addEventListener("click",clearWide,{once:true}));
+      document.getElementById("drawerMask")?.addEventListener("click",clearWide,{once:true});
+    }
+    function syncFireZoneSelectionUi(){
+      const deleteBtn=document.querySelector('[data-fire-action="delete"]');
+      if(deleteBtn)deleteBtn.disabled=selectedFireZoneIds.size===0;
+      const boxes=[...document.querySelectorAll("[data-fire-check]")];
+      const selectAll=document.querySelector("[data-fire-select-all]");
+      if(selectAll)selectAll.checked=boxes.length>0&&boxes.every((input)=>selectedFireZoneIds.has(Number(input.dataset.fireCheck)));
+    }
+    function refreshFireZoneLedger(list=filteredFireZones){
+      const code=document.querySelector('[data-fire-filter="code"]')?.value||"";
+      const name=document.querySelector('[data-fire-filter="name"]')?.value||"";
+      const host=document.querySelector("[data-fire-zone-ledger]");
+      if(!host){openFireZoneLedger(list);return;}
+      const drawerBody=document.getElementById("drawerBody");
+      if(drawerBody)drawerBody.innerHTML=fireZoneLedgerBody(list);
+      const codeInput=document.querySelector('[data-fire-filter="code"]');
+      const nameInput=document.querySelector('[data-fire-filter="name"]');
+      if(codeInput)codeInput.value=code;
+      if(nameInput)nameInput.value=name;
+    }
+    function closeFireZoneFormModal(){document.querySelector(".fire-zone-form-mask")?.remove();}
+    function openFireZoneForm(mode,item=null){
+      const isCreate=mode==="create";
+      const value=(key)=>isCreate?"":esc(item?.[key]??"");
+      closeFireZoneFormModal();
+      const mask=document.createElement("div");
+      mask.className="fire-zone-form-mask";
+      mask.innerHTML=`<section class="fire-zone-form-dialog" role="dialog" aria-modal="true">
+        <header><h3>${isCreate?"新增防火分区":"编辑防火分区"}</h3><button type="button" data-fire-action="close-form" aria-label="关闭">×</button></header>
+        <div class="fire-zone-form-body"><div class="form-grid-2" data-fire-zone-form data-mode="${mode}" data-fire-id="${item?.id||""}">
+          <label class="form-field form-item"><span class="form-label form-required">防火分区编号</span><input class="form-control" data-fire-field="code" value="${value("code")}" placeholder="请输入"></label>
+          <label class="form-field form-item"><span class="form-label form-required">防火分区名称</span><input class="form-control" data-fire-field="name" value="${value("name")}" placeholder="请输入"></label>
+          <label class="form-field form-item"><span class="form-label">防火分区长度</span><input class="form-control" data-fire-field="length" type="number" value="${value("length")}" placeholder="请输入"></label>
+          <label class="form-field form-item"><span class="form-label">防火分区起点桩号</span><input class="form-control" data-fire-field="start" value="${value("start")}" placeholder="如 K0+000"></label>
+          <label class="form-field form-item"><span class="form-label">防火分区止点桩号</span><input class="form-control" data-fire-field="end" value="${value("end")}" placeholder="如 K0+600"></label>
+        </div></div>
+        <footer><button class="btn btn-secondary" type="button" data-fire-action="close-form">取消</button><button class="btn btn-primary" type="button" data-fire-action="save">确认</button></footer>
+      </section>`;
+      document.body.append(mask);
+      mask.addEventListener("click",(event)=>{if(event.target===mask)closeFireZoneFormModal();});
+    }
+    function saveFireZone(){
+      const form=document.querySelector("[data-fire-zone-form]");if(!form)return;
+      const code=form.querySelector('[data-fire-field="code"]')?.value.trim()||"";
+      const name=form.querySelector('[data-fire-field="name"]')?.value.trim()||"";
+      const lengthRaw=form.querySelector('[data-fire-field="length"]')?.value;
+      const start=form.querySelector('[data-fire-field="start"]')?.value.trim()||"";
+      const end=form.querySelector('[data-fire-field="end"]')?.value.trim()||"";
+      if(!code||!name){showHouseMessage("提示","请填写防火分区编号和名称。");return;}
+      const mode=form.dataset.mode;const editId=form.dataset.fireId;
+      const duplicatedCode=fireZones().some((item)=>item.code===code&&String(item.id)!==String(editId));
+      const duplicatedName=fireZones().some((item)=>item.name===name&&String(item.id)!==String(editId));
+      if(duplicatedCode){showHouseMessage("提示","防火分区编号已存在，请更换后重试。");return;}
+      if(duplicatedName){showHouseMessage("提示","防火分区名称已存在，请更换后重试。");return;}
+      const payload={code,name,length:lengthRaw===""?"":Number(lengthRaw),start,end,category:"防火分区",project:"",corridor:"",cabin:"",pipelines:0,devices:0,status:"已完工",note:"",fireZoneId:null};
+      if(mode==="edit"){const target=houseById(editId);if(target)Object.assign(target,payload);}
+      else{houses.unshift({id:Date.now(),...payload});}
+      renderRows(houses);closeFireZoneFormModal();
+      if(document.querySelector("[data-fire-zone-ledger]"))refreshFireZoneLedger(fireZones());
+      else openFireZoneLedger(fireZones());
+    }
+    function deleteFireZones(ids){
+      const list=[...ids].map((id)=>houseById(id)).filter((item)=>item&&item.category==="防火分区");
+      if(!list.length)return;
+      const blocked=list.filter((item)=>fireZoneChildren(item.id).length>0);
+      if(blocked.length){showHouseMessage("提示",`防火分区「${blocked.map((item)=>item.name).join("」、「")}」已关联子区段，请解除关联后删除。`);return;}
+      window.openAppConfirm({title:"删除防火分区",message:`确认删除选中的 ${list.length} 个防火分区吗？`,confirmText:"确认删除",onConfirm:()=>{list.forEach((item)=>{const index=houses.indexOf(item);if(index>=0)houses.splice(index,1);selectedFireZoneIds.delete(item.id);});renderRows(houses);if(document.querySelector("[data-fire-zone-ledger]"))refreshFireZoneLedger(fireZones());}});
+    }
+    function confirmDelete(item){if(item.pipelines>0||item.devices>0){window.openAppConfirm({title:"提示",message:"当前区段下关联了管线/设备，将无法删除，请解除关联后删除",confirmText:"知道了"});return;}window.openAppConfirm({title:"提示",message:`确认删除区段「${item.name}」吗？`,onConfirm:()=>{const index=houses.findIndex((entry)=>entry.id===item.id);if(index>=0)houses.splice(index,1);selectedHouseIds.delete(item.id);renderRows();}});}
+    function updateSelection(){const button=document.querySelector('[data-action="delete-selected"]');if(button)button.disabled=!selectedHouseIds.size;}
+    function deleteSelectedHouses(){const selected=houses.filter((item)=>selectedHouseIds.has(item.id));if(!selected.length)return;const blockedZones=selected.filter((item)=>item.category==="防火分区"&&fireZoneChildren(item.id).length>0);if(blockedZones.length){showHouseMessage("提示",`防火分区「${blockedZones.map((item)=>item.name).join("」、「")}」已关联子区段，请解除关联后删除。`);return;}if(selected.some((item)=>item.category!=="防火分区"&&(item.pipelines>0||item.devices>0))){window.openAppConfirm({title:"提示",message:"当前区段下关联了管线/设备，将无法删除，请解除关联后删除",confirmText:"知道了"});return;}window.openAppConfirm({title:"提示",message:`确认删除选中的 ${selected.length} 条记录吗？`,onConfirm:()=>{selected.forEach((item)=>{const index=houses.findIndex((entry)=>entry.id===item.id);if(index>=0)houses.splice(index,1);});selectedHouseIds.clear();renderRows();}});}
+    const importHeaders=["防火分区编号","防火分区名称","防火分区长度","防火分区起点桩号","防火分区止点桩号","区段编码","区段名称","所属项目","所属管廊","所属舱室","起始桩号","结束桩号","区段长度（m）","管线数量","设备数量","区段状态","备注"];
+    function showHouseMessage(title,message){window.openAppConfirm({title,message,confirmText:"知道了"});}
+    function ensureXlsx(){if(window.XLSX)return true;showHouseMessage("提示","Excel 组件加载失败，请刷新页面后重试。");return false;}
+    function downloadBlob(blob,name){const url=URL.createObjectURL(blob);const link=document.createElement("a");link.href=url;link.download=name;document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+    function downloadWorkbook(book,name){const content=XLSX.write(book,{bookType:"xlsx",type:"array"});downloadBlob(new Blob([content],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}),name);}
+    function downloadHouseTemplate(){if(!ensureXlsx())return;const rows=[importHeaders,["FH-01","高新大道综合舱防火一区",600,"K0+000","K0+600","ZN-09","通风口","光谷科学岛综合开发项目","高新大道综合管廊","综合舱","K2+400","K2+700",300,2,10,"建设中","示例数据，导入前请删除"]];const sheet=XLSX.utils.aoa_to_sheet(rows);const book=XLSX.utils.book_new();XLSX.utils.book_append_sheet(book,sheet,"区段导入模板");downloadWorkbook(book,"区段导入模板.xlsx");}
+    function exportHouses(){if(!ensureXlsx())return;const rows=filteredHouses.map((item)=>{const fire=resolveFireFields(item);return {"防火分区编号":fire.code,"防火分区名称":fire.name,"防火分区长度":fire.length,"防火分区起点桩号":fire.start,"防火分区止点桩号":fire.end,"区段编码":item.code,"区段名称":item.name,"所属项目":item.project||"","所属管廊":item.corridor||"","所属舱室":item.cabin||"","起始桩号":item.start||"","结束桩号":item.end||"","区段长度（m）":item.length,"管线数量":item.pipelines,"设备数量":item.devices,"区段状态":item.status,"备注":item.note||""};});const sheet=XLSX.utils.json_to_sheet(rows.length?rows:[{"防火分区编号":""}],{header:importHeaders});const book=XLSX.utils.book_new();XLSX.utils.book_append_sheet(book,sheet,"区段管理");downloadWorkbook(book,"区段管理.xlsx");}
+    let pendingHouseImportFile=null;
+    function setHouseImportFile(file){if(!file)return;if(!/\.(xlsx|xls)$/i.test(file.name)){pendingHouseImportFile=null;showHouseMessage("提示","请选择 xlsx 或 xls 格式文件。");return;}pendingHouseImportFile=file;const text=document.querySelector("[data-import-file-name]");if(text)text.textContent=file.name;}
+    function openHouseImport(){pendingHouseImportFile=null;window.openAppDrawer({title:"导入区段",body:'<label class="house-import-box" data-import-drop><input type="file" data-import-file accept=".xlsx,.xls"><i class="fa-solid fa-cloud-arrow-up"></i><strong>点击或拖拽文件到此处上传</strong><span>支持 xlsx、xls 格式</span></label><p class="house-import-file" data-import-file-name>尚未选择文件</p><div class="house-import-actions"><button class="btn btn-secondary" type="button" data-action="download-template"><i class="fa-solid fa-download"></i> 下载模板</button></div>',footer:'<button class="btn btn-secondary" type="button" data-drawer-close>取消</button><button class="btn btn-primary" type="button" data-action="confirm-import">确认导入</button>'});const box=document.querySelector("[data-import-drop]");box.addEventListener("dragover",(event)=>{event.preventDefault();box.classList.add("dragover");});box.addEventListener("dragleave",()=>box.classList.remove("dragover"));box.addEventListener("drop",(event)=>{event.preventDefault();box.classList.remove("dragover");setHouseImportFile(event.dataTransfer.files[0]);});document.querySelector("[data-import-file]").addEventListener("change",(event)=>setHouseImportFile(event.target.files[0]));}
+    async function importHouses(){if(!pendingHouseImportFile){showHouseMessage("提示","请先选择需要导入的 Excel 文件。");return;}if(!ensureXlsx())return;try{const workbook=XLSX.read(await pendingHouseImportFile.arrayBuffer(),{type:"array"});const sheet=workbook.Sheets[workbook.SheetNames[0]];const headerRow=XLSX.utils.sheet_to_json(sheet,{header:1,range:0,blankrows:false})[0]||[];const missingHeaders=importHeaders.filter((header)=>!headerRow.includes(header));if(missingHeaders.length){showHouseMessage("导入失败",`缺少必填表头：${missingHeaders.join("、")}`);return;}const rows=XLSX.utils.sheet_to_json(sheet,{defval:""});const required=["区段编码","区段名称","所属项目","所属管廊","所属舱室","起始桩号","结束桩号","区段长度（m）","区段状态"];let success=0,failed=0;rows.forEach((row)=>{if(String(row["区段名称"]).includes("示例"))return;const valid=required.every((header)=>String(row[header]).trim());if(!valid){failed+=1;return;}const name=String(row["区段名称"]).trim();const fireCode=String(row["防火分区编号"]||"").trim();const zone=fireCode?fireZones().find((item)=>item.code===fireCode):null;houses.unshift({id:Date.now()+success,code:String(row["区段编码"]).trim(),name,project:String(row["所属项目"]).trim(),corridor:String(row["所属管廊"]).trim(),cabin:String(row["所属舱室"]).trim(),start:String(row["起始桩号"]).trim(),end:String(row["结束桩号"]).trim(),length:Number(row["区段长度（m）"])||0,pipelines:Number(row["管线数量"])||0,devices:Number(row["设备数量"])||0,category:name,status:String(row["区段状态"]).trim(),note:String(row["备注"]||"").trim(),fireZoneId:zone?zone.id:null});success+=1;});if(!success){showHouseMessage("导入失败",`没有可导入的有效数据，共 ${failed} 条数据校验失败。`);return;}selectedHouseIds.clear();renderRows(houses);window.closeAppDrawer();showHouseMessage("导入完成",`成功导入 ${success} 条，失败 ${failed} 条。`);}catch(error){showHouseMessage("导入失败","文件无法解析，请检查文件格式和内容。");}}
+    renderRows();
+    const projectFilter=document.querySelector('[data-filter="project"]'),corridorFilter=document.querySelector('[data-filter="corridor"]'),cabinFilter=document.querySelector('[data-filter="cabin"]');
+    function resetCascadeFilters(){if(corridorFilter){corridorFilter.innerHTML='<option value="">请选择</option>';corridorFilter.disabled=true;}if(cabinFilter){cabinFilter.innerHTML='<option value="">请选择</option>';cabinFilter.disabled=true;}}
+    if(projectFilter)projectFilter.addEventListener("change",()=>{if(corridorFilter){corridorFilter.innerHTML='<option value="">请选择</option>'+corridorOptions(projectFilter.value,"");corridorFilter.disabled=!projectFilter.value;}if(cabinFilter){cabinFilter.innerHTML='<option value="">请选择</option>';cabinFilter.disabled=true;}});
+    if(corridorFilter)corridorFilter.addEventListener("change",()=>{if(cabinFilter){cabinFilter.innerHTML='<option value="">请选择</option>'+cabinOptions(corridorFilter.value,"");cabinFilter.disabled=!corridorFilter.value;}});
+    const panoramaBuildings=[
+      {name:"1号楼",floors:[{name:"一层",rooms:["101","102","103","104","105","106","107","108"]},{name:"二层",rooms:["201","202","203","204","205","206","207","208"]},{name:"B1层",rooms:["B101","B102","B103","B104"]}]},
+      {name:"2号楼",floors:[{name:"一层",rooms:["101","102","103","104","105","106"]},{name:"二层",rooms:["201","202","203","204","205","206"]}]},
+      {name:"A座",floors:[{name:"一层",rooms:["A-101","A-102","A-103","A-104"]},{name:"设备层",rooms:["A-M01","A-M02","A-M03"]}]}
+    ];
+    const panoramaRoomZones=[
+      {left:12,top:14,width:19,height:21},{left:32,top:14,width:17,height:21},{left:51,top:14,width:17,height:21},{left:69,top:14,width:19,height:21},
+      {left:12,top:62,width:19,height:22},{left:32,top:62,width:17,height:22},{left:51,top:62,width:17,height:22},{left:69,top:62,width:19,height:22}
+    ];
+    let panoramaFiles=new Map();
+    const panoramaKey=(building,floor,room)=>`${building} / ${floor} / ${room}`;
+    const currentPanoramaKey=(item)=>panoramaKey(item.building,item.floor,item.name);
+    function panoramaFloorButtons(selectedFloor){return panoramaBuildings.map((building)=>`<section><h3 class="panorama-building-title">${esc(building.name)}</h3>${building.floors.map((floor)=>{const key=`${building.name} / ${floor.name}`;return `<button class="panorama-floor-button${key===selectedFloor?" active":""}" type="button" data-panorama-floor="${esc(key)}">${esc(floor.name)}</button>`;}).join("")}</section>`).join("");}
+    function panoramaFloorData(selectedFloor){const [buildingName,floorName]=selectedFloor.split(" / ");const building=panoramaBuildings.find((entry)=>entry.name===buildingName)||panoramaBuildings[0];return {building,floor:building.floors.find((entry)=>entry.name===floorName)||building.floors[0]};}
+    function panoramaRoomsMarkup(selectedFloor,selectedRoom){const {floor}=panoramaFloorData(selectedFloor);return floor.rooms.map((room,index)=>{const zone=panoramaRoomZones[index%panoramaRoomZones.length];return `<button class="panorama-room${room===selectedRoom?" active":""}" type="button" data-panorama-room="${esc(room)}" style="left:${zone.left}%;top:${zone.top}%;width:${zone.width}%;height:${zone.height}%"><span>${esc(room)}</span></button>`;}).join("");}
+    function panoramaPanelMarkup(selectedFloor,selectedRoom,draft){if(!selectedRoom)return '<div class="panorama-empty"><i class="fa-solid fa-vector-square"></i><strong>请选择房间</strong><span>在楼层平面图中点击房间后上传全景图</span><button class="btn btn-primary" type="button" disabled>上传360全景图</button></div>';const [building,floor]=selectedFloor.split(" / "),file=draft.get(panoramaKey(building,floor,selectedRoom));return `<div class="panorama-room-panel"><div class="panorama-room-meta"><span>当前房间</span><strong>${esc(selectedRoom)}</strong><small>${esc(building)} / ${esc(floor)}</small></div>${file?`<div class="panorama-preview-card"><img src="${file.url}" alt="${esc(selectedRoom)} 360全景图"><div class="panorama-file-name" title="${esc(file.name)}">${esc(file.name)}</div><div class="panorama-file-actions"><button class="table-action" type="button" data-panorama-preview>预览</button><button class="table-action" type="button" data-panorama-replace>更换</button><button class="table-action status-danger" type="button" data-panorama-delete>删除</button></div></div>`:`<div class="panorama-upload-empty"><i class="fa-regular fa-image"></i><span>当前房间暂未上传全景图</span></div><button class="btn btn-primary panorama-upload-button" type="button" data-panorama-upload><i class="fa-solid fa-upload"></i> 上传360全景图</button>`}<input type="file" accept=".jpg,.jpeg,.png,.webp,.bmp,image/jpeg,image/png,image/webp,image/bmp" hidden data-panorama-input></div>`;}
+    function openPanoramaPreview(file,room){const preview=document.createElement("div");preview.className="panorama-image-mask";preview.innerHTML=`<section class="panorama-image-dialog" role="dialog" aria-modal="true"><header><strong>${esc(room)} · 360全景图</strong><button type="button" data-preview-close aria-label="关闭">×</button></header><img src="${file.url}" alt="${esc(room)} 360全景图"></section>`;document.body.append(preview);preview.addEventListener("click",(event)=>{if(event.target===preview||event.target.closest("[data-preview-close]"))preview.remove();});}
+    function updatePanoramaDrawerStatus(item){const field=document.querySelector('[data-house-panorama-upload]');if(!field)return;const file=panoramaFiles.get(currentPanoramaKey(item));field.querySelector('[data-panorama-drawer-status]').textContent=file?file.name:"未上传";field.classList.toggle("has-file",Boolean(file));}
+    function openPanoramaManager(item){
+      document.querySelector('.panorama-manager-mask')?.remove();
+      let selectedFloor=`${item.building} / ${item.floor}`;if(!panoramaFloorData(selectedFloor).building.floors.some((floor)=>`${item.building} / ${floor.name}`===selectedFloor))selectedFloor="1号楼 / 一层";
+      let selectedRoom=panoramaFloorData(selectedFloor).floor.rooms.includes(item.name)?item.name:"";
+      const draft=new Map(panoramaFiles),createdUrls=new Set();
+      const mask=document.createElement("div");mask.className="panorama-manager-mask";
+      mask.innerHTML=`<section class="panorama-manager-modal" role="dialog" aria-modal="true" aria-labelledby="panoramaTitle"><header class="panorama-modal-head"><h2 id="panoramaTitle">360全景图管理</h2><button type="button" data-panorama-close aria-label="关闭">×</button></header><div class="panorama-modal-body"><div class="panorama-picker"><aside class="panorama-floor-list" data-panorama-floors>${panoramaFloorButtons(selectedFloor)}</aside><main class="panorama-canvas"><h3 data-panorama-title>${esc(selectedFloor)} 楼层平面图</h3><div class="panorama-plan-wrap"><div class="panorama-plan-stage"><img src="../../assets/images/device-floor-plan.png" alt="楼层平面图"><div data-panorama-rooms>${panoramaRoomsMarkup(selectedFloor,selectedRoom)}</div></div></div></main><aside class="panorama-side-panel" data-panorama-panel>${panoramaPanelMarkup(selectedFloor,selectedRoom,draft)}</aside></div></div><footer class="panorama-modal-foot"><button class="btn btn-secondary" type="button" data-panorama-cancel>取消</button><button class="btn btn-primary" type="button" data-panorama-confirm>确定</button></footer></section>`;
+      document.body.append(mask);
+      const render=()=>{mask.querySelector('[data-panorama-title]').textContent=`${selectedFloor} 楼层平面图`;mask.querySelector('[data-panorama-rooms]').innerHTML=panoramaRoomsMarkup(selectedFloor,selectedRoom);mask.querySelector('[data-panorama-panel]').innerHTML=panoramaPanelMarkup(selectedFloor,selectedRoom,draft);};
+      const close=(commit=false)=>{if(commit){panoramaFiles.forEach((file,key)=>{if(!draft.has(key)||draft.get(key).url!==file.url)URL.revokeObjectURL(file.url);});panoramaFiles=draft;createdUrls.forEach((url)=>{if(![...panoramaFiles.values()].some((file)=>file.url===url))URL.revokeObjectURL(url);});updatePanoramaDrawerStatus(item);}else createdUrls.forEach((url)=>URL.revokeObjectURL(url));mask.remove();};
+      mask.addEventListener("click",(event)=>{
+        const floorButton=event.target.closest('[data-panorama-floor]');if(floorButton){selectedFloor=floorButton.dataset.panoramaFloor;selectedRoom="";mask.querySelectorAll('[data-panorama-floor]').forEach((button)=>button.classList.toggle('active',button===floorButton));render();return;}
+        const roomButton=event.target.closest('[data-panorama-room]');if(roomButton){selectedRoom=roomButton.dataset.panoramaRoom;render();return;}
+        if(event.target.closest('[data-panorama-upload],[data-panorama-replace]')){mask.querySelector('[data-panorama-input]')?.click();return;}
+        if(event.target.closest('[data-panorama-preview]')){const [building,floor]=selectedFloor.split(" / "),file=draft.get(panoramaKey(building,floor,selectedRoom));if(file)openPanoramaPreview(file,selectedRoom);return;}
+        if(event.target.closest('[data-panorama-delete]')){const [building,floor]=selectedFloor.split(" / "),key=panoramaKey(building,floor,selectedRoom);window.openAppConfirm({title:"删除全景图",message:`确认删除房间「${selectedRoom}」的360全景图吗？`,onConfirm:()=>{draft.delete(key);render();}});return;}
+        if(event.target.closest('[data-panorama-confirm]')){close(true);return;}
+        if(event.target===mask||event.target.closest('[data-panorama-close],[data-panorama-cancel]'))close(false);
+      });
+      mask.addEventListener("change",(event)=>{if(!event.target.matches('[data-panorama-input]'))return;const file=event.target.files[0];if(!file)return;const allowed=/\.(jpe?g|png|webp|bmp)$/i.test(file.name);if(!allowed){window.openAppConfirm({title:"文件格式不支持",message:"请上传 jpg、jpeg、png、webp 或 bmp 格式的图片。",confirmText:"知道了"});return;}const [building,floor]=selectedFloor.split(" / "),key=panoramaKey(building,floor,selectedRoom),url=URL.createObjectURL(file);createdUrls.add(url);draft.set(key,{name:file.name,url,type:file.type});render();});
+    }
+    function ensureHousePanoramaUpload(){const drawerBody=document.getElementById('drawerBody');if(!drawerBody||drawerBody.querySelector('[data-house-panorama-upload]'))return;const attachment=[...drawerBody.querySelectorAll('.form-field')].find((field)=>field.querySelector('.form-label')?.textContent.trim()==='附件');if(!attachment)return;const field=document.createElement('div');field.className='form-field form-item house-panorama-field';field.dataset.housePanoramaUpload='';field.innerHTML='<span class="form-label">360全景图</span><div class="house-panorama-entry"><button class="btn btn-secondary" type="button" data-open-panorama><i class="fa-solid fa-panorama"></i> 上传全景图</button><span class="house-panorama-status" data-panorama-drawer-status>未上传</span></div><small class="house-panorama-help">每个房间支持上传一张 jpg、jpeg、png、webp、bmp 格式全景图</small>';attachment.parentNode.insertBefore(field,attachment);const panoramaItem=activeHouseDrawerMode==="create"?{...activeHouseDrawerItem,name:""}:activeHouseDrawerItem;field.querySelector('[data-open-panorama]').addEventListener('click',()=>openPanoramaManager(panoramaItem));updatePanoramaDrawerStatus(panoramaItem);}
+    function normalizeHouseDrawer(){const drawerBody=document.getElementById('drawerBody');if(!drawerBody)return;const selects=[...drawerBody.querySelectorAll('select')];const orientationSelect=selects[5];if(orientationSelect){const previous=orientationSelect.value;orientationSelect.innerHTML='<option>东</option><option>南</option><option>西</option><option>北</option>';orientationSelect.value=['东','南','西','北'].includes(previous)?previous:'东';}const rentSelect=selects[6];if(rentSelect){const previous=rentSelect.value;rentSelect.innerHTML='<option>租赁</option><option>出售</option><option>租售</option><option>自用</option>';rentSelect.value=['租赁','出售','租售','自用'].includes(previous)?previous:'租赁';}const statusSelect=selects[7];if(statusSelect){const previous=statusSelect.value;statusSelect.innerHTML='<option>空置</option><option>已售</option><option>已租</option>';statusSelect.value=['空置','已售','已租'].includes(previous)?previous:'空置';}const textarea=drawerBody.querySelector('textarea[maxlength]');if(textarea){let wrap=textarea.closest('.textarea-count-wrap');const count=textarea.parentElement.querySelector('.field-count');if(!wrap&&count){wrap=document.createElement('span');wrap.className='textarea-count-wrap';textarea.parentNode.insertBefore(wrap,textarea);wrap.append(textarea,count);}if(wrap){const counter=wrap.querySelector('.field-count');if(counter)counter.textContent=`${textarea.value.length}/${textarea.maxLength}`;}}}
+    
+    document.addEventListener('input',(event)=>{if(event.target.matches('#drawerBody textarea[maxlength]')){const counter=event.target.closest('.textarea-count-wrap')?.querySelector('.field-count');if(counter)counter.textContent=`${event.target.value.length}/${event.target.maxLength}`;}});
+    document.addEventListener("click",(event)=>{
+      const fireAction=event.target.closest("[data-fire-action]")?.dataset.fireAction;
+      if(fireAction==="search"){const f=Object.fromEntries([...document.querySelectorAll("[data-fire-filter]")].map((input)=>[input.dataset.fireFilter,input.value.trim()]));refreshFireZoneLedger(fireZones().filter((item)=>(!f.code||item.code.includes(f.code))&&(!f.name||item.name.includes(f.name))));return;}
+      if(fireAction==="reset"){document.querySelectorAll("[data-fire-filter]").forEach((input)=>input.value="");refreshFireZoneLedger(fireZones());return;}
+      if(fireAction==="create"){openFireZoneForm("create");return;}
+      if(fireAction==="delete"){deleteFireZones(selectedFireZoneIds);return;}
+      if(fireAction==="close-form"){closeFireZoneFormModal();return;}
+      if(fireAction==="save"){saveFireZone();return;}
+      const fireRow=event.target.closest("[data-fire-row]");
+      if(fireRow){const item=houseById(fireRow.dataset.fireId);if(fireRow.dataset.fireRow==="edit")openFireZoneForm("edit",item);else if(fireRow.dataset.fireRow==="delete")deleteFireZones(new Set([item.id]));return;}
+      const action=event.target.closest("[data-action]")?.dataset.action;
+      if(action==="fire-zone")openFireZoneLedger(fireZones());
+      if(action==="create")openHouseDrawer("create");
+      if(action==="save-house")saveHouseFromDrawer();
+      if(action==="refresh")renderRows();
+      if(action==="import")openHouseImport();
+      if(action==="export")exportHouses();
+      if(action==="delete-selected")deleteSelectedHouses();
+      if(action==="download-template")downloadHouseTemplate();
+      if(action==="confirm-import")importHouses();
+      if(action==="reset"){document.querySelectorAll("[data-filter]").forEach((input)=>input.value="");resetCascadeFilters();renderRows(houses);}
+      if(action==="search"){const f=Object.fromEntries([...document.querySelectorAll("[data-filter]")].map((input)=>[input.dataset.filter,input.value]));renderRows(houses.filter((item)=>(!f.keyword||(item.code+item.name).includes(f.keyword))&&(!f.category||item.category===f.category)&&(!f.status||item.status===f.status)&&(!f.project||item.project===f.project)&&(!f.corridor||item.corridor===f.corridor)&&(!f.cabin||item.cabin===f.cabin)));}
+      const rowAction=event.target.closest("[data-house-action]");
+      if(rowAction){const item=houseById(rowAction.dataset.houseId);const houseAction=rowAction.dataset.houseAction;if(houseAction==="delete"){if(item.category==="防火分区")deleteFireZones(new Set([item.id]));else confirmDelete(item);}else if(houseAction==="pipelines")location.href=`pipeline.html?section=${encodeURIComponent(item.name)}`;else openHouseDrawer(houseAction,item);}
+    });
+    document.addEventListener("change",(event)=>{
+      if(event.target.matches("[data-fire-select-all]")){document.querySelectorAll("[data-fire-check]").forEach((input)=>{input.checked=event.target.checked;const id=Number(input.dataset.fireCheck);if(event.target.checked)selectedFireZoneIds.add(id);else selectedFireZoneIds.delete(id);});syncFireZoneSelectionUi();}
+      if(event.target.matches("[data-fire-check]")){const id=Number(event.target.dataset.fireCheck);if(event.target.checked)selectedFireZoneIds.add(id);else selectedFireZoneIds.delete(id);syncFireZoneSelectionUi();}
+      if(event.target.matches("[data-select-all]")){document.querySelectorAll("[data-house-check]").forEach((input)=>{input.checked=event.target.checked;const id=Number(input.dataset.houseCheck);if(event.target.checked)selectedHouseIds.add(id);else selectedHouseIds.delete(id);});updateSelection();}
+      if(event.target.matches("[data-house-check]")){const id=Number(event.target.dataset.houseCheck);if(event.target.checked)selectedHouseIds.add(id);else selectedHouseIds.delete(id);updateSelection();}
+      if(event.target.matches("[data-form-project]")){const corridorSelect=document.querySelector("[data-form-corridor]"),cabinSelect=document.querySelector("[data-form-cabin]");if(corridorSelect)corridorSelect.innerHTML='<option value="">请选择</option>'+corridorOptions(event.target.value,"");if(cabinSelect)cabinSelect.innerHTML='<option value="">请选择</option>';}
+      if(event.target.matches("[data-form-corridor]")){const cabinSelect=document.querySelector("[data-form-cabin]");if(cabinSelect)cabinSelect.innerHTML='<option value="">请选择</option>'+cabinOptions(event.target.value,"");}
+    });
+  </script>
+</body>
+</html>
+
+

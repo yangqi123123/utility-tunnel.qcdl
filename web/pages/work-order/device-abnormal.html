@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>设备异常 - 科学岛管廊监控中心</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/tob-ui.css">
+  <link rel="stylesheet" href="../../assets/css/inspection.css">
+  <link rel="stylesheet" href="../../assets/css/work-order.css">
+</head>
+<body class="work-order-page inspection-page" data-menu-key="work-order.device-abnormal" data-page-section="工单管理" data-page-title="设备异常" data-work-order-page="device-abnormal">
+  <div class="app-shell">
+    <aside id="app-sidebar" class="sidebar"></aside>
+    <header id="app-header" class="header"></header>
+    <main class="main"><div class="screen-frame stack">
+      <section class="card inspection-filters" data-wo-filter-card>
+        <div class="inspection-filter-grid" data-wo-filters>
+          <label class="form-field"><span class="form-label">工单编号</span><input class="form-control" data-wo-filter="code" placeholder="请输入"></label>
+          <label class="form-field"><span class="form-label">报修内容</span><input class="form-control" data-wo-filter="content" placeholder="请输入"></label>
+          <label class="form-field"><span class="form-label">工单类型</span><select class="form-control" data-wo-filter="orderType"><option value="">全部</option></select></label>
+          <label class="form-field"><span class="form-label">工单分类</span><select class="form-control" data-wo-filter="categoryId"><option value="">全部</option></select></label>
+          <label class="form-field extra-filter"><span class="form-label">工单状态</span><select class="form-control" data-wo-filter="status"><option value="">全部</option></select></label>
+          <div class="device-location-cascade" data-wo-location-filter data-location-cascade>
+            <label class="form-field extra-filter"><span class="form-label">所属项目</span><select class="form-control" data-location-level="project" data-wo-filter="project"><option value="">全部</option></select></label>
+            <label class="form-field extra-filter"><span class="form-label">所属管廊</span><select class="form-control" data-location-level="corridor" data-wo-filter="corridor"><option value="">全部</option></select></label>
+            <label class="form-field extra-filter"><span class="form-label">所属舱室</span><select class="form-control" data-location-level="room" data-wo-filter="room"><option value="">全部</option></select></label>
+            <label class="form-field extra-filter"><span class="form-label">所属区段</span><select class="form-control" data-location-level="section" data-wo-filter="section"><option value="">全部</option></select></label>
+            <label class="form-field extra-filter"><span class="form-label">所属管线</span><select class="form-control" data-location-level="pipeline" data-wo-filter="pipeline"><option value="">全部</option></select></label>
+          </div>
+          <div class="filter-actions">
+            <button class="btn btn-ghost" type="button" data-wo-action="expand"><span>展开</span> <i class="fa-solid fa-chevron-down"></i></button>
+            <button class="btn btn-secondary" type="button" data-wo-action="reset">重置</button>
+            <button class="btn btn-primary" type="button" data-wo-action="search">搜索</button>
+          </div>
+        </div>
+      </section>
+      <section class="card inspection-list-card">
+        <div class="inspection-toolbar">
+          <div class="toolbar-left"><h1 class="toolbar-title">设备异常</h1></div>
+          <div class="toolbar-right"></div>
+        </div>
+        <div class="inspection-table-wrap">
+          <table class="table inspection-table table-actions-sticky">
+            <thead><tr>
+              <th>工单编号</th><th>工单名称</th><th>图片</th><th>报修内容</th><th>工单类型</th><th>工单分类</th>
+              <th>异常设备</th>
+              <th>项目</th><th>管廊</th><th>舱室</th><th>区段</th><th>管线</th><th>报修位置</th>
+              <th>工单状态</th><th>当前处理人</th><th>联系人</th><th>联系人电话</th><th>提交时间</th><th>操作</th>
+            </tr></thead>
+            <tbody id="workOrderBody"></tbody>
+          </table>
+        </div>
+        <div id="workOrderPagination" class="inspection-pagination"></div>
+      </section>
+    </div></main>
+  </div>
+  <script src="../../../app/config/menu.js"></script>
+  <script src="../../../app/data/work-order-data.js"></script>
+  <script src="../../../app/components/sidebar.js"></script>
+  <script src="../../../app/components/header.js"></script>
+  <script src="../../../app/components/drawer.js"></script>
+  <script src="../../../app/components/work-order.js"></script>
+  <script src="../../../app/components/requirement.js"></script>
+</body>
+</html>

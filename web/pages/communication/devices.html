@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>通信设备 - 科学岛管廊监控中心</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/tob-ui.css">
+  <link rel="stylesheet" href="../../assets/css/communication.css">
+</head>
+<body class="monitoring-page communication-page communication-device-page" data-menu-key="communication.devices" data-page-section="通信系统" data-page-title="通信设备">
+  <div class="app-shell">
+    <aside id="app-sidebar" class="sidebar"></aside>
+    <header id="app-header" class="header"></header>
+    <main class="main">
+      <div class="screen-frame stack communication-shell">
+        <section class="card communication-device-filter" id="deviceFilterCard">
+          <div class="communication-device-filter-grid">
+            <label class="form-field"><span class="form-label">设备名称</span><input class="form-control" id="filterName" placeholder="请输入设备名称"></label>
+            <label class="form-field"><span class="form-label">设备编码</span><input class="form-control" id="filterCode" placeholder="请输入设备编码"></label>
+            <label class="form-field"><span class="form-label">设备分类</span>
+              <select class="form-control" id="filterType">
+                <option value="">请选择</option>
+              </select>
+            </label>
+            <label class="form-field"><span class="form-label">所属项目</span><input class="form-control" id="filterProject" placeholder="请输入所属项目"></label>
+            <label class="form-field extra-filter" data-filter-extra><span class="form-label">是否智能化</span>
+              <select class="form-control" id="filterSmart">
+                <option value="">请选择</option>
+                <option>是</option>
+                <option>否</option>
+              </select>
+            </label>
+            <label class="form-field extra-filter" data-filter-extra><span class="form-label">来源模块</span>
+              <select class="form-control" id="filterSource">
+                <option value="">请选择</option>
+                <option>人工台账</option>
+                <option>第三方同步</option>
+              </select>
+            </label>
+            <div class="communication-device-filter-actions">
+              <button class="btn btn-ghost" type="button" id="deviceCollapse"><span>展开</span> <i class="fa-solid fa-chevron-down"></i></button>
+              <button class="btn btn-secondary" type="button" id="deviceReset">重置</button>
+              <button class="btn btn-primary" type="button" id="deviceSearch">搜索</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="card communication-device-list-card">
+          <div class="card-title-row device-toolbar">
+            <h1 class="card-title">通信设备</h1>
+            <div class="btn-row">
+              <button class="btn btn-secondary" type="button" id="deviceExport"><i class="fa-solid fa-file-export"></i> 导出</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="table device-table communication-device-table" aria-label="通信设备列表">
+              <thead>
+                <tr>
+                  <th>设备名称</th>
+                  <th>设备编码</th>
+                  <th>所属系统</th>
+                  <th>设备分类</th>
+                  <th>所属项目</th>
+                  <th>所属管廊</th>
+                  <th>所属舱室</th>
+                  <th>所属区段</th>
+                  <th>所属管线</th>
+                  <th>安装位置</th>
+                  <th>是否智能化</th>
+                  <th>来源模块</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="deviceBody"></tbody>
+            </table>
+          </div>
+          <div class="pagination"><span>共 <strong id="deviceCount">0</strong> 条</span></div>
+        </section>
+      </div>
+    </main>
+  </div>
+  <script src="../../../app/config/menu.js?v=comm-c2-1"></script>
+  <script src="../../../app/data/mock-data.js"></script>
+  <script src="../../../app/data/device-categories.js"></script>
+  <script src="../../assets/vendor/xlsx.full.min.js"></script>
+  <script src="../../../app/components/sidebar.js?v=nav-home-1"></script>
+  <script src="../../../app/components/header.js?v=nav-home-1"></script>
+  <script src="../../../app/components/drawer.js"></script>
+  <script src="../../../app/components/communication-devices.js"></script>
+  <script src="../../../app/components/requirement.js"></script>
+</body>
+</html>

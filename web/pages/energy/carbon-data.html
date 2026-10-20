@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>碳排放数据 - 科学岛管廊监控中心</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/tob-ui.css">
+  <link rel="stylesheet" href="../../assets/css/carbon-data.css">
+</head>
+<body class="carbon-page" data-menu-key="energy.carbon" data-page-section="能源管理" data-page-title="碳排放数据">
+  <div class="app-shell">
+    <aside id="app-sidebar" class="sidebar"></aside>
+    <header id="app-header" class="header"></header>
+    <main class="main">
+      <div class="screen-frame stack">
+        <div id="carbonToolbar"></div>
+        <section class="carbon-list card">
+          <div class="card-title-row carbon-list-head"><h2 class="card-title">数据列表</h2><button class="btn btn-secondary" type="button" data-carbon-action="export"><i class="fa-solid fa-download" aria-hidden="true"></i> 导出</button></div>
+          <div class="table-wrap carbon-table-wrap"><table class="table carbon-table"><thead><tr id="carbonTableHead"></tr></thead><tbody id="carbonTableBody"></tbody></table></div>
+          <div id="carbonPagination"></div>
+        </section>
+      </div>
+    </main>
+  </div>
+  <script src="../../../app/config/menu.js?v=nav-hide-1"></script>
+  <script src="../../../app/data/carbon-data.js"></script>
+  <script src="../../../app/components/sidebar.js?v=nav-home-1"></script>
+  <script src="../../../app/components/header.js?v=nav-home-1"></script>
+  <script src="../../../app/components/drawer.js"></script>
+  <script src="../../../app/components/carbon-overview.js"></script>
+  <script src="../../../app/components/requirement.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,53 @@
+import assert from "node:assert/strict";
+import fs from "node:fs";
+
+const menu = fs.readFileSync("app/config/menu.js", "utf8");
+const plans = fs.readFileSync("web/pages/safety/plans.html", "utf8");
+const plansJs = fs.readFileSync("app/components/safety-plans.js", "utf8");
+const regulations = fs.readFileSync("web/pages/safety/regulations.html", "utf8");
+const regulationsJs = fs.readFileSync("app/components/safety-regulations.js", "utf8");
+const dictionary = fs.readFileSync("app/config/dictionary.js", "utf8");
+
+assert.match(menu, /key: "safety"/);
+assert.match(menu, /safety\.plans/);
+assert.match(menu, /safety\.regulations/);
+assert.match(menu, /label:\s*"应急预案库"/);
+assert.match(menu, /label:\s*"法规制度库"/);
+assert.match(menu, /safety\.facilities/);
+assert.match(menu, /label:\s*"安全设施台账"/);
+assert.doesNotMatch(menu, /label:\s*"安全预案"/);
+assert.doesNotMatch(menu, /label:\s*"法规库"/);
+assert.match(plans, /data-menu-key="safety\.plans"/);
+assert.match(plans, /应急预案库/);
+assert.match(plans, /emergency-data\.js/);
+assert.match(plans, /emergency-ledger-toolbar/);
+assert.match(plans, /planCount/);
+assert.match(plans, /启用/);
+assert.match(plansJs, /处置步骤/);
+assert.match(plansJs, /data-step/);
+assert.match(plansJs, /data-plan-action="more"/);
+assert.match(regulations, /data-menu-key="safety\.regulations"/);
+assert.match(regulations, /国家/);
+assert.match(regulations, /失效/);
+assert.match(regulations, /法规分类/);
+assert.match(regulations, /emergency-ledger-toolbar/);
+assert.match(regulations, /safety-regulations\.js/);
+assert.match(regulations, /dictionary\.js/);
+assert.match(regulations, /id="count"/);
+assert.match(regulationsJs, /regulationCategory/);
+assert.match(regulationsJs, /expireAt/);
+assert.match(regulationsJs, /attachments/);
+assert.match(regulationsJs, /photos/);
+assert.match(regulationsJs, /data-row="more"/);
+assert.doesNotMatch(regulationsJs, /主题分类/);
+assert.doesNotMatch(regulationsJs, /data-row="revise"|时效/);
+assert.match(dictionary, /regulationCategory/);
+
+const facilities = fs.readFileSync("web/pages/safety/facilities.html", "utf8");
+assert.match(facilities, /data-menu-key="safety\.facilities"/);
+assert.match(facilities, /基础信息/);
+assert.match(facilities, /维保临期/);
+assert.match(facilities, /生成风险预警|data-risk/);
+assert.match(facilities, /safety\.facilities|safety-facilities/);
+
+console.log("safety pages static checks passed");

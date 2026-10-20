@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>组态系统 - 科学岛管廊监控中心</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/tob-ui.css">
+  <style>
+    :root{--ink:#192435;--muted:#758297;--line:#e6ebf2;--blue:#135afa;--cyan:#39d7ff;--green:#2dd39a;--amber:#f3b84b}
+    .configuration-page .main{background:#f5f7fc;padding:0 12px 16px}.configuration-workspace{padding:0;max-width:1680px;margin:auto}
+    .config-tabs{display:flex;gap:4px;margin-bottom:16px;border-bottom:1px solid var(--line)}
+    .config-tab{border:0;background:transparent;padding:12px 22px;color:var(--muted);font-weight:700;cursor:pointer;border-bottom:2px solid transparent}
+    .config-tab.active{color:var(--blue);border-color:var(--blue)}
+    .config-grid{display:grid;grid-template-columns:220px minmax(0,1fr);gap:14px;align-items:stretch}
+    .config-panel{background:#fff;border:1px solid var(--line);border-radius:4px;min-width:0}
+    .config-panel-head{height:54px;padding:0 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}
+    .config-panel-head h2{font-size:14px;margin:0;color:var(--ink)}.config-panel-head span{font-size:12px;color:var(--muted)}
+    .config-panel-body{padding:14px}
+    .screen-list{display:grid;gap:8px}
+    .screen-item{width:100%;text-align:left;border:1px solid var(--line);background:#fff;border-radius:3px;padding:12px;cursor:pointer}
+    .screen-item.active{border-color:var(--blue);background:#eef3ff}
+    .screen-item strong{display:block;font-size:13px;color:var(--ink)}.screen-item small{display:block;margin-top:6px;font-size:11px;color:var(--muted)}
+    .legend-stack{display:grid;gap:10px}
+    .legend-card{border:1px solid var(--line);border-radius:6px;padding:12px 12px 10px;background:#f8faff}
+    .legend-card .lc-k{font-size:11px;color:var(--muted);margin-bottom:4px}
+    .legend-card .lc-v{font-size:13px;color:var(--ink);font-weight:600;line-height:1.45}
+    .legend-card .lc-d{margin-top:6px;font-size:12px;color:#667589;line-height:1.5}
+    .legend-card.is-warn{background:#fffaf0;border-color:#f0e0b8}
+    .legend-foot{margin:4px 2px 0;font-size:11px;color:#8a96a8;line-height:1.5}
+    .topology-card{overflow:hidden;display:flex;flex-direction:column;min-height:0}
+    .topology-toolbar{position:relative;z-index:5;flex:none;height:54px;padding:0 14px;background:#121b2a;color:#d6e6ff;display:flex;align-items:center;justify-content:space-between}
+    .topology-toolbar strong{font-size:14px}
+    .topology-actions{display:flex;gap:6px;position:relative;z-index:6}
+    .topology-actions button{width:32px;height:30px;border:1px solid #32445f;background:#1a2a40;color:#bad0eb;border-radius:3px;cursor:pointer}
+    .topology-actions button:hover{background:#243752;color:#fff}
+    .diagram-stage{position:relative;z-index:1;flex:1;min-height:640px;height:calc(100vh - 220px);background:#06101f;overflow:hidden}
+    .diagram-zoom{position:absolute;inset:0;transform-origin:center center;will-change:transform}
+    .diagram-zoom svg{display:block;width:100%;height:100%}
+    .flow-line{fill:none;stroke-linecap:round;stroke-width:2.2;stroke-dasharray:8 12;animation:flowDash 1.15s linear infinite}
+    .flow-line.cyan{stroke:#39d7ff;filter:drop-shadow(0 0 3px #39d7ff)}.flow-line.green{stroke:#2dd39a;filter:drop-shadow(0 0 3px #2dd39a)}.flow-line.amber{stroke:#f3b84b;filter:drop-shadow(0 0 3px #f3b84b)}.flow-line.blue{stroke:#5b8cff;filter:drop-shadow(0 0 3px #5b8cff)}.flow-line.pink{stroke:#ff5d9a}.flow-line.orange{stroke:#ff8a3d}.flow-line.red{stroke:#ff5d70}
+    .flow-line.slow{animation-duration:1.8s}.flow-line.fast{animation-duration:.8s}
+    @keyframes flowDash{to{stroke-dashoffset:-40}}
+    .eq-card{fill:rgba(12,24,42,.9);stroke:rgba(90,140,200,.4);stroke-width:1}.eq-card.warn{stroke:rgba(243,184,75,.65)}
+    .eq-glow{filter:drop-shadow(0 0 8px rgba(57,215,255,.28))}
+    .t-cap{fill:#dcecff;font-size:12px;font-weight:600}.t-sub{fill:#8fa3bd;font-size:10px}.t-sec{fill:#6f859f;font-size:11px}
+    .t-val{fill:#e8f4ff;font-size:12px;font-weight:700}.t-met{fill:#7fdfff;font-size:11px;font-weight:600}.t-met.warn{fill:#f3b84b}
+    .summary-panel{fill:rgba(10,22,40,.92);stroke:rgba(57,215,255,.3);stroke-width:1}
+    .view-hmi-only{display:none}.config-grid.is-hmi .view-topo-only{display:none}.config-grid.is-hmi .view-hmi-only{display:block}
+    @media(max-width:900px){.config-grid{display:block}.config-panel{margin-bottom:12px}.diagram-stage{height:520px;min-height:520px}.config-tabs{overflow:auto}.config-tab{white-space:nowrap}}
+    body.configuration-embed,
+    body.configuration-embed html{height:100%;margin:0;overflow:hidden;background:#06101f}
+    body.configuration-embed .sidebar,
+    body.configuration-embed .header,
+    body.configuration-embed .config-tabs,
+    body.configuration-embed .config-grid > aside{display:none !important}
+    body.configuration-embed .app-shell{
+      display:block !important;
+      width:100% !important;
+      height:100vh !important;
+      min-height:100vh !important;
+      overflow:hidden;
+      background:#06101f;
+    }
+    body.configuration-embed .main{
+      display:block !important;
+      grid-column:auto !important;
+      grid-row:auto !important;
+      margin:0 !important;
+      padding:0 !important;
+      width:100% !important;
+      height:100% !important;
+      overflow:hidden;
+      background:#06101f;
+    }
+    body.configuration-embed .configuration-workspace,
+    body.configuration-embed .config-grid,
+    body.configuration-embed .topology-card{
+      display:flex !important;
+      flex-direction:column;
+      width:100%;
+      height:100%;
+      max-width:none;
+      margin:0;
+      gap:0;
+      border:0;
+      background:#06101f;
+    }
+    body.configuration-embed .config-grid{grid-template-columns:1fr !important}
+    body.configuration-embed .topology-toolbar{flex:none}
+    body.configuration-embed .diagram-stage{
+      position:relative;
+      flex:1 1 auto !important;
+      width:100%;
+      height:auto !important;
+      min-height:0 !important;
+    }
+    body.configuration-embed .diagram-zoom{
+      position:absolute;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    body.configuration-embed .diagram-zoom svg{
+      width:100% !important;
+      height:100% !important;
+      max-width:100%;
+      max-height:100%;
+    }
+  </style>
+</head>
+<body class="configuration-page" data-menu-key="configuration" data-page-section="组态系统" data-page-title="组态系统">
+  <div class="app-shell"><aside id="app-sidebar" class="sidebar"></aside><header id="app-header" class="header"></header><main class="main"><div class="configuration-workspace">
+    <nav class="config-tabs" role="tablist">
+      <button class="config-tab active" data-tab="gateway" role="tab">网关拓扑</button>
+      <button class="config-tab" data-tab="hmi" role="tab">组态图</button>
+    </nav>
+    <section class="config-grid" id="configGrid">
+      <aside class="config-panel">
+        <div class="config-panel-head"><h2 id="sideTitle">网关拓扑说明</h2><span id="sideHint"></span></div>
+        <div class="config-panel-body">
+          <div class="view-topo-only" id="topoLegend"></div>
+          <div class="view-hmi-only"><div class="screen-list" id="screenList"></div></div>
+        </div>
+      </aside>
+      <section class="config-panel topology-card">
+        <div class="topology-toolbar">
+          <div><strong id="topologyTitle">网关拓扑</strong></div>
+          <div class="topology-actions">
+            <button title="放大" id="zoomIn" type="button"><i class="fa-solid fa-plus"></i></button>
+            <button title="缩小" id="zoomOut" type="button"><i class="fa-solid fa-minus"></i></button>
+          </div>
+        </div>
+        <div class="diagram-stage" id="diagramStage" aria-label="组态拓扑画布"><div class="diagram-zoom" id="diagramZoom"></div></div>
+      </section>
+    </section>
+  </div></main></div>
+  <script src="../../../app/config/menu.js?v=nav-hide-1"></script>
+  <script src="../../../app/data/configuration-data.js?v=config-topo-5"></script>
+  <script src="../../../app/components/sidebar.js?v=nav-home-1"></script>
+  <script src="../../../app/components/header.js?v=nav-home-1"></script>
+  <script src="../../../app/components/drawer.js"></script>
+  <script src="../../../app/components/requirement.js"></script>
+  <script>
+    const D = window.ConfigurationData;
+    const { servers, workstations, gatewayTopo, hmiScreens, powerHmi, fireHmi } = D;
+    const embedPower = new URLSearchParams(location.search).get("embed") === "power";
+    if (embedPower) document.body.classList.add("configuration-embed");
+    const state = { tab: embedPower ? "hmi" : "gateway", screenId: "power", scale: 1 };
+
+    const SRV_SHORT = {
+      "通用业务服务器": "通用业务",
+      "视频流媒体服务器": "视频流媒体",
+      "IP核心调度专用服务器": "IP核心调度",
+      "通用业务备机": "业务备机",
+    };
+
+    function isHmi() { return state.tab === "hmi"; }
+    function currentScreen() { return hmiScreens.find((s) => s.id === state.screenId) || hmiScreens[0]; }
+    function shortSrv(name) { return SRV_SHORT[name] || name; }
+
+    function metricBox(x, y, w, h, title, lines, warn) {
+      const rows = lines.map((ln, i) =>
+        `<text class="t-met ${warn ? "warn" : ""}" x="${x + 12}" y="${y + 40 + i * 18}">${ln.k}</text>
+         <text class="t-val" x="${x + w - 12}" y="${y + 40 + i * 18}" text-anchor="end">${ln.v}</text>`
+      ).join("");
+      return `<g class="eq-glow"><rect class="eq-card ${warn ? "warn" : ""}" x="${x}" y="${y}" width="${w}" height="${h}" rx="6"/>
+        <text class="t-cap" x="${x + 12}" y="${y + 22}">${title}</text>${rows}</g>`;
+    }
+
+    function iconCloud(x, y, label) {
+      return `<g transform="translate(${x},${y})" class="eq-glow">
+        <ellipse cx="0" cy="6" rx="40" ry="18" fill="#1a4a7a" stroke="#5b8cff" stroke-width="1.4"/>
+        <ellipse cx="-16" cy="-2" rx="20" ry="14" fill="#2563a8" stroke="#7eb0ff" stroke-width="1"/>
+        <ellipse cx="14" cy="-2" rx="22" ry="16" fill="#2a6bb8" stroke="#7eb0ff" stroke-width="1"/>
+        <text class="t-cap" x="0" y="42" text-anchor="middle">${label}</text>
+      </g>`;
+    }
+
+    function iconRouter(x, y, label) {
+      return `<g transform="translate(${x},${y})" class="eq-glow">
+        <rect x="-34" y="-12" width="68" height="24" rx="5" fill="#13243a" stroke="#39d7ff" stroke-width="1.4"/>
+        <circle cx="-16" cy="0" r="3.5" fill="#39d7ff"/><circle cx="0" cy="0" r="3.5" fill="#2dd39a"/><circle cx="16" cy="0" r="3.5" fill="#39d7ff"/>
+        <text class="t-cap" x="0" y="36" text-anchor="middle">${label}</text>
+      </g>`;
+    }
+
+    function iconSwitch(x, y, label, wide) {
+      const w = wide ? 120 : 72, h = wide ? 26 : 20;
+      return `<g transform="translate(${x},${y})" class="eq-glow">
+        <rect x="${-w / 2}" y="${-h / 2}" width="${w}" height="${h}" rx="4" fill="#101c30" stroke="#5b8cff" stroke-width="1.4"/>
+        ${Array.from({ length: wide ? 8 : 5 }, (_, i) => {
+          const px = -w / 2 + 10 + i * ((w - 20) / (wide ? 7 : 4));
+          return `<rect x="${px}" y="-3.5" width="5" height="7" rx="1" fill="${i % 2 ? "#2dd39a" : "#5b8cff"}" opacity=".9"/>`;
+        }).join("")}
+        <text class="t-cap" x="0" y="${h / 2 + 16}" text-anchor="middle">${label}</text>
+      </g>`;
+    }
+
+    function iconServer(x, y, label, warn) {
+      const c = warn ? "#f3b84b" : "#39d7ff";
+      return `<g transform="translate(${x},${y})" class="eq-glow">
+        <rect x="-16" y="-30" width="32" height="58" rx="3" fill="#152238" stroke="${c}" stroke-width="1.4"/>
+        <rect x="-10" y="-22" width="20" height="6" rx="1" fill="#0a1422"/>
+        <rect x="-10" y="-10" width="20" height="6" rx="1" fill="#0a1422"/>
+        <rect x="-10" y="2" width="20" height="6" rx="1" fill="#0a1422"/>
+        <circle cx="0" cy="18" r="2.5" fill="${warn ? "#f3b84b" : "#2dd39a"}"/>
+        <text class="t-sub" x="0" y="46" text-anchor="middle">${label}</text>
+      </g>`;
+    }
+
+    function iconPC(x, y, label) {
+      return `<g transform="translate(${x},${y})" class="eq-glow">
+        <rect x="-20" y="-16" width="30" height="20" rx="2" fill="#163050" stroke="#7eb0ff" stroke-width="1.2"/>
+        <rect x="-16" y="-12" width="22" height="11" rx="1" fill="#39d7ff" opacity=".35"/>
+        <rect x="12" y="-6" width="10" height="18" rx="2" fill="#1a2a40" stroke="#7eb0ff" stroke-width="1"/>
+        <rect x="-6" y="8" width="12" height="2.5" fill="#8fa3bd"/>
+        <text class="t-sub" x="0" y="30" text-anchor="middle">${label}</text>
+      </g>`;
+    }
+
+    function iconAP(x, y, label, warn) {
+      const c = warn ? "#f3b84b" : "#39d7ff";
+      return `<g transform="translate(${x},${y})" class="eq-glow">
+        <rect x="-14" y="-6" width="28" height="14" rx="3" fill="#152238" stroke="${c}" stroke-width="1.2"/>
+        <path d="M-8 -12 Q0 -20 8 -12" fill="none" stroke="${c}" stroke-width="1.4"/>
+        <text class="t-sub" x="0" y="24" text-anchor="middle">${label}</text>
+      </g>`;
+    }
+
+    function renderGatewayDiagram() {
+      const g = gatewayTopo;
+      /* 接入：左 AP 区 / 中 2 工作站 / 右 3 工作站，拉开间距 */
+      const swXs = [180, 520, 900];
+      const swY = 350;
+      let body = "";
+      let flows = "";
+      g.accessSwitches.forEach((sw, i) => {
+        const sx = swXs[i];
+        flows += `<path class="flow-line blue ${i % 2 ? "slow" : "fast"}" d="M550 236 V280 H${sx} V${swY - 18}"/>`;
+        body += iconSwitch(sx, swY, sw.name, false);
+        const n = sw.children.length;
+        const gap = n >= 3 ? 86 : (n === 2 ? 110 : 78);
+        sw.children.forEach((ch, j) => {
+          const cx = sx + (j - (n - 1) / 2) * gap;
+          const cy = 480;
+          flows += `<path class="flow-line ${ch.status === "warn" ? "amber" : "cyan"} fast" d="M${sx} ${swY + 18} V410 H${cx} V${cy - 24}"/>`;
+          body += ch.type === "ap"
+            ? iconAP(cx, cy, ch.name, ch.status === "warn")
+            : iconPC(cx, cy, ch.name);
+        });
+      });
+      /* 4 台服务器横排，避免重叠 */
+      const srvSvg = servers.map((s, i) => {
+        const x = 720 + i * 92;
+        const y = 150;
+        flows += `<path class="flow-line green ${i % 2 ? "slow" : "fast"}" d="M620 210 H${x} V${y - 36}"/>`;
+        return iconServer(x, y, shortSrv(s.name), s.status === "warn");
+      }).join("");
+
+      return `<svg viewBox="0 0 1140 600" preserveAspectRatio="xMidYMid meet">
+        <defs><radialGradient id="bg1" cx="50%" cy="28%" r="70%"><stop offset="0%" stop-color="#12325a"/><stop offset="100%" stop-color="#06101f"/></radialGradient></defs>
+        <rect width="1140" height="600" fill="url(#bg1)"/>
+        <path class="flow-line cyan" d="M550 58 V96"/>
+        <path class="flow-line cyan fast" d="M550 136 V176"/>
+        ${flows}
+        ${iconCloud(550, 42, g.cloud)}
+        ${iconRouter(550, 118, g.router.name)}
+        ${iconSwitch(550, 210, g.coreSwitch.name, true)}
+        ${srvSvg}${body}
+        <g><rect class="summary-panel" x="24" y="48" width="176" height="78" rx="6"/>
+          <text class="t-cap" x="38" y="72">网关拓扑</text>
+          <text class="t-met" x="38" y="94">服务器 ${servers.length} 台</text>
+          <text class="t-sub" x="38" y="112">工作站 ${workstations.length} 席 · 交换机 ${g.accessSwitches.length}</text></g>
+      </svg>`;
+    }
+
+    function deviceTank(x, y, label, sub, tone) {
+      const c = tone === "warn" ? "#f3b84b" : tone === "fire" ? "#ff6b4a" : "#39d7ff";
+      return `<g transform="translate(${x},${y})" class="eq-glow">
+        <ellipse cx="40" cy="18" rx="38" ry="12" fill="#1e3a5f" stroke="${c}" stroke-width="1.5" opacity=".9"/>
+        <rect x="2" y="18" width="76" height="88" fill="#0d1c30" stroke="${c}" stroke-width="1.5"/>
+        <ellipse cx="40" cy="106" rx="38" ry="12" fill="#0a1628" stroke="${c}" stroke-width="1.5"/>
+        <rect x="14" y="36" width="8" height="52" rx="2" fill="${c}" opacity=".55"/>
+        <rect x="28" y="44" width="8" height="44" rx="2" fill="#ff8a3d" opacity=".45"/>
+        <rect x="42" y="40" width="8" height="48" rx="2" fill="#2dd39a" opacity=".5"/>
+        <text class="t-cap" x="40" y="148" text-anchor="middle">${label}</text>
+        <text class="t-sub" x="40" y="164" text-anchor="middle">${sub}</text>
+      </g>`;
+    }
+
+    function renderPowerHmi() {
+      const p = powerHmi;
+      const outs = p.lvOut.map((o, i) => {
+        const y = 110 + i * 105;
+        const warn = o.status === "warn";
+        return `<path class="flow-line ${warn ? "amber" : "green"} fast" d="M700 290 H760 V${y + 36} H840"/>
+          ${metricBox(840, y, 200, 84, o.name, [{ k: "U", v: o.u }, { k: "I", v: o.i }, { k: "P", v: o.p }], warn)}`;
+      }).join("");
+      return `<svg viewBox="0 0 1100 620" preserveAspectRatio="xMidYMid meet">
+        <defs><radialGradient id="bgP" cx="50%" cy="40%" r="60%"><stop offset="0%" stop-color="#12325a"/><stop offset="100%" stop-color="#06101f"/></radialGradient>
+          <linearGradient id="busGrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#39d7ff"/><stop offset="100%" stop-color="#2dd39a"/></linearGradient></defs>
+        <rect width="1100" height="620" fill="url(#bgP)"/>
+        <path class="flow-line cyan" d="M140 290 H270"/><path class="flow-line green" d="M350 210 H500 V290 H600"/><path class="flow-line amber slow" d="M350 370 H500 V290"/>
+        <path class="flow-line cyan fast" d="M680 290 H700"/><rect x="600" y="282" width="90" height="14" rx="4" fill="url(#busGrad)" opacity=".85"/>
+        ${deviceTank(270, 140, p.transformers[0].name, p.transformers[0].ratio, "ok")}
+        ${deviceTank(270, 300, p.transformers[1].name, p.transformers[1].ratio, "warn")}
+        <g class="eq-glow"><rect class="eq-card" x="40" y="220" width="96" height="130" rx="8"/><circle cx="88" cy="330" r="7" fill="#2dd39a"/><text class="t-cap" x="88" y="372" text-anchor="middle">高压进线</text></g>
+        ${metricBox(30, 60, 180, 96, p.hvIn.name, [{ k: "U", v: p.hvIn.u }, { k: "I", v: p.hvIn.i }, { k: "P", v: p.hvIn.p }])}
+        ${metricBox(370, 60, 200, 96, p.transformers[0].name, [{ k: "U", v: p.transformers[0].u }, { k: "I", v: p.transformers[0].i }, { k: "P", v: p.transformers[0].p }])}
+        ${metricBox(370, 460, 200, 96, p.transformers[1].name, [{ k: "U", v: p.transformers[1].u }, { k: "I", v: p.transformers[1].i }, { k: "P", v: p.transformers[1].p }], true)}
+        ${metricBox(580, 60, 170, 84, p.lvBus.name, [{ k: "U", v: p.lvBus.u }, { k: "I", v: p.lvBus.i }, { k: "P", v: p.lvBus.p }])}
+        ${outs}
+        <g><rect class="summary-panel" x="820" y="18" width="250" height="80" rx="8"/><text class="t-cap" x="838" y="44">${p.summary.title}</text>
+          <text class="t-met" x="838" y="66">总负荷 ${p.summary.loadKw} kW</text><text class="t-sub" x="838" y="84">功率因数 ${p.summary.pf} · ${p.summary.status}</text></g>
+      </svg>`;
+    }
+
+    function renderFireHmi() {
+      const f = fireHmi;
+      const loops = f.loops.map((l, i) => {
+        const y = 90 + i * 105;
+        const warn = l.status === "warn";
+        return `<path class="flow-line ${warn ? "orange" : "pink"} ${i % 2 ? "slow" : "fast"}" d="M410 290 H470 V${y + 34} H550"/>
+          ${metricBox(550, y, 210, 76, l.name, [{ k: "设备数", v: String(l.devices) }, { k: "告警点", v: String(l.alarm) }], warn)}`;
+      }).join("");
+      const pts = f.points.map((pt, i) => {
+        const x = 110 + (i % 2) * 140;
+        const y = 400 + Math.floor(i / 2) * 88;
+        const warn = pt.status === "warn";
+        return `${metricBox(x, y, 128, 68, pt.name, [{ k: pt.zone, v: pt.value }], warn)}
+          <path class="flow-line ${warn ? "red" : "orange"} slow" d="M${x + 64} ${y} V360 H290 V290"/>`;
+      }).join("");
+      return `<svg viewBox="0 0 1100 620" preserveAspectRatio="xMidYMid meet">
+        <defs><radialGradient id="bgF" cx="45%" cy="40%" r="65%"><stop offset="0%" stop-color="#2a1830"/><stop offset="100%" stop-color="#06101f"/></radialGradient></defs>
+        <rect width="1100" height="620" fill="url(#bgF)"/>
+        <path class="flow-line red" d="M290 290 H410"/>
+        ${deviceTank(290, 200, f.controller.name, f.controller.zone, "fire")}
+        ${metricBox(240, 60, 220, 96, "控制器状态", [{ k: "回路在线", v: f.controller.loopsOnline }, { k: "电源", v: f.controller.power }, { k: "模式", v: "自动监视" }])}
+        ${loops}${pts}
+        <g><rect class="summary-panel" x="820" y="18" width="250" height="90" rx="8"/><text class="t-cap" x="838" y="44">${f.summary.title}</text>
+          <text class="t-met warn" x="838" y="68">回路 ${f.summary.loops} · 设备 ${f.summary.devices}</text>
+          <text class="t-sub" x="838" y="88">${f.summary.status}</text></g>
+      </svg>`;
+    }
+
+    function renderLegend() {
+      document.getElementById("topoLegend").innerHTML = `<div class="legend-stack">
+        <div class="legend-card"><div class="lc-k">核心层</div><div class="lc-v">网络 · 路由 · 核心交换机</div></div>
+        <div class="legend-card"><div class="lc-k">服务器</div><div class="lc-v">4 台</div><div class="lc-d">通用业务、视频流媒体、IP 核心调度、业务备机</div></div>
+        <div class="legend-card"><div class="lc-k">交换机 1</div><div class="lc-v">无线接入</div><div class="lc-d">AP1 · AP2 · AP3</div></div>
+        <div class="legend-card"><div class="lc-k">交换机 2</div><div class="lc-v">业务席位</div><div class="lc-d">通信工作站 · 门禁巡更</div></div>
+        <div class="legend-card"><div class="lc-k">交换机 3</div><div class="lc-v">管理席位</div><div class="lc-d">网管 · 火灾报警 · 安防工作站</div></div>
+        <div class="legend-card is-warn"><div class="lc-k">说明</div><div class="lc-v">工作站 5 席</div><div class="lc-d">安防席位业务已合并至通信/大屏，拓扑仍展示</div></div>
+      </div>
+      <p class="legend-foot">动态走线表示通信方向</p>`;
+    }
+
+    function renderScreenList() {
+      document.getElementById("screenList").innerHTML = hmiScreens.map((s) =>
+        `<button type="button" class="screen-item ${s.id === state.screenId ? "active" : ""}" data-screen-id="${s.id}"><strong>${s.name}</strong><small>${s.hint}</small></button>`
+      ).join("");
+      document.querySelectorAll("[data-screen-id]").forEach((el) => el.addEventListener("click", () => {
+        state.screenId = el.dataset.screenId;
+        renderAll();
+      }));
+    }
+
+    function applyZoom() {
+      const zoom = document.getElementById("diagramZoom");
+      if (zoom) zoom.style.transform = `scale(${state.scale})`;
+    }
+
+    function renderDiagram() {
+      const zoom = document.getElementById("diagramZoom");
+      zoom.innerHTML = isHmi()
+        ? (state.screenId === "fire" ? renderFireHmi() : renderPowerHmi())
+        : renderGatewayDiagram();
+      applyZoom();
+    }
+
+    function renderAll() {
+      document.getElementById("configGrid").classList.toggle("is-hmi", isHmi());
+      document.querySelectorAll("[data-tab]").forEach((b) => b.classList.toggle("active", b.dataset.tab === state.tab));
+      document.getElementById("sideHint").textContent = "";
+      if (isHmi()) {
+        const s = currentScreen();
+        document.getElementById("sideTitle").textContent = "组态图列表";
+        document.getElementById("topologyTitle").textContent = s.name;
+        renderScreenList();
+      } else {
+        document.getElementById("sideTitle").textContent = "网关拓扑说明";
+        document.getElementById("topologyTitle").textContent = gatewayTopo.title;
+        renderLegend();
+      }
+      renderDiagram();
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      document.querySelectorAll("[data-tab]").forEach((b) => b.addEventListener("click", () => {
+        state.tab = b.dataset.tab;
+        state.scale = 1;
+        renderAll();
+      }));
+      document.getElementById("zoomIn").addEventListener("click", (e) => {
+        e.stopPropagation();
+        state.scale = Math.min(1.4, +(state.scale + 0.1).toFixed(2));
+        applyZoom();
+      });
+      document.getElementById("zoomOut").addEventListener("click", (e) => {
+        e.stopPropagation();
+        state.scale = Math.max(0.75, +(state.scale - 0.1).toFixed(2));
+        applyZoom();
+      });
+      renderAll();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,907 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>网络告警 - 科学岛管廊监控中心</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/tob-ui.css">
+  <link rel="stylesheet" href="../../assets/css/service-center.css?v=3">
+  <link rel="stylesheet" href="../../assets/css/alarm-center.css">
+  <link rel="stylesheet" href="../../assets/css/network.css">
+</head>
+<body class="service-center-page alarm-page" data-menu-key="network.alarms" data-page-section="网络管理" data-page-title="网络告警">
+  <div class="app-shell">
+    <aside id="app-sidebar" class="sidebar"></aside>
+    <header id="app-header" class="header"></header>
+    <main class="main">
+      <div class="screen-frame stack">
+        <nav class="network-tabs" role="tablist">
+          <button class="network-tab active" type="button" data-tab="events" role="tab">告警事件</button>
+          <button class="network-tab" type="button" data-tab="rules" role="tab">阈值规则</button>
+        </nav>
+
+        <section class="network-tab-panel" data-panel="events">
+          <section class="card alarm-filter-card">
+            <div class="filter-actions alarm-info-filter-row network-event-filter-row">
+              <label class="form-field"><span class="form-label">告警类型</span>
+                <select class="form-control" data-event-filter="type">
+                  <option value="">请选择</option>
+                  <option>性能阈值</option>
+                  <option>设备离线</option>
+                  <option>故障检测</option>
+                </select>
+              </label>
+              <label class="form-field"><span class="form-label">告警等级</span>
+                <select class="form-control" data-event-filter="level">
+                  <option value="">请选择</option>
+                  <option>告警</option>
+                  <option>预警</option>
+                  <option>提醒</option>
+                </select>
+              </label>
+              <label class="form-field"><span class="form-label">告警状态</span>
+                <select class="form-control" data-event-filter="status">
+                  <option value="">请选择</option>
+                  <option>未处理</option>
+                  <option>已处理</option>
+                </select>
+              </label>
+              <label class="form-field"><span class="form-label">关键词</span>
+                <input class="form-control" data-event-filter="keyword" placeholder="对象 / 描述">
+              </label>
+              <button class="btn btn-secondary" type="button" data-event-action="reset">重置</button>
+              <button class="btn btn-primary" type="button" data-event-action="search">搜索</button>
+            </div>
+          </section>
+          <section class="card alarm-list-card">
+            <div class="card-title-row alarm-toolbar">
+              <h1 class="card-title">告警事件列表</h1>
+            </div>
+            <div class="table-wrap">
+              <table class="table alarm-table alarm-info-table">
+                <thead>
+                  <tr>
+                    <th>序号</th>
+                    <th>告警对象</th>
+                    <th>对象编码</th>
+                    <th>告警类型</th>
+                    <th>告警描述</th>
+                    <th>告警等级</th>
+                    <th>告警时间</th>
+                    <th>告警状态</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody id="eventBody"></tbody>
+              </table>
+            </div>
+            <div class="pagination" id="eventPagination"></div>
+          </section>
+        </section>
+
+        <section class="network-tab-panel" data-panel="rules" hidden>
+          <section class="card alarm-filter-card">
+            <div class="filter-actions alarm-rule-filter-row">
+              <label class="form-field"><span class="form-label">规则名称</span>
+                <input class="form-control" data-rule-filter="name" placeholder="请输入规则名称">
+              </label>
+              <label class="form-field"><span class="form-label">指标</span>
+                <select class="form-control" data-rule-filter="metric">
+                  <option value="">请选择</option>
+                  <option value="cpu">cpu</option>
+                  <option value="memory">memory</option>
+                  <option value="disk">disk</option>
+                  <option value="latency">latency</option>
+                  <option value="offline">offline</option>
+                </select>
+              </label>
+              <label class="form-field"><span class="form-label">告警等级</span>
+                <select class="form-control" data-rule-filter="level">
+                  <option value="">请选择</option>
+                  <option>告警</option>
+                  <option>预警</option>
+                  <option>提醒</option>
+                </select>
+              </label>
+              <button class="btn btn-secondary" type="button" data-rule-action="reset">重置</button>
+              <button class="btn btn-primary" type="button" data-rule-action="search">搜索</button>
+            </div>
+          </section>
+          <section class="card alarm-list-card">
+            <div class="card-title-row alarm-toolbar">
+              <h1 class="card-title">阈值规则列表</h1>
+              <button class="btn btn-primary" type="button" data-rule-action="create"><i class="fa-solid fa-plus"></i> 新增</button>
+            </div>
+            <div class="table-wrap">
+              <table class="table alarm-rule-table">
+                <thead>
+                  <tr>
+                    <th>序号</th>
+                    <th>规则名称</th>
+                    <th>指标</th>
+                    <th>运算符</th>
+                    <th>阈值</th>
+                    <th>告警等级</th>
+                    <th>通知方式</th>
+                    <th>启用状态</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody id="ruleBody"></tbody>
+              </table>
+            </div>
+            <div class="pagination" id="rulePagination"></div>
+          </section>
+        </section>
+      </div>
+    </main>
+  </div>
+  <script src="../../../app/config/menu.js?v=nav-hide-1"></script>
+  <script src="../../../app/components/sidebar.js?v=nav-home-1"></script>
+  <script src="../../../app/components/header.js?v=nav-home-1"></script>
+  <script src="../../../app/components/drawer.js"></script>
+  <script src="../../../app/components/requirement.js"></script>
+  <script src="../../../app/data/network-data.js"></script>
+  <script>
+    const PAGE_SIZE = 10;
+    let eventPage = 1;
+    let rulePage = 1;
+    let eventFiltered = [];
+    let ruleFiltered = [];
+
+    function esc(value) {
+      return String(value ?? "").replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+    }
+    function levelClass(level) { return level === "告警" ? "high" : level === "预警" ? "medium" : "low"; }
+    function statusClass(status) { return status === "未处理" ? "active" : "processed"; }
+    function formatDateTimeLocal(value) {
+      if (!value) return "";
+      return value.includes("T") ? value.replace("T", " ").slice(0, 19) : value;
+    }
+    const notificationDirectory = [
+      { id: "project", name: "项目管理部", people: [{ id: "li", name: "李工" }, { id: "wang", name: "王工" }] },
+      { id: "equipment", name: "设备管理部", people: [{ id: "zhao", name: "赵工" }, { id: "chen", name: "陈工" }] },
+      { id: "safety", name: "安全质量部", people: [{ id: "liu", name: "刘主任" }, { id: "sun", name: "孙工" }] },
+    ];
+    let wizardState = {
+      step: 1, mode: "create", ruleId: "", rule: null,
+      period: "60", departments: [], people: [], method: "站内信", openMulti: null,
+    };
+
+    function notifyText(rule) {
+      return rule.method || (rule.notify || []).join(" / ") || "站内信";
+    }
+    function deptNames(ids) {
+      return (ids || []).map((id) => notificationDirectory.find((d) => d.id === id)?.name).filter(Boolean).join("、") || "—";
+    }
+    function peopleNames(ids) {
+      const all = notificationDirectory.flatMap((d) => d.people);
+      return (ids || []).map((id) => all.find((p) => p.id === id)?.name).filter(Boolean).join("、") || "—";
+    }
+
+    function readEventFilters() {
+      return Object.fromEntries([...document.querySelectorAll("[data-event-filter]")].map((el) => [el.dataset.eventFilter, el.value.trim()]));
+    }
+    function readRuleFilters() {
+      return Object.fromEntries([...document.querySelectorAll("[data-rule-filter]")].map((el) => [el.dataset.ruleFilter, el.value.trim()]));
+    }
+
+    function applyEventFilter() {
+      const f = readEventFilters();
+      const kw = (f.keyword || "").toLowerCase();
+      eventFiltered = NETWORK_STORE.listAlarmEvents().filter((e) => {
+        const matchKw = !kw || e.object.toLowerCase().includes(kw) || (e.message || "").toLowerCase().includes(kw) || (e.objectCode || "").toLowerCase().includes(kw);
+        return matchKw && (!f.type || e.type === f.type) && (!f.level || e.level === f.level) && (!f.status || e.status === f.status);
+      });
+      eventPage = 1;
+      renderEvents();
+    }
+
+    function applyRuleFilter() {
+      const f = readRuleFilters();
+      ruleFiltered = NETWORK_STORE.listAlarmRules().filter((r) => {
+        return (!f.name || r.name.includes(f.name)) && (!f.metric || r.metric === f.metric) && (!f.level || r.level === f.level);
+      });
+      rulePage = 1;
+      renderRules();
+    }
+
+    function renderPager(el, total, page) {
+      const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+      const safePage = Math.min(page, pages);
+      const items = [];
+      items.push(`<span>共 <strong>${total}</strong> 条，每页显示 ${PAGE_SIZE} 条</span>`);
+      items.push(`<span class="page-item ${safePage <= 1 ? "disabled" : ""}" data-page="${safePage - 1}">‹</span>`);
+      for (let i = 1; i <= pages; i += 1) {
+        items.push(`<span class="page-item ${i === safePage ? "active" : ""}" data-page="${i}">${i}</span>`);
+      }
+      items.push(`<span class="page-item ${safePage >= pages ? "disabled" : ""}" data-page="${safePage + 1}">›</span>`);
+      el.innerHTML = items.join("");
+      return safePage;
+    }
+
+    function eventActions(item) {
+      if (item.status === "未处理") {
+        return `<button class="table-action" type="button" data-event-op="detail" data-id="${esc(item.id)}">详情</button>
+          <button class="table-action" type="button" data-event-op="process" data-id="${esc(item.id)}">处理</button>
+          <button class="table-action" type="button" data-event-op="close" data-id="${esc(item.id)}">关闭</button>`;
+      }
+      return `<button class="table-action" type="button" data-event-op="detail" data-id="${esc(item.id)}">详情</button>`;
+    }
+
+    function renderEvents() {
+      eventPage = renderPager(document.getElementById("eventPagination"), eventFiltered.length, eventPage);
+      const start = (eventPage - 1) * PAGE_SIZE;
+      const rows = eventFiltered.slice(start, start + PAGE_SIZE);
+      document.getElementById("eventBody").innerHTML = rows.map((e, idx) => `<tr>
+        <td>${start + idx + 1}</td>
+        <td>${esc(e.object)}</td>
+        <td>${esc(e.objectCode || e.id)}</td>
+        <td>${esc(e.type || e.metric)}</td>
+        <td class="alarm-message" title="${esc(e.message || `${e.metric} ${e.value}`)}">${esc(e.message || `${e.metric} ${e.value}`)}</td>
+        <td><span class="alarm-level ${levelClass(e.level)}">${esc(e.level)}</span></td>
+        <td>${esc(e.time)}</td>
+        <td><span class="alarm-state ${statusClass(e.status)}">${esc(e.status)}</span></td>
+        <td>${eventActions(e)}</td>
+      </tr>`).join("") || '<tr><td colspan="9" class="service-muted" style="text-align:center">暂无告警事件</td></tr>';
+    }
+
+    function renderRules() {
+      rulePage = renderPager(document.getElementById("rulePagination"), ruleFiltered.length, rulePage);
+      const start = (rulePage - 1) * PAGE_SIZE;
+      const rows = ruleFiltered.slice(start, start + PAGE_SIZE);
+      document.getElementById("ruleBody").innerHTML = rows.map((r, idx) => `<tr>
+        <td>${start + idx + 1}</td>
+        <td>${esc(r.name)}</td>
+        <td>${esc(r.metric)}</td>
+        <td>${esc(r.operator || "—")}</td>
+        <td>${esc(r.threshold)}</td>
+        <td><span class="alarm-level ${levelClass(r.level)}">${esc(r.level)}</span></td>
+        <td>${esc(notifyText(r))}</td>
+        <td><label class="alarm-rule-switch"><input type="checkbox" data-rule-toggle="${esc(r.id)}" ${r.enabled ? "checked" : ""} aria-label="${esc(r.name)}"><span class="alarm-rule-switch-track"></span></label></td>
+        <td>
+          <button class="table-action" type="button" data-rule-op="detail" data-id="${esc(r.id)}">详情</button>
+          <button class="table-action" type="button" data-rule-op="edit" data-id="${esc(r.id)}">编辑</button>
+          <button class="table-action status-danger" type="button" data-rule-op="delete" data-id="${esc(r.id)}">删除</button>
+        </td>
+      </tr>`).join("") || '<tr><td colspan="9" class="service-muted" style="text-align:center">暂无规则</td></tr>';
+    }
+
+    function eventInfoMarkup(e) {
+      return `<section class="detail-section"><h3 class="detail-title">告警信息</h3>
+        <div class="detail-grid alarm-detail-grid">
+          <div class="info-item"><span class="info-label">告警对象</span><span class="info-value">${esc(e.object)}</span></div>
+          <div class="info-item"><span class="info-label">对象编码</span><span class="info-value">${esc(e.objectCode || e.id)}</span></div>
+          <div class="info-item"><span class="info-label">告警类型</span><span class="info-value">${esc(e.type || e.metric)}</span></div>
+          <div class="info-item"><span class="info-label">指标</span><span class="info-value">${esc(e.metric)}</span></div>
+          <div class="info-item"><span class="info-label">当前值</span><span class="info-value">${esc(e.value)}</span></div>
+          <div class="info-item"><span class="info-label">阈值</span><span class="info-value">${esc(e.threshold)}</span></div>
+          <div class="info-item"><span class="info-label">告警等级</span><span class="info-value"><span class="alarm-level ${levelClass(e.level)}">${esc(e.level)}</span></span></div>
+          <div class="info-item"><span class="info-label">告警状态</span><span class="info-value"><span class="alarm-state ${statusClass(e.status)}">${esc(e.status)}</span></span></div>
+          <div class="info-item"><span class="info-label">告警时间</span><span class="info-value">${esc(e.time)}</span></div>
+          <div class="info-item"><span class="info-label">告警描述</span><span class="info-value">${esc(e.message || "—")}</span></div>
+          ${e.rootHint ? `<div class="info-item"><span class="info-label">根因提示</span><span class="info-value">${esc(e.rootHint)}</span></div>` : ""}
+          ${e.suggest ? `<div class="info-item"><span class="info-label">处置建议</span><span class="info-value">${esc(e.suggest)}</span></div>` : ""}
+        </div></section>`;
+    }
+
+    function eventCloseMarkup(e) {
+      const handler = e.processedBy || e.closedBy;
+      const handledAt = e.processedAt || e.closedAt;
+      const remark = e.processRemark || e.closeReason;
+      if (!handler && !handledAt && !remark) return "";
+      return `<section class="detail-section"><h3 class="detail-title">告警解除信息</h3>
+        <div class="detail-grid alarm-detail-grid">
+          <div class="info-item"><span class="info-label">处理人</span><span class="info-value">${esc(handler || "—")}</span></div>
+          <div class="info-item"><span class="info-label">处理时间</span><span class="info-value">${esc(handledAt || "—")}</span></div>
+          <div class="info-item"><span class="info-label">备注</span><span class="info-value">${esc(remark || "—")}</span></div>
+        </div></section>`;
+    }
+
+    function eventHistoryMarkup(e) {
+      const history = e.history || [];
+      if (!history.length) return '<div class="alarm-detail-empty">暂无处理记录</div>';
+      return `<section class="detail-section"><h3 class="detail-title">处理记录</h3>
+        <div class="alarm-history">${history.map((entry) => `<div class="alarm-history-item">
+          <span class="alarm-history-time">${esc(entry.time)}</span>
+          <strong>${esc(entry.operator)}</strong>
+          <span>${esc(entry.action)}</span>
+        </div>`).join("")}</div></section>`;
+    }
+
+    function eventRecordsMarkup(e) {
+      const content = `${eventCloseMarkup(e)}${eventHistoryMarkup(e)}`;
+      return content || '<div class="alarm-detail-empty">暂无处理记录</div>';
+    }
+
+    function openEventDetail(id) {
+      const e = NETWORK_STORE.getAlarmEvent?.(id) || NETWORK_STORE.listAlarmEvents().find((item) => item.id === id);
+      if (!e || !window.openAppDrawer) return;
+      openAppDrawer({
+        title: "告警详情",
+        subtitle: "网络管理 · 网络告警",
+        body: `<div class="alarm-detail-tabs" role="tablist">
+            <button class="alarm-detail-tab active" type="button" role="tab" aria-selected="true" data-detail-tab="info">报警信息</button>
+            <button class="alarm-detail-tab" type="button" role="tab" aria-selected="false" data-detail-tab="records">处理记录</button>
+          </div>
+          <div data-detail-pane="info">${eventInfoMarkup(e)}</div>
+          <div class="hidden" data-detail-pane="records">${eventRecordsMarkup(e)}</div>`,
+        footer: '<button class="btn btn-secondary" type="button" data-drawer-close>关闭</button>',
+      });
+    }
+
+    function openProcessPanel(id) {
+      openAppDrawer({
+        title: "处理确认",
+        subtitle: "网络管理 · 网络告警",
+        body: `<div class="form-grid-2 alarm-process-form">
+          <label class="form-field form-item"><span class="form-label form-required">处理人</span>
+            <select class="form-control" data-process-field="handler">
+              <option value="">请选择处理人</option>
+              <option>管理员</option>
+              <option>运维甲</option>
+              <option>运维乙</option>
+              <option>运维丙</option>
+            </select>
+          </label>
+          <label class="form-field form-item"><span class="form-label form-required">处理时间</span>
+            <input class="form-control" type="datetime-local" data-process-field="handledAt">
+          </label>
+          <label class="form-field form-item form-span-2"><span class="form-label form-required">备注</span>
+            <textarea class="form-control textarea" data-process-field="remark" placeholder="请输入处理备注"></textarea>
+          </label>
+        </div>`,
+        footer: `<button class="btn btn-secondary" type="button" data-drawer-close>取消</button>
+          <button class="btn btn-primary" type="button" data-process-save="${esc(id)}">确认</button>`,
+      });
+    }
+
+    function openClosePanel(id) {
+      openAppDrawer({
+        title: "关闭确认",
+        subtitle: "网络管理 · 网络告警",
+        body: `<label class="form-field form-item"><span class="form-label form-required">关闭原因</span>
+          <textarea class="form-control textarea" data-close-reason placeholder="请输入关闭原因"></textarea>
+        </label>`,
+        footer: `<button class="btn btn-secondary" type="button" data-drawer-close>取消</button>
+          <button class="btn btn-primary" type="button" data-close-save="${esc(id)}">确认</button>`,
+      });
+    }
+
+    function saveProcess(id) {
+      const body = document.getElementById("drawerBody");
+      if (!body) return;
+      body.querySelectorAll(".form-error").forEach((el) => el.remove());
+      body.querySelectorAll(".error").forEach((el) => el.classList.remove("error"));
+      const values = Object.fromEntries([...body.querySelectorAll("[data-process-field]")].map((el) => [el.dataset.processField, el.value.trim()]));
+      let valid = true;
+      [["handler", "请选择处理人"], ["handledAt", "请选择处理时间"], ["remark", "请输入备注"]].forEach(([key, message]) => {
+        const field = body.querySelector(`[data-process-field="${key}"]`);
+        if (!values[key]) {
+          field?.classList.add("error");
+          const error = document.createElement("span");
+          error.className = "form-error";
+          error.textContent = message;
+          field?.closest(".form-field")?.appendChild(error);
+          valid = false;
+        }
+      });
+      if (!valid) return;
+      NETWORK_STORE.processAlarm(id, {
+        handler: values.handler,
+        handledAt: formatDateTimeLocal(values.handledAt),
+        remark: values.remark,
+      });
+      window.closeAppDrawer?.();
+      applyEventFilter();
+    }
+
+    function saveClose(id) {
+      const field = document.querySelector("[data-close-reason]");
+      const reason = field?.value.trim();
+      field?.classList.remove("error");
+      field?.closest(".form-field")?.querySelector(".form-error")?.remove();
+      if (!reason) {
+        field?.classList.add("error");
+        const error = document.createElement("span");
+        error.className = "form-error";
+        error.textContent = "请输入关闭原因";
+        field?.closest(".form-field")?.appendChild(error);
+        return;
+      }
+      NETWORK_STORE.closeAlarm(id, { reason });
+      window.closeAppDrawer?.();
+      applyEventFilter();
+    }
+
+    function wizardStepMarkup() {
+      const rule = wizardState.rule || {};
+      return `<div class="alarm-wizard network-rule-wizard" data-wizard-mode="${wizardState.mode}">
+        <div class="alarm-wizard-steps">
+          <button class="alarm-wizard-step active" type="button" data-step="1" data-wizard-step="1">填写基本信息</button>
+          <button class="alarm-wizard-step" type="button" data-step="2" data-wizard-step="2">选择发送方式</button>
+          <button class="alarm-wizard-step" type="button" data-step="3" data-wizard-step="3">保存预览</button>
+        </div>
+        <div class="alarm-wizard-content">
+          <section data-wizard-panel="1">
+            <div class="form-grid-2">
+              <label class="form-field form-item"><span class="form-label form-required">规则名称</span>
+                <input class="form-control" data-wizard-field="name" value="${esc(rule.name || "")}" placeholder="请输入规则名称">
+              </label>
+              <label class="form-field form-item"><span class="form-label form-required">指标</span>
+                <select class="form-control" data-wizard-field="metric">
+                  <option value="">请选择指标</option>
+                  ${["cpu", "memory", "disk", "latency", "offline"].map((m) => `<option value="${m}" ${rule.metric === m ? "selected" : ""}>${m}</option>`).join("")}
+                </select>
+              </label>
+              <label class="form-field form-item"><span class="form-label form-required">运算符</span>
+                <select class="form-control" data-wizard-field="operator">
+                  <option value="">请选择运算符</option>
+                  ${["等于", "大于", "大于等于", "小于", "小于等于"].map((op) => `<option ${rule.operator === op ? "selected" : ""}>${op}</option>`).join("")}
+                </select>
+              </label>
+              <label class="form-field form-item"><span class="form-label form-required">阈值</span>
+                <input class="form-control" data-wizard-field="threshold" value="${esc(rule.threshold || "")}" placeholder="请输入阈值">
+              </label>
+              <label class="form-field form-item"><span class="form-label form-required">告警等级</span>
+                <select class="form-control" data-wizard-field="level">
+                  <option value="">请选择告警等级</option>
+                  ${["告警", "预警", "提醒"].map((l) => `<option ${rule.level === l ? "selected" : ""}>${l}</option>`).join("")}
+                </select>
+              </label>
+              <div class="form-field form-item form-span-2">
+                <div class="alarm-choice-row alarm-filter-label-row"><span class="form-label form-required">过滤方式</span></div>
+                <div class="alarm-filter-options">
+                  <label class="alarm-filter-option">
+                    <input type="radio" name="network-alarm-filter" value="periodic" checked>
+                    <span class="alarm-filter-card-option">
+                      <span class="alarm-filter-card-head">
+                        <span class="alarm-filter-card-icon"><i class="fa-solid fa-clock-rotate-left"></i></span>
+                        <span><strong>周期性报警</strong><small>在指定周期内只生成一次</small></span>
+                      </span>
+                      <span class="alarm-filter-card-body">同一个设备、同一个报警在周期之内，将不再重复生成告警和通知，直到周期结束后若报警还存在，再次触发。</span>
+                    </span>
+                  </label>
+                </div>
+                <div class="alarm-period" data-alarm-period>
+                  <span class="form-label form-required">报警周期</span>
+                  <input class="form-control" data-wizard-field="period" value="${esc(wizardState.period)}" inputmode="numeric">
+                  <span>分钟</span>
+                </div>
+              </div>
+              <label class="form-field form-item form-span-2"><span class="form-label">规则说明</span>
+                <textarea class="form-control textarea" data-wizard-field="description" placeholder="请输入规则说明">${esc(rule.description || "")}</textarea>
+              </label>
+            </div>
+          </section>
+          <section class="hidden" data-wizard-panel="2">
+            <div class="alarm-tip">请设置告警通知的部门、人员和通知方式。</div>
+            <div class="alarm-send-section">
+              <h3 class="alarm-summary-title">发送方式</h3>
+              <div class="alarm-send-grid">
+                <div class="form-field form-item"><span class="form-label form-required">部门</span>
+                  <div class="alarm-tag-select" data-multi-select="departments">
+                    <button class="alarm-tag-control" type="button" data-multi-trigger="departments" aria-expanded="false">
+                      <span data-multi-value="departments"></span><i class="fa-solid fa-chevron-down"></i>
+                    </button>
+                    <div class="alarm-tag-dropdown" data-multi-options="departments"></div>
+                  </div>
+                </div>
+                <div class="form-field form-item"><span class="form-label form-required">通知人员</span>
+                  <div class="alarm-tag-select" data-multi-select="people">
+                    <button class="alarm-tag-control" type="button" data-multi-trigger="people" aria-expanded="false">
+                      <span data-multi-value="people"></span><i class="fa-solid fa-chevron-down"></i>
+                    </button>
+                    <div class="alarm-tag-dropdown" data-multi-options="people"></div>
+                  </div>
+                </div>
+                <label class="form-field form-item"><span class="form-label form-required">通知方式</span>
+                  <select class="form-control" data-wizard-field="method"><option value="站内信" selected>站内信</option></select>
+                </label>
+              </div>
+            </div>
+          </section>
+          <section class="hidden" data-wizard-panel="3">
+            <div class="alarm-tip">确认已填写信息，提交保存：</div>
+            <div class="alarm-summary-section">
+              <h3 class="alarm-summary-title">基本信息</h3>
+              <table class="alarm-summary-table"><tbody>
+                <tr><th class="summary-label">规则名称</th><td data-summary="name">-</td><th class="summary-label">指标</th><td data-summary="metric">-</td></tr>
+                <tr><th class="summary-label">运算符</th><td data-summary="operator">-</td><th class="summary-label">阈值</th><td data-summary="threshold">-</td></tr>
+                <tr><th class="summary-label">告警等级</th><td data-summary="level">-</td><th class="summary-label">过滤方式</th><td data-summary="filter">周期性报警</td></tr>
+                <tr><th class="summary-label">报警周期</th><td data-summary="period">-</td><th class="summary-label">规则说明</th><td data-summary="description">-</td></tr>
+              </tbody></table>
+            </div>
+            <div class="alarm-summary-section">
+              <h3 class="alarm-summary-title">发送方式</h3>
+              <table class="alarm-summary-table"><tbody>
+                <tr><th class="summary-label">部门</th><td data-summary="departments">-</td><th class="summary-label">通知人员</th><td data-summary="people">-</td></tr>
+                <tr><th class="summary-label">通知方式</th><td colspan="3" data-summary="method">站内信</td></tr>
+              </tbody></table>
+            </div>
+          </section>
+        </div>
+      </div>`;
+    }
+
+    function captureWizardState() {
+      const body = document.getElementById("drawerBody");
+      if (!body) return;
+      const get = (key) => body.querySelector(`[data-wizard-field="${key}"]`)?.value || "";
+      wizardState.period = get("period") || wizardState.period;
+      wizardState.method = get("method") || "站内信";
+      if (!wizardState.rule) wizardState.rule = {};
+      wizardState.rule = {
+        ...wizardState.rule,
+        name: get("name"),
+        metric: get("metric"),
+        operator: get("operator"),
+        threshold: get("threshold"),
+        level: get("level"),
+        description: get("description"),
+      };
+    }
+
+    function renderMultiSelects() {
+      const body = document.getElementById("drawerBody");
+      if (!body) return;
+      const allPeople = notificationDirectory.flatMap((item) => item.people);
+      const allowedPeople = notificationDirectory.filter((item) => wizardState.departments.includes(item.id)).flatMap((item) => item.people);
+      const render = (key, source, placeholder) => {
+        const component = body.querySelector(`[data-multi-select="${key}"]`);
+        if (!component) return;
+        const value = component.querySelector(`[data-multi-value="${key}"]`);
+        const dropdown = component.querySelector(`[data-multi-options="${key}"]`);
+        const control = component.querySelector("[data-multi-trigger]");
+        const selected = wizardState[key].map((id) => source.find((item) => item.id === id)).filter(Boolean);
+        value.innerHTML = selected.length
+          ? selected.map((item) => `<span class="alarm-selection-tag">${esc(item.name)}<span role="button" tabindex="0" data-tag-remove="${key}" data-tag-id="${esc(item.id)}" aria-label="移除${esc(item.name)}">×</span></span>`).join("")
+          : `<span class="alarm-tag-placeholder">${placeholder}</span>`;
+        dropdown.innerHTML = source.length
+          ? source.map((item) => `<button class="alarm-tag-option ${wizardState[key].includes(item.id) ? "selected" : ""}" type="button" data-multi-option="${key}" data-option-id="${esc(item.id)}"><span>${esc(item.name)}</span>${wizardState[key].includes(item.id) ? '<i class="fa-solid fa-check"></i>' : ""}</button>`).join("")
+          : '<span class="alarm-tag-empty">请先选择部门</span>';
+        component.classList.toggle("open", wizardState.openMulti === key);
+        control?.setAttribute("aria-expanded", String(wizardState.openMulti === key));
+        if (selected.length) {
+          control?.classList.remove("error");
+          component.closest(".form-field")?.querySelector(".form-error")?.remove();
+        }
+      };
+      render("departments", notificationDirectory, "请选择部门");
+      render("people", allowedPeople, wizardState.departments.length ? "请选择通知人员" : "请先选择部门");
+      wizardState.people = wizardState.people.filter((id) => allPeople.some((item) => item.id === id) && allowedPeople.some((item) => item.id === id));
+    }
+
+    function updateNotificationPeople() {
+      const allowed = notificationDirectory.filter((item) => wizardState.departments.includes(item.id)).flatMap((item) => item.people);
+      wizardState.people = wizardState.people.filter((id) => allowed.some((item) => item.id === id));
+      if (!wizardState.departments.length && wizardState.openMulti === "people") wizardState.openMulti = null;
+      renderMultiSelects();
+    }
+
+    function updateSummary() {
+      const body = document.getElementById("drawerBody");
+      if (!body) return;
+      captureWizardState();
+      const set = (key, value) => {
+        const item = body.querySelector(`[data-summary="${key}"]`);
+        if (item) item.textContent = value || "-";
+      };
+      set("name", wizardState.rule?.name);
+      set("metric", wizardState.rule?.metric);
+      set("operator", wizardState.rule?.operator);
+      set("threshold", wizardState.rule?.threshold);
+      set("level", wizardState.rule?.level);
+      set("filter", "周期性报警");
+      set("period", `${wizardState.period || 60} 分钟`);
+      set("description", wizardState.rule?.description || "-");
+      set("departments", deptNames(wizardState.departments));
+      set("people", peopleNames(wizardState.people));
+      set("method", wizardState.method || "站内信");
+    }
+
+    function clearValidation(panel) {
+      panel.querySelectorAll(".error").forEach((item) => item.classList.remove("error"));
+      panel.querySelectorAll(".form-error").forEach((item) => item.remove());
+    }
+    function markValidation(field, message) {
+      if (!field) return;
+      field.classList.add("error");
+      const host = field.closest(".form-field") || field.parentElement;
+      if (!host || host.querySelector(".form-error")) return;
+      const error = document.createElement("span");
+      error.className = "form-error";
+      error.textContent = message;
+      host.appendChild(error);
+    }
+    function validateWizardStep(step) {
+      const body = document.getElementById("drawerBody");
+      const panel = body?.querySelector(`[data-wizard-panel="${step}"]`);
+      if (!panel) return true;
+      captureWizardState();
+      clearValidation(panel);
+      let valid = true;
+      const required = (field, message) => {
+        if (!field || !String(field.value || "").trim()) {
+          if (field) markValidation(field, message);
+          valid = false;
+        }
+      };
+      if (step === 1) {
+        required(panel.querySelector('[data-wizard-field="name"]'), "请输入规则名称");
+        required(panel.querySelector('[data-wizard-field="metric"]'), "请选择指标");
+        required(panel.querySelector('[data-wizard-field="operator"]'), "请选择运算符");
+        required(panel.querySelector('[data-wizard-field="threshold"]'), "请输入阈值");
+        required(panel.querySelector('[data-wizard-field="level"]'), "请选择告警等级");
+        const period = panel.querySelector('[data-wizard-field="period"]');
+        if (!period || !/^\d+$/.test(period.value.trim()) || Number(period.value) < 1) {
+          markValidation(period, "请输入大于等于1的整数分钟");
+          valid = false;
+        }
+      }
+      if (step === 2) {
+        const departmentControl = panel.querySelector('[data-multi-select="departments"] .alarm-tag-control');
+        const peopleControl = panel.querySelector('[data-multi-select="people"] .alarm-tag-control');
+        const method = panel.querySelector('[data-wizard-field="method"]');
+        if (!wizardState.departments.length) { markValidation(departmentControl, "请选择通知部门"); valid = false; }
+        if (!wizardState.people.length) { markValidation(peopleControl, "请选择通知人员"); valid = false; }
+        required(method, "请选择通知方式");
+      }
+      return valid;
+    }
+
+    function syncWizard() {
+      const body = document.getElementById("drawerBody");
+      if (!body) return;
+      body.querySelectorAll("[data-wizard-step]").forEach((item) => {
+        const step = Number(item.dataset.wizardStep);
+        item.classList.toggle("active", step === wizardState.step);
+        item.classList.toggle("done", step < wizardState.step);
+      });
+      body.querySelectorAll("[data-wizard-panel]").forEach((panel) => {
+        panel.classList.toggle("hidden", Number(panel.dataset.wizardPanel) !== wizardState.step);
+      });
+      const footer = document.getElementById("drawerFooter");
+      if (footer) {
+        footer.innerHTML = `${wizardState.step > 1 ? '<button class="btn btn-secondary" type="button" data-wizard-action="prev">上一步</button>' : ""}
+          <button class="btn btn-primary" type="button" data-wizard-action="${wizardState.step === 3 ? "save" : "next"}">${wizardState.step === 3 ? "保存" : "下一步"}</button>
+          <button class="btn btn-secondary" type="button" data-drawer-close>取消</button>`;
+        footer.querySelectorAll("[data-drawer-close]").forEach((item) => item.addEventListener("click", window.closeAppDrawer));
+      }
+      updateNotificationPeople();
+      if (wizardState.step === 3) updateSummary();
+    }
+
+    function openRuleWizard(mode, id) {
+      const rule = id ? NETWORK_STORE.getAlarmRule(id) : null;
+      if (id && !rule) return;
+      wizardState = {
+        step: 1,
+        mode,
+        ruleId: id || "",
+        rule: rule ? { ...rule } : { level: "预警", metric: "cpu" },
+        period: String(rule?.period || 60),
+        departments: [...(rule?.departments || [])],
+        people: [...(rule?.people || [])],
+        method: rule?.method || "站内信",
+        openMulti: null,
+      };
+      openAppDrawer({
+        title: mode === "edit" ? "编辑阈值规则" : "新增阈值规则",
+        subtitle: "网络管理 · 网络告警",
+        body: wizardStepMarkup(),
+        footer: "",
+      });
+      syncWizard();
+    }
+
+    function openRuleDetail(id) {
+      const rule = NETWORK_STORE.getAlarmRule(id);
+      if (!rule || !window.openAppDrawer) return;
+      openAppDrawer({
+        title: "规则详情",
+        subtitle: "网络管理 · 网络告警",
+        body: `<section class="detail-section"><h3 class="detail-title">基本信息</h3>
+          <div class="detail-grid alarm-detail-grid network-detail-grid">
+            <div class="info-item"><span class="info-label">规则名称</span><span class="info-value">${esc(rule.name)}</span></div>
+            <div class="info-item"><span class="info-label">指标</span><span class="info-value">${esc(rule.metric)}</span></div>
+            <div class="info-item"><span class="info-label">运算符</span><span class="info-value">${esc(rule.operator || "—")}</span></div>
+            <div class="info-item"><span class="info-label">阈值</span><span class="info-value">${esc(rule.threshold)}</span></div>
+            <div class="info-item"><span class="info-label">告警等级</span><span class="info-value"><span class="alarm-level ${levelClass(rule.level)}">${esc(rule.level)}</span></span></div>
+            <div class="info-item"><span class="info-label">过滤方式</span><span class="info-value">周期性报警</span></div>
+            <div class="info-item"><span class="info-label">报警周期</span><span class="info-value">${esc(rule.period || 60)} 分钟</span></div>
+            <div class="info-item"><span class="info-label">启用状态</span><span class="info-value">${rule.enabled ? "启用" : "停用"}</span></div>
+            <div class="info-item"><span class="info-label">规则说明</span><span class="info-value">${esc(rule.description || "—")}</span></div>
+          </div></section>
+          <section class="detail-section"><h3 class="detail-title">发送方式</h3>
+          <div class="detail-grid alarm-detail-grid network-detail-grid">
+            <div class="info-item"><span class="info-label">部门</span><span class="info-value">${esc(deptNames(rule.departments))}</span></div>
+            <div class="info-item"><span class="info-label">通知人员</span><span class="info-value">${esc(peopleNames(rule.people))}</span></div>
+            <div class="info-item"><span class="info-label">通知方式</span><span class="info-value">${esc(notifyText(rule))}</span></div>
+          </div></section>`,
+        footer: '<button class="btn btn-secondary" type="button" data-drawer-close>关闭</button>',
+      });
+    }
+
+    function saveWizardRule() {
+      if (!validateWizardStep(2)) {
+        wizardState.step = 2;
+        syncWizard();
+        return;
+      }
+      captureWizardState();
+      NETWORK_STORE.saveAlarmRule({
+        id: wizardState.ruleId || undefined,
+        name: wizardState.rule.name,
+        metric: wizardState.rule.metric,
+        operator: wizardState.rule.operator,
+        threshold: wizardState.rule.threshold,
+        level: wizardState.rule.level,
+        description: wizardState.rule.description || "",
+        filter: "periodic",
+        period: wizardState.period,
+        method: wizardState.method || "站内信",
+        departments: wizardState.departments,
+        people: wizardState.people,
+        enabled: true,
+      });
+      window.closeAppDrawer?.();
+      applyRuleFilter();
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      applyEventFilter();
+      applyRuleFilter();
+
+      document.querySelectorAll("[data-tab]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          document.querySelectorAll("[data-tab]").forEach((b) => b.classList.toggle("active", b === btn));
+          document.querySelectorAll("[data-panel]").forEach((p) => { p.hidden = p.dataset.panel !== btn.dataset.tab; });
+        });
+      });
+
+      document.querySelector("[data-event-action=search]").addEventListener("click", applyEventFilter);
+      document.querySelector("[data-event-action=reset]").addEventListener("click", () => {
+        document.querySelectorAll("[data-event-filter]").forEach((el) => { el.value = ""; });
+        applyEventFilter();
+      });
+      document.querySelector("[data-rule-action=search]").addEventListener("click", applyRuleFilter);
+      document.querySelector("[data-rule-action=reset]").addEventListener("click", () => {
+        document.querySelectorAll("[data-rule-filter]").forEach((el) => { el.value = ""; });
+        applyRuleFilter();
+      });
+      document.querySelector("[data-rule-action=create]").addEventListener("click", () => openRuleWizard("create"));
+
+      document.getElementById("eventBody").addEventListener("click", (ev) => {
+        const btn = ev.target.closest("[data-event-op]");
+        if (!btn) return;
+        const id = btn.dataset.id;
+        if (btn.dataset.eventOp === "detail") openEventDetail(id);
+        if (btn.dataset.eventOp === "process") openProcessPanel(id);
+        if (btn.dataset.eventOp === "close") openClosePanel(id);
+      });
+
+      document.getElementById("ruleBody").addEventListener("click", (ev) => {
+        const btn = ev.target.closest("[data-rule-op]");
+        if (!btn) return;
+        const id = btn.dataset.id;
+        const rule = NETWORK_STORE.getAlarmRule(id);
+        if (btn.dataset.ruleOp === "detail") openRuleDetail(id);
+        if (btn.dataset.ruleOp === "edit") openRuleWizard("edit", id);
+        if (btn.dataset.ruleOp === "delete" && rule) {
+          window.openAppConfirm?.({
+            title: "提示",
+            message: `确认删除规则「${rule.name}」吗？`,
+            onConfirm: () => {
+              NETWORK_STORE.deleteAlarmRule(id);
+              applyRuleFilter();
+            },
+          });
+        }
+      });
+
+      document.getElementById("ruleBody").addEventListener("change", (ev) => {
+        const input = ev.target.closest("[data-rule-toggle]");
+        if (!input) return;
+        NETWORK_STORE.setRuleEnabled(input.dataset.ruleToggle, input.checked);
+      });
+
+      document.getElementById("eventPagination").addEventListener("click", (ev) => {
+        const item = ev.target.closest("[data-page]");
+        if (!item || item.classList.contains("disabled")) return;
+        const next = Number(item.dataset.page);
+        if (!Number.isFinite(next) || next < 1) return;
+        eventPage = next;
+        renderEvents();
+      });
+      document.getElementById("rulePagination").addEventListener("click", (ev) => {
+        const item = ev.target.closest("[data-page]");
+        if (!item || item.classList.contains("disabled")) return;
+        const next = Number(item.dataset.page);
+        if (!Number.isFinite(next) || next < 1) return;
+        rulePage = next;
+        renderRules();
+      });
+
+      document.addEventListener("click", (ev) => {
+        const detailTab = ev.target.closest("[data-detail-tab]");
+        if (detailTab) {
+          const body = document.getElementById("drawerBody");
+          const tabKey = detailTab.dataset.detailTab;
+          body?.querySelectorAll("[data-detail-tab]").forEach((tab) => {
+            const active = tab === detailTab;
+            tab.classList.toggle("active", active);
+            tab.setAttribute("aria-selected", String(active));
+          });
+          body?.querySelectorAll("[data-detail-pane]").forEach((pane) => {
+            pane.classList.toggle("hidden", pane.dataset.detailPane !== tabKey);
+          });
+        }
+
+        const processSave = ev.target.closest("[data-process-save]");
+        if (processSave) saveProcess(processSave.dataset.processSave);
+
+        const closeSave = ev.target.closest("[data-close-save]");
+        if (closeSave) saveClose(closeSave.dataset.closeSave);
+
+        const wizardAction = ev.target.closest("[data-wizard-action]")?.dataset.wizardAction;
+        if (wizardAction === "prev") {
+          captureWizardState();
+          wizardState.step = Math.max(1, wizardState.step - 1);
+          syncWizard();
+        }
+        if (wizardAction === "next") {
+          if (!validateWizardStep(wizardState.step)) return;
+          captureWizardState();
+          wizardState.step = Math.min(3, wizardState.step + 1);
+          syncWizard();
+        }
+        if (wizardAction === "save") saveWizardRule();
+
+        const stepBtn = ev.target.closest("[data-wizard-step]");
+        if (stepBtn && Number(stepBtn.dataset.wizardStep) <= wizardState.step) {
+          captureWizardState();
+          wizardState.step = Number(stepBtn.dataset.wizardStep);
+          syncWizard();
+        }
+
+        const tagRemove = ev.target.closest("[data-tag-remove]");
+        if (tagRemove) {
+          ev.stopPropagation();
+          const key = tagRemove.dataset.tagRemove;
+          wizardState[key] = wizardState[key].filter((id) => id !== tagRemove.dataset.tagId);
+          if (key === "departments") updateNotificationPeople();
+          else renderMultiSelects();
+          return;
+        }
+        const multiOption = ev.target.closest("[data-multi-option]");
+        if (multiOption) {
+          const key = multiOption.dataset.multiOption;
+          const id = multiOption.dataset.optionId;
+          wizardState[key] = wizardState[key].includes(id)
+            ? wizardState[key].filter((item) => item !== id)
+            : wizardState[key].concat(id);
+          wizardState.openMulti = key;
+          if (key === "departments") updateNotificationPeople();
+          else renderMultiSelects();
+          return;
+        }
+        const multiTrigger = ev.target.closest("[data-multi-trigger]");
+        if (multiTrigger) {
+          const key = multiTrigger.dataset.multiTrigger;
+          if (key !== "people" || wizardState.departments.length) {
+            wizardState.openMulti = wizardState.openMulti === key ? null : key;
+          }
+          renderMultiSelects();
+          return;
+        }
+        if (!ev.target.closest("[data-multi-select]") && wizardState.openMulti) {
+          wizardState.openMulti = null;
+          renderMultiSelects();
+        }
+      });
+    });
+  </script>
+</body>
+</html>

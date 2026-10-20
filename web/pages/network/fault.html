@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>故障诊断 - 科学岛管廊监控中心</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/tob-ui.css">
+  <link rel="stylesheet" href="../../assets/css/service-center.css?v=3">
+  <link rel="stylesheet" href="../../assets/css/network.css">
+</head>
+<body class="service-center-page" data-menu-key="network.fault" data-page-section="网络管理" data-page-title="故障诊断">
+  <div class="app-shell">
+    <aside id="app-sidebar" class="sidebar"></aside>
+    <header id="app-header" class="header"></header>
+    <main class="main">
+      <div class="screen-frame service-dashboard">
+        <p class="service-muted" style="margin:0 0 12px">一期提供轻量根因（拓扑关联提示）与建议动作；自动化修复将于后续版本提供。</p>
+        <div style="display:grid;grid-template-columns:minmax(0,1.4fr) minmax(280px,1fr);gap:16px">
+          <article class="service-card performance-wide-card">
+            <header class="service-card-header performance-card-head"><div><h2>故障事件</h2></div></header>
+            <div class="table-wrap">
+              <table class="performance-table">
+                <thead><tr><th>时间</th><th>类型</th><th>对象</th><th>级别</th><th>可能源头</th><th>建议动作</th><th></th></tr></thead>
+                <tbody id="faultBody"></tbody>
+              </table>
+            </div>
+          </article>
+          <article class="service-card">
+            <header class="service-card-header"><h2>诊断详情</h2></header>
+            <div class="service-card-body" id="faultDetail"><p class="service-muted">选择左侧事件查看</p></div>
+          </article>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="../../../app/config/menu.js?v=nav-hide-1"></script>
+  <script src="../../../app/components/sidebar.js?v=nav-home-1"></script>
+  <script src="../../../app/components/header.js?v=nav-home-1"></script>
+  <script src="../../../app/data/network-data.js"></script>
+  <script>
+    function showDetail(id) {
+      const e = NETWORK_STORE.listFaultEvents().find((x) => x.id === id);
+      if (!e) return;
+      document.getElementById("faultDetail").innerHTML = `
+        <p><strong>${e.type}</strong> · ${e.severity}</p>
+        <p class="service-muted">${e.time} · ${e.object}</p>
+        <h3 style="font-size:13px;margin:16px 0 8px">可能源头</h3>
+        <p>${e.rootHint}</p>
+        <h3 style="font-size:13px;margin:16px 0 8px">建议动作</h3>
+        <p>${e.suggest}</p>
+        <p class="service-muted" style="margin-top:16px">自动化修复（脚本执行）将于后续版本提供。</p>`;
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const list = NETWORK_STORE.listFaultEvents();
+      document.getElementById("faultBody").innerHTML = list.map((e) => `<tr>
+        <td>${e.time}</td><td>${e.type}</td><td>${e.object}</td><td>${e.severity}</td>
+        <td>${e.rootHint}</td><td>${e.suggest}</td>
+        <td><button class="btn btn-link btn-sm" type="button" data-id="${e.id}">详情</button></td>
+      </tr>`).join("");
+      document.getElementById("faultBody").addEventListener("click", (ev) => {
+        const btn = ev.target.closest("[data-id]");
+        if (btn) showDetail(btn.dataset.id);
+      });
+      if (list[0]) showDetail(list[0].id);
+    });
+  </script>
+</body>
+</html>

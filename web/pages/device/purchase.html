@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>申购审批 - 科学岛管廊监控中心</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/tob-ui.css">
+</head>
+<body data-menu-key="device.purchase" data-page-section="设备管理" data-page-title="申购审批">
+  <div class="app-shell">
+    <aside id="app-sidebar" class="sidebar"></aside>
+    <header id="app-header" class="header"></header>
+
+    <main class="main">
+      <div class="screen-frame stack">
+        <section class="page-head">
+          <div>
+            <h1 class="page-title">申购审批</h1>
+            <p class="page-desc">统一管理设备资产、库存状态、申购流程与维保异常。</p>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-secondary" type="button"><i class="fa-solid fa-download"></i> 批量导入</button>
+            <button class="btn btn-secondary" type="button"><i class="fa-solid fa-upload"></i> 导出</button>
+            <button class="btn btn-primary" type="button" data-open-device="create"><i class="fa-solid fa-plus"></i> 新增设备</button>
+          </div>
+        </section>
+
+        <section class="metric-grid">
+          <article class="metric-card">
+            <div class="metric-label">设备总数</div>
+            <div class="metric-number">1,286</div>
+            <div class="metric-sub">较上月增加 <strong class="status-primary">36</strong> 台</div>
+          </article>
+          <article class="metric-card">
+            <div class="metric-label">在线设备</div>
+            <div class="metric-number">1,094</div>
+            <div class="metric-sub">在线率 <strong class="status-success">85.1%</strong></div>
+          </article>
+          <article class="metric-card">
+            <div class="metric-label">异常设备</div>
+            <div class="metric-number">28</div>
+            <div class="metric-sub">今日新增 <strong class="status-danger">5</strong> 条异常</div>
+          </article>
+          <article class="metric-card">
+            <div class="metric-label">待审批申购</div>
+            <div class="metric-number">16</div>
+            <div class="metric-sub">超时待办 <strong class="status-warning">3</strong> 单</div>
+          </article>
+        </section>
+
+        <section class="content-grid with-aside">
+          <div class="stack">
+            <article class="card">
+              <div class="filters">
+                <div class="filter-actions">
+                  <label class="form-field">
+                    <span class="form-label">设备名称</span>
+                    <input class="form-control" value="断路器">
+                  </label>
+                  <label class="form-field">
+                    <span class="form-label">设备分类</span>
+                    <select class="form-control"><option>全部分类</option><option selected>电气设备</option><option>仪器仪表</option></select>
+                  </label>
+                  <label class="form-field">
+                    <span class="form-label">设备状态</span>
+                    <select class="form-control"><option>全部状态</option><option>在线</option><option>异常</option><option>维修中</option></select>
+                  </label>
+                  <label class="form-field">
+                    <span class="form-label">所属区域</span>
+                    <select class="form-control"><option>全部区域</option><option>华东一区</option><option>华南二区</option></select>
+                  </label>
+                  <label class="form-field">
+                    <span class="form-label">入库时间</span>
+                    <input class="form-control" value="2026-07">
+                  </label>
+                  <button class="btn btn-secondary" type="button">重置</button>
+                  <button class="btn btn-primary" type="button">查询</button>
+                </div>
+              </div>
+
+              <div class="tabs" role="tablist">
+                <button class="tab active" type="button">全部</button>
+                <button class="tab" type="button">在线</button>
+                <button class="tab" type="button">维修中</button>
+                <button class="tab" type="button">待审批</button>
+                <button class="tab" type="button">异常</button>
+              </div>
+
+              <div class="table-wrap">
+                <table class="table" aria-label="设备台账列表">
+                  <thead>
+                    <tr>
+                      <th class="check-cell"><span class="checkbox"></span></th>
+                      <th>设备名称</th>
+                      <th>规格型号</th>
+                      <th>设备厂商</th>
+                      <th>所属区域</th>
+                      <th>库存量</th>
+                      <th>设备状态</th>
+                      <th>申购流程</th>
+                      <th>最近维保</th>
+                      <th>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody id="deviceTable"></tbody>
+                </table>
+              </div>
+              <div class="pagination">
+                <span>共120条，每页 10 条</span>
+                <span class="page-item">‹</span>
+                <span class="page-item active">1</span>
+                <span class="page-item">2</span>
+                <span class="page-item">3</span>
+                <span class="page-item">4</span>
+                <span>...</span>
+                <span class="page-item">12</span>
+                <span class="page-item">›</span>
+              </div>
+            </article>
+
+            <article class="card pad">
+              <div class="card-title-row">
+                <h2 class="card-title">月度设备异常趋势</h2>
+                <span class="status-muted">2026年07月</span>
+              </div>
+              <div class="chart">
+                <svg viewBox="0 0 820 200" role="img" aria-label="设备趋势折线图">
+                  <defs>
+                    <linearGradient id="blueFill" x1="0" x2="0" y1="0" y2="1">
+                      <stop offset="0%" stop-color="#5B83FF" stop-opacity="0.28"/>
+                      <stop offset="100%" stop-color="#5B83FF" stop-opacity="0"/>
+                    </linearGradient>
+                    <linearGradient id="purpleFill" x1="0" x2="0" y1="0" y2="1">
+                      <stop offset="0%" stop-color="#B18AF2" stop-opacity="0.24"/>
+                      <stop offset="100%" stop-color="#B18AF2" stop-opacity="0"/>
+                    </linearGradient>
+                  </defs>
+                  <g stroke="#EDF1F7" stroke-width="1">
+                    <path d="M30 30H790"/><path d="M30 70H790"/><path d="M30 110H790"/><path d="M30 150H790"/><path d="M30 190H790"/>
+                  </g>
+                  <path d="M30 162 L90 146 L150 154 L210 102 L270 100 L330 124 L390 76 L450 68 L510 70 L570 90 L630 118 L690 130 L750 116 L790 120 L790 190 L30 190Z" fill="url(#blueFill)"/>
+                  <path d="M30 162 L90 146 L150 154 L210 102 L270 100 L330 124 L390 76 L450 68 L510 70 L570 90 L630 118 L690 130 L750 116 L790 120" fill="none" stroke="#5B83FF" stroke-width="3"/>
+                  <path d="M30 180 L90 180 L150 176 L210 172 L270 146 L330 170 L390 168 L450 114 L510 112 L570 176 L630 160 L690 72 L750 152 L790 180" fill="none" stroke="#B18AF2" stroke-width="3"/>
+                  <circle cx="390" cy="76" r="5" fill="#fff" stroke="#5B83FF" stroke-width="3"/>
+                  <text x="390" y="64" text-anchor="middle" fill="#5B83FF" font-size="14" font-weight="600">58</text>
+                  <circle cx="690" cy="72" r="5" fill="#fff" stroke="#B18AF2" stroke-width="3"/>
+                  <text x="690" y="60" text-anchor="middle" fill="#9359E3" font-size="14" font-weight="600">11</text>
+                </svg>
+                <div class="chart-legend">
+                  <span><i class="legend-dot" style="background:#5B83FF"></i>设备总量</span>
+                  <span><i class="legend-dot" style="background:#B18AF2"></i>故障量</span>
+                </div>
+              </div>
+            </article>
+          </div>
+
+          <aside class="stack">
+            <article class="card pad">
+              <div class="card-title-row">
+                <h2 class="card-title">常用功能</h2>
+                <button class="btn btn-ghost" type="button">自定义</button>
+              </div>
+              <div class="quick-grid">
+                <button class="quick-item" type="button" data-open-device="create">
+                  <div class="quick-icon blue"><i class="fa-solid fa-plus"></i></div>
+                  <div class="quick-title">设备入库</div>
+                  <div class="quick-desc">录入资产信息</div>
+                </button>
+                <button class="quick-item" type="button" data-open-device="edit">
+                  <div class="quick-icon yellow"><i class="fa-solid fa-up-right-and-down-left-from-center"></i></div>
+                  <div class="quick-title">设备调拨</div>
+                  <div class="quick-desc">跨区域流转</div>
+                </button>
+                <button class="quick-item" type="button" data-open-device="detail">
+                  <div class="quick-icon green"><i class="fa-solid fa-chart-line"></i></div>
+                  <div class="quick-title">维保记录</div>
+                  <div class="quick-desc">查看处理明细</div>
+                </button>
+                <button class="quick-item" type="button">
+                  <div class="quick-icon purple"><i class="fa-regular fa-square-check"></i></div>
+                  <div class="quick-title">申购审批</div>
+                  <div class="quick-desc">处理待办流程</div>
+                </button>
+              </div>
+            </article>
+
+            <article class="card pad">
+              <div class="card-title-row">
+                <h2 class="card-title">待办工单</h2>
+                <button class="btn btn-ghost" type="button">更多 ›</button>
+              </div>
+              <div class="timeline" id="taskList"></div>
+            </article>
+          </aside>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="../../../app/config/menu.js?v=nav-hide-1"></script>
+  <script src="../../../app/data/mock-data.js"></script>
+  <script src="../../../app/components/sidebar.js?v=nav-home-1"></script>
+  <script src="../../../app/components/header.js?v=nav-home-1"></script>
+  <script src="../../../app/components/drawer.js"></script>
+  <script src="../../../app/components/requirement.js"></script>
+  <script>
+    const devices = window.APP_DATA.devices || [];
+    const stages = ["申购", "审核", "采购", "入库"];
+
+    function statusClass(type) {
+      return type === "success" ? "success" : type === "warning" ? "warning" : type === "danger" ? "danger" : "";
+    }
+
+    function renderStage(device) {
+      const currentIndex = stages.indexOf(device.currentStage);
+      return `
+        <div class="stage" style="--progress:${device.progress}%">
+          <div class="stage-line"></div>
+          <div class="stage-dots">
+            ${stages.map((stage, index) => `<span class="${index < currentIndex ? "done" : index === currentIndex ? "current" : ""}">${stage}</span>`).join("")}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderRows() {
+      document.getElementById("deviceTable").innerHTML = devices.map((device, index) => `
+        <tr data-id="${device.id}" class="${index === 0 ? "selected" : ""}">
+          <td class="check-cell"><span class="checkbox ${index === 0 ? "checked" : ""}">${index === 0 ? "✓" : ""}</span></td>
+          <td>${device.name}</td>
+          <td>${device.model}</td>
+          <td>${device.vendor}</td>
+          <td>${device.area}</td>
+          <td class="number">${device.stock}</td>
+          <td><span class="tag ${statusClass(device.statusType)}">${device.status}</span></td>
+          <td>${renderStage(device)}</td>
+          <td>${device.maintenance}</td>
+          <td>
+            <button class="table-action" type="button" data-open-device="detail" data-id="${device.id}">详情</button>
+            <button class="table-action" type="button" data-open-device="edit" data-id="${device.id}">编辑</button>
+            <button class="table-action status-danger" type="button" data-delete-device="${device.id}">删除</button>
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    function deviceById(id) {
+      return devices.find((device) => device.id === id) || devices[0];
+    }
+
+    function detailBody(device) {
+      return `
+        <section class="detail-section">
+          <h3 class="detail-title">基础信息</h3>
+          <div class="detail-grid">
+            <div class="info-item"><span class="info-label">设备名称</span><span class="info-value">${device.name}</span></div>
+            <div class="info-item"><span class="info-label">设备编号</span><span class="info-value">${device.model}</span></div>
+            <div class="info-item"><span class="info-label">设备状态</span><span class="info-value">${device.status}</span></div>
+            <div class="info-item"><span class="info-label">所属区域</span><span class="info-value">${device.area}</span></div>
+            <div class="info-item"><span class="info-label">设备厂商</span><span class="info-value">${device.vendor}</span></div>
+            <div class="info-item"><span class="info-label">责任人</span><span class="info-value">${device.owner}</span></div>
+          </div>
+        </section>
+        <section class="detail-section">
+          <h3 class="detail-title">申购流程</h3>
+          <div class="process">
+            <div class="process-item"><span class="process-dot"></span><div><div class="process-title">提交申购</div><div class="process-meta">刘海 · 2026-07-18 09:20</div></div></div>
+            <div class="process-item"><span class="process-dot"></span><div><div class="process-title">主管审核通过</div><div class="process-meta">王主管 · 2026-07-18 14:45</div></div></div>
+            <div class="process-item"><span class="process-dot"></span><div><div class="process-title">${device.currentStage}处理中</div><div class="process-meta">预计 2026-07-26 完成</div></div></div>
+            <div class="process-item"><span class="process-dot gray"></span><div><div class="process-title">待入库</div><div class="process-meta">流程完成后自动更新库存</div></div></div>
+          </div>
+        </section>
+        <section class="detail-section">
+          <h3 class="detail-title">维保备注</h3>
+          <textarea class="form-control textarea" readonly>${device.note}</textarea>
+        </section>
+      `;
+    }
+
+    function formBody(device, mode) {
+      return `
+        <section class="detail-section">
+          <h3 class="detail-title">${mode === "create" ? "新增设备信息" : "编辑设备信息"}</h3>
+          <label class="form-field form-item"><span class="form-label form-required">设备名称</span><input class="form-control" value="${mode === "create" ? "" : device.name}" placeholder="请输入设备名称"></label>
+          <label class="form-field form-item"><span class="form-label form-required">规格型号</span><input class="form-control" value="${mode === "create" ? "" : device.model}" placeholder="请输入规格型号"></label>
+          <label class="form-field form-item"><span class="form-label form-required">设备分类</span><select class="form-control"><option>电气设备</option><option>仪器仪表</option><option>应急设备</option></select></label>
+          <label class="form-field form-item"><span class="form-label">所属区域</span><select class="form-control"><option>${device.area || "华东一区"}</option><option>华南二区</option><option>中心库房</option></select></label>
+          <label class="form-field form-item"><span class="form-label">设备厂商</span><input class="form-control" value="${mode === "create" ? "" : device.vendor}" placeholder="请输入设备厂商"></label>
+          <label class="form-field form-item"><span class="form-label">维保说明</span><textarea class="form-control textarea" maxlength="200" placeholder="请输入维保说明">${mode === "create" ? "" : device.note}</textarea><span class="field-count">0/200</span></label>
+          <label class="form-field form-item"><span class="form-label form-required">责任人</span><input class="form-control error" value="${mode === "create" ? "" : device.owner}" placeholder="请输入责任人"><span class="form-error">请选择设备责任人</span></label>
+        </section>
+      `;
+    }
+
+    function openDevice(mode, id) {
+      const device = deviceById(id);
+      const createMode = mode === "create";
+      window.openAppDrawer({
+        title: createMode ? "新增设备" : mode === "edit" ? "编辑设备" : "设备详情",
+        subtitle: createMode ? "设备台账 · 设备入库" : `设备台账 · ${device.name}`,
+        body: mode === "detail" ? detailBody(device) : formBody(device, mode),
+        footer: `<button class="btn btn-secondary" type="button" data-drawer-close>${mode === "detail" ? "关闭" : "取消"}</button><button class="btn btn-primary" type="button">${mode === "detail" ? "发起维保" : createMode ? "提交" : "保存"}</button>`,
+      });
+    }
+
+    renderRows();
+    document.getElementById("taskList").innerHTML = window.APP_DATA.tasks.map((task) => `
+      <div class="task">
+        <span class="dot ${task.level}"></span>
+        <div><div class="task-title">${task.title}</div><div class="task-meta">${task.meta}</div></div>
+        <button class="btn btn-ghost" type="button" data-open-device="detail">详情</button>
+      </div>
+    `).join("");
+
+    document.addEventListener("click", (event) => {
+      const openButton = event.target.closest("[data-open-device]");
+      if (openButton) {
+        event.stopPropagation();
+        const row = openButton.closest("tr");
+        openDevice(openButton.dataset.openDevice, openButton.dataset.id || row?.dataset.id);
+        return;
+      }
+
+      const deleteButton = event.target.closest("[data-delete-device]");
+      if (deleteButton) {
+        event.stopPropagation();
+        const device = deviceById(deleteButton.dataset.deleteDevice);
+        window.openAppDrawer({
+          title: "删除确认",
+          subtitle: "设备台账 · 危险操作",
+          body: `<p>确认删除 <strong>${device.name}</strong> 吗？该操作仅为原型交互演示，不会修改模拟数据。</p>`,
+          footer: `<button class="btn btn-secondary" type="button" data-drawer-close>取消</button><button class="btn btn-primary" type="button" data-drawer-close>确认删除</button>`,
+        });
+        return;
+      }
+
+      const row = event.target.closest("#deviceTable tr");
+      if (row) {
+        document.querySelectorAll("#deviceTable tr").forEach((item) => item.classList.remove("selected"));
+        row.classList.add("selected");
+        openDevice("detail", row.dataset.id);
+      }
+    });
+
+    document.querySelectorAll(".tab").forEach((tab) => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll(".tab").forEach((item) => item.classList.remove("active"));
+        tab.classList.add("active");
+      });
+    });
+  </script>
+</body>
+</html>
+
+
+
+
+
+

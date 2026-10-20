@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>设备诊断分析 - 科学岛管廊监控中心</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/tob-ui.css">
+  <link rel="stylesheet" href="../../assets/css/emergency.css">
+  <link rel="stylesheet" href="../../assets/css/big-data.css">
+</head>
+<body class="emergency-page" data-menu-key="big-data.diagnosis" data-page-section="大数据分析" data-page-title="设备诊断分析" data-big-data-page="diagnosis">
+  <div class="app-shell"><aside id="app-sidebar" class="sidebar"></aside><header id="app-header" class="header"></header>
+    <main class="main"><div class="screen-frame emergency-stack">
+      <section class="page-head emergency-page-head">
+        <div>
+          <h1 class="page-title">设备诊断分析</h1>
+          <p class="page-desc">环境监测、设备健康、管廊状态与巡检/保养/工单运行分析（只读）。</p>
+        </div>
+      </section>
+
+      <section class="emergency-panel analysis-filter-panel">
+        <div class="analysis-filter-row" id="bdDiagFilters">
+          <label class="form-field"><span class="form-label">所属项目</span>
+            <select class="form-control" id="bdProject"><option value="">全部项目</option></select>
+          </label>
+          <label class="form-field"><span class="form-label">所属管廊</span>
+            <select class="form-control" id="bdCorridor" disabled><option value="">请先选择所属项目</option></select>
+          </label>
+          <label class="form-field"><span class="form-label">所属舱室</span>
+            <select class="form-control" id="bdRoom" disabled><option value="">请先选择所属管廊</option></select>
+          </label>
+          <label class="form-field"><span class="form-label">所属区段</span>
+            <select class="form-control" id="bdSection" disabled><option value="">请先选择所属舱室</option></select>
+          </label>
+          <label class="form-field"><span class="form-label">所属管线</span>
+            <select class="form-control" id="bdPipeline" disabled><option value="">请先选择所属区段</option></select>
+          </label>
+          <label class="form-field"><span class="form-label">开始时间</span>
+            <input class="form-control" id="bdStart" type="date">
+          </label>
+          <label class="form-field"><span class="form-label">结束时间</span>
+            <input class="form-control" id="bdEnd" type="date">
+          </label>
+          <div class="filter-actions">
+            <button class="btn btn-primary" type="button" data-bd-action="query">查询</button>
+            <button class="btn btn-secondary" type="button" data-bd-action="reset">重置</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="analysis-chart-grid bd-diagnosis-grid">
+        <!-- 1 环境监测总览 -->
+        <article class="analysis-chart-panel bd-env-panel">
+          <div class="emergency-panel-head"><h2 class="emergency-panel-title">环境监测总览</h2></div>
+          <div class="bd-table-wrap bd-env-table-wrap">
+            <table class="table bd-table bd-env-table">
+              <thead>
+                <tr>
+                  <th>防火分区</th>
+                  <th>温度℃</th>
+                  <th>湿度%</th>
+                  <th>氧气%</th>
+                  <th>甲烷%LEL</th>
+                  <th>硫化氢ppm</th>
+                  <th>水位m</th>
+                </tr>
+              </thead>
+              <tbody id="bdEnvBody"></tbody>
+            </table>
+          </div>
+        </article>
+
+        <!-- 2 设备健康状态 -->
+        <article class="analysis-chart-panel">
+          <div class="emergency-panel-head">
+            <h2 class="emergency-panel-title">设备健康状态</h2>
+            <div class="bd-range-tabs" id="deviceHealthModeTabs">
+              <button type="button" class="bd-range-tab" data-health-mode="time">按时间</button>
+              <button type="button" class="bd-range-tab is-active" data-health-mode="system">按系统</button>
+            </div>
+          </div>
+          <div class="analysis-chart-body single">
+            <div class="bd-scroll-chart" id="scrollDeviceHealth">
+              <div class="analysis-chart-canvas-wrap" id="wrapDeviceHealth"><canvas id="chartDeviceHealth"></canvas></div>
+            </div>
+          </div>
+        </article>
+
+        <!-- 3 管廊状态统计 -->
+        <article class="analysis-chart-panel">
+          <div class="emergency-panel-head">
+            <h2 class="emergency-panel-title">管廊状态统计</h2>
+          </div>
+          <div class="analysis-chart-body single">
+            <div class="analysis-chart-canvas-wrap" id="wrapCorridorStatus"><canvas id="chartCorridorStatus"></canvas></div>
+          </div>
+        </article>
+
+        <!-- 4 巡检统计 -->
+        <article class="analysis-chart-panel">
+          <div class="emergency-panel-head">
+            <h2 class="emergency-panel-title">巡检统计</h2>
+          </div>
+          <div class="analysis-chart-body single">
+            <div class="bd-scroll-chart">
+              <div class="analysis-chart-canvas-wrap" id="wrapInspection"><canvas id="chartInspection"></canvas></div>
+            </div>
+          </div>
+        </article>
+
+        <!-- 5 保养统计 -->
+        <article class="analysis-chart-panel">
+          <div class="emergency-panel-head">
+            <h2 class="emergency-panel-title">保养统计</h2>
+          </div>
+          <div class="analysis-chart-body single">
+            <div class="bd-scroll-chart">
+              <div class="analysis-chart-canvas-wrap" id="wrapMaintenance"><canvas id="chartMaintenance"></canvas></div>
+            </div>
+          </div>
+        </article>
+
+        <!-- 6 报修工单分析 -->
+        <article class="analysis-chart-panel">
+          <div class="emergency-panel-head">
+            <h2 class="emergency-panel-title">报修工单分析</h2>
+          </div>
+          <div class="analysis-chart-body single">
+            <div class="bd-scroll-chart">
+              <div class="analysis-chart-canvas-wrap" id="wrapRepair"><canvas id="chartRepair"></canvas></div>
+            </div>
+          </div>
+        </article>
+
+        <!-- 7 设备异常工单分析 -->
+        <article class="analysis-chart-panel">
+          <div class="emergency-panel-head">
+            <h2 class="emergency-panel-title">设备异常工单分析</h2>
+          </div>
+          <div class="analysis-chart-body single">
+            <div class="bd-scroll-chart">
+              <div class="analysis-chart-canvas-wrap" id="wrapAbnormal"><canvas id="chartAbnormal"></canvas></div>
+            </div>
+          </div>
+        </article>
+      </section>
+    </div></main>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="../../../app/config/menu.js?v=nav-hide-1"></script>
+  <script src="../../../app/data/environment-data.js"></script>
+  <script src="../../../app/data/power-monitor-data.js"></script>
+  <script src="../../../app/data/device-monitor-data.js"></script>
+  <script src="../../../app/data/inspection-data.js"></script>
+  <script src="../../../app/data/maintenance-data.js"></script>
+  <script src="../../../app/data/work-order-data.js"></script>
+  <script src="../../../app/data/big-data-diagnosis-data.js"></script>
+  <script src="../../../app/components/sidebar.js?v=nav-home-1"></script>
+  <script src="../../../app/components/header.js?v=nav-home-1"></script>
+  <script src="../../../app/components/drawer.js"></script>
+  <script src="../../../app/components/emergency-common.js"></script>
+  <script src="../../../app/components/big-data-filters.js"></script>
+  <script src="../../../app/components/big-data-diagnosis.js"></script>
+  <script src="../../../app/components/requirement.js"></script>
+</body>
+</html>

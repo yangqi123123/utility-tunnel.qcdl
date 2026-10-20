@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>科学岛管廊监控中心</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="viewport">
+    <main class="screen" id="screenShell" data-page="weak-electric">
+      <header class="hud-header">
+        <div class="project-mark">
+          <div class="project-name">科学岛管廊监控中心</div>
+          <div class="project-meta"><span id="clockTime">14:29:28</span><span><i class="fa-solid fa-cloud" aria-hidden="true"></i>25~32℃</span><span id="clockDate">星期四</span><span id="currentDate">2026.08.27</span></div>
+        </div>
+        <div class="system-title">科学岛管廊监控中心</div>
+        <div class="header-tools">
+          <div class="company"><img class="company-logo" src="assets/cscec-logo.png" alt="中国建筑标志"><span>中国建筑第四工程局有限公司<small>CHINA CONSTRUCTION FOURTH ENGINEERING DIVISION CORP. LTD</small></span></div>
+          
+          <button class="header-icon" id="profileButton" type="button" aria-label="用户中心" aria-expanded="false"><i class="fa-regular fa-user"></i></button>
+          <button class="header-icon" type="button" aria-label="消息提醒"><i class="fa-regular fa-bell"></i></button>
+          <button class="header-icon" id="logoutButton" type="button" aria-label="退出系统"><i class="fa-solid fa-power-off"></i></button>
+          <div class="profile-popover" id="profilePopover" role="dialog" aria-label="基本信息" hidden><h2>基本信息</h2><dl><div><dt>用户名:</dt><dd>test</dd></div><div><dt>姓名:</dt><dd>管理员</dd></div><div><dt>手机号:</dt><dd>18705183442</dd></div></dl></div>
+        </div>
+      </header>
+      <nav class="module-nav" aria-label="系统模块导航">
+        <button type="button">总览</button>
+        <button type="button">机电系统</button>
+        <button class="active" type="button" aria-current="page">弱电系统</button>
+        <button type="button">能源管理</button>
+        <button type="button">运营管理</button>
+      </nav>
+      <section class="workspace mep-active weak-active weak-overview">
+        <aside class="mep-left" aria-label="机电系统左侧看板">
+          <section class="info-panel mep-panel floor-overview-panel">
+            <h2 class="panel-title">单层概览<span></span></h2>
+            <div class="floor-overview-body">
+              <form class="floor-device-search"><label>设备名称：<input type="search" placeholder="请输入设备名称" aria-label="设备名称"></label><button type="submit">查询</button></form>
+              <div class="floor-overview-table"><div class="floor-overview-head"><span>序号</span><span>设备名称</span><span>状态</span><span>操作</span></div><div class="floor-overview-rows"><div><span>1</span><span>1号楼1F大厅温控面板</span><span>在线</span><button type="button">定位</button></div><div><span>2</span><span>1号楼2F公共区烟感</span><span>在线</span><button type="button">定位</button></div><div><span>3</span><span>1号楼3F办公区空气质量传感器</span><span>在线</span><button type="button">定位</button></div><div><span>4</span><span>1号楼4F走道70度防火阀</span><span>在线</span><button type="button">定位</button></div><div><span>5</span><span>1号楼5F设备间电表</span><span>在线</span><button type="button">定位</button></div><div><span>6</span><span>2号楼1F大厅温控面板</span><span>在线</span><button type="button">定位</button></div><div><span>7</span><span>2号楼3F公共区温感</span><span>在线</span><button type="button">定位</button></div><div><span>8</span><span>2号楼5F设备间水流指示器</span><span>在线</span><button type="button">定位</button></div><div><span>9</span><span>3号楼1F大厅照明电表</span><span>在线</span><button type="button">定位</button></div><div><span>10</span><span>3号楼3F办公区空气质量传感器</span><span>在线</span><button type="button">定位</button></div><div><span>11</span><span>3号楼5F走道声光报警器</span><span>在线</span><button type="button">定位</button></div><div><span>12</span><span>4号楼2F公共区烟感</span><span>在线</span><button type="button">定位</button></div><div><span>13</span><span>4号楼4F设备间动力电表</span><span>在线</span><button type="button">定位</button></div><div><span>14</span><span>B1停车场一氧化碳传感器</span><span>在线</span><button type="button">定位</button></div><div><span>15</span><span>B2停车场排风机控制箱</span><span>在线</span><button type="button">定位</button></div></div></div>
+              <div class="floor-overview-pagination"><button type="button">‹</button><button class="active" type="button">1</button><span>/</span><strong>577</strong><button type="button">›</button></div>
+            </div>
+          </section>
+          <section class="info-panel mep-panel mep-intro-panel">
+            <h2 class="panel-title">系统简介<span></span></h2>
+            <div class="mep-system-intro" id="mepSystemIntro"></div>
+          </section>
+          <section class="info-panel mep-panel mep-device-list-panel weak-shaft-panel">
+            <h2 class="panel-title">设备列表<span></span></h2>
+            <div class="mep-device-table"><div class="mep-device-table-head"><span>序号</span><span>设备名称</span><span>状态</span><span>操作</span></div><div id="mepDeviceRows" aria-live="polite"></div></div>
+          </section>
+          <section class="info-panel mep-panel weak-room-panel weak-equipment-room-panel">
+            <h2 class="panel-title">弱电机房列表<span></span></h2>
+            <div id="weakRoomRows" aria-live="polite"></div>
+          </section>
+          <section class="info-panel mep-panel meeting-panel">
+            <h2 class="panel-title">会议室使用<span></span></h2>
+            <div class="meeting-body meeting-status-body">
+              <div class="meeting-status-summary"><article><span>会议室总数</span><b>32</b></article><article class="free"><span>空闲</span><b>18</b></article><article class="busy"><span>使用中</span><b>10</b></article><article class="fault"><span>故障/停用</span><b>4</b></article></div>
+              <div class="meeting-status-overview"><div class="meeting-status-ring"><strong>32<small>会议室总数</small></strong></div><div class="meeting-status-legend"><span class="free"><i></i>空闲<b>56%</b></span><span class="busy"><i></i>使用中<b>31%</b></span><span class="fault"><i></i>故障/停用<b>13%</b></span></div></div>
+              <div class="meeting-room-list"><div class="meeting-room-row table-head"><span>会议室</span><span>位置</span><span>状态</span><span>预约时间</span></div><div class="meeting-room-row"><span>3120小会议室</span><span>1栋3F</span><b class="free">空闲</b><time>-</time></div><div class="meeting-room-row"><span>3324小会议室</span><span>1栋3F</span><b class="busy">使用中</b><time>09:00-10:30</time></div><div class="meeting-room-row"><span>3201大会议室</span><span>1栋3F</span><b class="fault">故障</b><time>-</time></div></div>
+            </div>
+          </section>
+          <section class="info-panel mep-panel meeting-panel access-card-panel">
+            <h2 class="panel-title">一卡通系统<span></span></h2>
+            <div class="meeting-body access-card-body">
+              <div class="access-card-summary"><div class="access-card-total"><b>2637</b><span>发卡总数</span><i class="fa-solid fa-id-card" aria-hidden="true"></i></div><div class="access-card-stat"><span>员工卡</span><b>2633</b><small>动态/静态<br>2123/510</small></div><div class="access-card-stat"><span>物业运维卡</span><b>4</b><small>动态/静态<br>3/1</small></div><div class="access-card-stat"><span>访客卡</span><b>0</b><small>有效/失效<br>0/0</small></div></div>
+              <div class="access-frequency-head"><span>刷卡频次</span><div class="meeting-periods" role="tablist"><button class="active" type="button">今日</button><button type="button">本周</button><button type="button">本月</button><button type="button">本年</button></div></div>
+              <div class="access-rank-list"><div class="rank-row"><div class="rank-label"><span><i>1</i>南门南亭</span><b>510</b></div><div class="rank-track"><span style="--rank:100%"></span></div></div><div class="rank-row"><div class="rank-label"><span><i>2</i>1F-高区电梯间02通道刷卡进</span><b>97</b></div><div class="rank-track"><span style="--rank:28%"></span></div></div><div class="rank-row"><div class="rank-label"><span><i>3</i>1层消防控制室-消防门2号</span><b>42</b></div><div class="rank-track"><span style="--rank:12%"></span></div></div><div class="rank-row"><div class="rank-label"><span><i>4</i>1F-高区电梯间1通道刷卡进</span><b>24</b></div><div class="rank-track"><span style="--rank:9%"></span></div></div></div>
+            </div>
+          </section>
+          <section class="info-panel mep-panel parking-panel parking-overview-panel">
+            <h2 class="panel-title">停车概览<span></span></h2>
+            <div class="parking-body">
+              <div class="parking-record-row"><button class="parking-record-trigger" type="button">通行记录</button></div>
+              <div class="parking-metric-grid">
+                <div class="parking-metric"><i class="fa-solid fa-car-side" aria-hidden="true"></i><span>主入口入场<b>120</b></span></div>
+                <div class="parking-metric"><i class="fa-solid fa-car-rear" aria-hidden="true"></i><span>主入口离场<b>135</b></span></div>
+                <div class="parking-metric"><i class="fa-solid fa-car-side" aria-hidden="true"></i><span>消防通道入场<b>95</b></span></div>
+                <div class="parking-metric"><i class="fa-solid fa-car-rear" aria-hidden="true"></i><span>消防通道离场<b>120</b></span></div>
+                <div class="parking-metric"><i class="fa-solid fa-percent" aria-hidden="true"></i><span>车位占用率<b>2%</b></span></div>
+              </div>
+              <h3 class="parking-section-title">剩余车位</h3>
+              <div class="parking-bars">
+                <div class="parking-bar"><span>B1</span><div class="parking-bar-track"><span style="width:28%"></span></div><b>54</b></div>
+                <div class="parking-bar"><span>B2</span><div class="parking-bar-track"><span style="width:76%"></span></div><b>145</b></div>
+              </div>
+            </div>
+          </section>
+          <section class="info-panel mep-panel parking-panel parking-agv-panel">
+            <h2 class="panel-title">车位统计<span></span></h2>
+            <div class="parking-body">
+              <div class="parking-resource-grid">
+                <div class="parking-resource-card"><i class="fa-solid fa-car-side" aria-hidden="true"></i><span>车位总数<b>22</b></span></div>
+                <div class="parking-resource-card accent-green"><i class="fa-solid fa-square-parking" aria-hidden="true"></i><span>剩余车位<b>22</b></span></div>
+              </div>
+            </div>
+          </section>
+          <section class="info-panel mep-panel parking-panel parking-charge-panel">
+            <h2 class="panel-title">充电桩<span></span></h2>
+            <div class="parking-body">
+              <div class="parking-resource-grid">
+                <div class="parking-resource-card"><i class="fa-solid fa-charging-station" aria-hidden="true"></i><span>充电桩总数<b>43</b></span></div>
+                <div class="parking-charge-status charging"><i class="fa-solid fa-plug-circle-bolt" aria-hidden="true"></i><span>充电中<b>2</b></span></div>
+                <div class="parking-charge-status idle"><i class="fa-solid fa-battery-three-quarters" aria-hidden="true"></i><span>空闲<b>41</b></span></div>
+                <div class="parking-charge-status connected"><i class="fa-solid fa-plug-circle-check" aria-hidden="true"></i><span>已插枪<b>0</b></span></div>
+              </div>
+            </div>
+          </section>
+          <section class="info-panel mep-panel security-panel security-gate-panel">
+            <h2 class="panel-title">道闸系统<span></span></h2>
+            <div class="security-body">
+              <div class="security-actions"><button class="security-system-diagram-trigger" type="button">查看系统图</button></div>
+              <div class="security-passage-grid"><div><span>道闸通行</span><b>199</b><small>人次</small></div><div><span>访客预约通行</span><b>22</b><small>人次</small></div></div>
+              <div class="security-stat-grid"><div class="security-stat"><span>设备总数</span><b>6</b></div><div class="security-stat alert"><span>设备故障率</span><b>0%</b></div></div>
+              <div class="security-rings security-rings-compact"><div><div class="security-ring"><strong>6</strong></div><span class="security-ring-label">在线 <b>100%</b></span></div><div><div class="security-ring offline"><strong>0</strong></div><span class="security-ring-label">离线 <b>0%</b></span></div></div>
+              <div class="parking-section-title security-alert-title">系统告警/联动记录</div>
+              <div class="security-alert-list"><div class="security-record security-alert-record"><div class="security-record-meta"><strong>瞬时</strong><span>● 瞬时</span></div><div class="security-record-main"><span>区域入侵</span><time>2019-01-02 15:17:24</time></div></div><div class="security-record security-alert-record"><div class="security-record-meta"><strong>瞬时</strong><span>● 瞬时</span></div><div class="security-record-main"><span>视频丢失</span><time>2018-08-16 10:25:59</time></div></div></div>
+            </div>
+          </section>
+          <section class="info-panel mep-panel security-panel security-access-panel">
+            <h2 class="panel-title">门禁系统<span></span></h2>
+            <div class="security-body">
+              <div class="security-actions"><button class="passage-record-trigger" type="button">查看通行记录</button><button class="security-system-diagram-trigger" type="button">查看系统图</button></div>
+              <div class="security-stat-grid"><div class="security-stat"><span>设备总数</span><b>198</b></div><div class="security-stat alert"><span>设备故障率</span><b>0%</b></div></div>
+              <div class="security-rings security-rings-compact"><div><div class="security-ring"><strong>198</strong></div><span class="security-ring-label">在线 <b>100%</b></span></div><div><div class="security-ring offline"><strong>0</strong></div><span class="security-ring-label">离线 <b>0%</b></span></div></div>
+              <div class="parking-section-title security-alert-title">系统告警/联动记录</div>
+              <div class="security-alert-list"><div class="security-record security-alert-record"><div class="security-record-meta"><strong>瞬时</strong><span>● 瞬时</span></div><div class="security-record-main"><span>A栋1F（超时未关闭消失）门点</span><time>2025-01-09 15:42:50</time></div></div></div>
+            </div>
+          </section>
+          <section class="info-panel mep-panel network-panel network-room-panel">
+            <h2 class="panel-title">数据中心机房<span></span></h2>
+            <div class="network-body">
+              <div class="network-room-head"><span>1F数据中心机房</span><div><button class="network-room-detail-trigger" type="button">查看</button></div></div>
+              <div class="network-tabs" role="tablist" aria-label="数据中心机房监测分类"><button class="active" type="button" data-network-view="environment">环境监测</button><button type="button" data-network-view="devices">设备概览</button><button type="button" data-network-view="ups">UPS监测</button></div>
+              <div class="network-main-view active" data-network-main-view="environment">
+                <div class="network-metrics"><div class="network-metric"><b>20.45</b>温度（℃）</div><div class="network-metric"><b>63.22</b>湿度（%）</div><div class="network-metric"><b>正常</b>漏水</div></div>
+                <div class="network-device-table"><div class="network-device-row table-head"><span>设备名称</span><span>设备状态</span><a>操作</a></div><div class="network-device-row"><span>长-冷通道后门温湿度</span><span>在线</span><button class="network-device-detail-trigger" type="button" data-device="长-冷通道后门温湿度" data-code="1F-DC-TH-01" data-position="1F数据中心机房冷通道后门">查看</button></div><div class="network-device-row"><span>短-冷通道前门温湿度</span><span>在线</span><button class="network-device-detail-trigger" type="button" data-device="短-冷通道前门温湿度" data-code="1F-DC-TH-02" data-position="1F数据中心机房冷通道前门">查看</button></div></div>
+              </div>
+              <div class="network-main-view" data-network-main-view="devices">
+                <div class="network-metrics network-metrics-four"><div class="network-metric"><b>4</b>设备数量</div><div class="network-metric"><b>4</b>在线数量</div><div class="network-metric"><b>0</b>离线数量</div><div class="network-metric alert"><b>0</b>故障数量</div></div>
+                <div class="network-device-table"><div class="network-device-row table-head"><span>设备名称</span><span>设备状态</span><a>操作</a></div><div class="network-device-row"><span>长-冷通道后门温湿度</span><span>在线</span><button class="network-device-detail-trigger" type="button" data-device="长-冷通道后门温湿度" data-code="1F-DC-TH-01" data-position="1F数据中心机房冷通道后门">查看</button></div><div class="network-device-row"><span>短-冷通道前门温湿度</span><span>在线</span><button class="network-device-detail-trigger" type="button" data-device="短-冷通道前门温湿度" data-code="1F-DC-TH-02" data-position="1F数据中心机房冷通道前门">查看</button></div></div>
+              </div>
+              <div class="network-main-view" data-network-main-view="ups">
+                <div class="network-metrics"><div class="network-metric"><b>1.03</b>A相(KVA)</div><div class="network-metric"><b>1.07</b>B相(KVA)</div><div class="network-metric"><b>1.01</b>C相(KVA)</div></div>
+                <div class="network-device-table"><div class="network-device-row table-head"><span>设备名称</span><span>设备状态</span><a>操作</a></div><div class="network-device-row"><span>长一体化配电UPS</span><span>在线</span><button class="network-device-detail-trigger" type="button" data-device="长一体化配电UPS" data-code="1F-DC-UPS-01" data-position="1F数据中心机房UPS区">查看</button></div></div>
+              </div>
+            </div>
+          </section>
+          <section class="info-panel mep-panel network-panel network-room-panel">
+            <h2 class="panel-title">消控室<span></span></h2>
+            <div class="network-body">
+              <div class="network-room-head"><span>1F安防控制室</span><div><button class="network-simple-room-trigger" type="button" data-room="security">查看</button></div></div>
+              <div class="network-tabs network-tabs-single"><button class="active" type="button">设备概览</button></div>
+              <div class="network-metrics network-metrics-four"><div class="network-metric"><b>16</b>设备数量</div><div class="network-metric"><b>16</b>在线数量</div><div class="network-metric"><b>0</b>离线数量</div><div class="network-metric alert"><b>0</b>故障数量</div></div>
+              <div class="network-device-table"><div class="network-device-row table-head"><span>设备名称</span><span>设备状态</span><a>操作</a></div><div class="network-device-row"><span>监听音响（主）</span><span>在线</span><button class="network-device-detail-trigger" type="button" data-device="监听音响（主）" data-code="1F-XK-YS-01" data-position="1F安防控制室">查看</button></div><div class="network-device-row"><span>IP模块音频接口</span><span>在线</span><button class="network-device-detail-trigger" type="button" data-device="IP模块音频接口" data-code="1F-XK-IP-01" data-position="1F安防控制室">查看</button></div></div>
+            </div>
+          </section>
+          <section class="info-panel mep-panel network-panel network-room-panel">
+            <h2 class="panel-title">弱电井<span></span></h2>
+            <div class="network-body">
+              <div class="network-room-head"><span>1F弱电间</span><div><button class="network-simple-room-trigger" type="button" data-room="shaft">查看</button></div></div>
+              <div class="network-metrics network-metrics-four"><div class="network-metric"><b>6</b>设备数量</div><div class="network-metric"><b>6</b>在线数量</div><div class="network-metric"><b>0</b>离线数量</div><div class="network-metric alert"><b>0</b>故障数量</div></div>
+              <div class="network-device-table"><div class="network-device-row table-head"><span>设备名称</span><span>设备状态</span><a>操作</a></div><div class="network-device-row"><span>1F弱电间温控面板</span><span>在线</span><button class="network-device-detail-trigger" type="button" data-device="1F弱电间温控面板" data-code="1F-WK-TH-01" data-position="1F弱电间">查看</button></div><div class="network-device-row"><span>1口POE交换机-1</span><span>在线</span><button class="network-device-detail-trigger" type="button" data-device="1口POE交换机-1" data-code="1F-WK-POE-01" data-position="1F弱电间">查看</button></div></div>
+            </div>
+          </section>
+        </aside>
+<section class="building-scene image-mode" aria-label="科学岛管廊监控中心建筑效果图">
+          <img class="building-reference" src="assets/public-building-centered.png" alt="科学岛管廊监控中心建筑效果图">
+          <nav class="operation-dock" id="operationDock" aria-label="运营管理子模块"><button class="active" type="button" data-operation="asset" aria-pressed="true">资产管理</button><button type="button" data-operation="management" aria-pressed="false">运营管理</button></nav>
+          <nav class="system-subnav" id="systemSubnav" aria-label="当前系统子系统"></nav>
+          <nav class="system-dock" id="systemDock" aria-label="机电主系统">
+            <button class="active" type="button" data-system="overview">系统总览</button><button type="button" data-system="hvac">暖通空调</button><button type="button" data-system="electric">电气系统</button><button type="button" data-system="water">给排水系统</button><button type="button" data-system="fire">消防系统</button><button type="button" data-system="elevator">电梯系统</button><button type="button" data-system="gas">燃气系统</button><button type="button" data-system="solar">光伏系统</button><button type="button" data-system="ventilation">自然通风</button>
+          </nav>
+          <nav class="weak-dock" id="weakDock" aria-label="弱电子系统"><button class="active" type="button" data-system="weak-overview">系统总览</button><button type="button" data-system="meeting">会议办公</button><button type="button" data-system="parking">智慧停车</button><button type="button" data-system="security">综合安防</button><button type="button" data-system="network">信息网络</button></nav>
+          <div class="floor-control"><button class="floor-button" type="button" aria-label="打开楼层选择" aria-expanded="false"><i class="fa-solid fa-building" aria-hidden="true"></i></button><div class="floor-menu" role="listbox" aria-label="楼层列表"><button type="button" data-floor="37F">37F</button><button type="button" data-floor="36F">36F</button><button type="button" data-floor="35F">35F</button><button type="button" data-floor="34F">34F</button><button type="button" data-floor="33F">33F</button><button type="button" data-floor="32F">32F</button><button type="button" data-floor="31F">31F</button><button type="button" data-floor="30F">30F</button><button type="button" data-floor="29F">29F</button><button type="button" data-floor="28F">28F</button><button type="button" data-floor="27F">27F</button><button type="button" data-floor="26F">26F</button><button type="button" data-floor="25F">25F</button><button type="button" data-floor="24F">24F</button><button type="button" data-floor="23F">23F</button><button type="button" data-floor="22F">22F</button><button type="button" data-floor="21F">21F</button><button type="button" data-floor="20F">20F</button><button type="button" data-floor="19F">19F</button><button type="button" data-floor="18F">18F</button><button type="button" data-floor="17F">17F</button><button type="button" data-floor="16F">16F</button><button class="active" type="button" data-floor="15F">15F</button><button type="button" data-floor="14F">14F</button><button type="button" data-floor="13F">13F</button><button type="button" data-floor="12F">12F</button><button type="button" data-floor="11F">11F</button><button type="button" data-floor="10F">10F</button><button type="button" data-floor="9F">9F</button><button type="button" data-floor="8F">8F</button><button type="button" data-floor="7F">7F</button><button type="button" data-floor="6F">6F</button><button type="button" data-floor="5F">5F</button><button type="button" data-floor="4F">4F</button><button type="button" data-floor="3F">3F</button><button type="button" data-floor="2F">2F</button><button type="button" data-floor="1F">1F</button><button type="button" data-floor="B1">B1</button></div></div>
+          <div class="floor-plan"><div class="floor-plan-stage"><img src="assets/floor-plan-15f.png" alt="15F楼层平面图"><button class="device-point" data-category="hvac" type="button" style="left:26%;top:27%" data-device="西侧温控面板" data-code="30F-WK-32-X07"><i class="fa-solid fa-temperature-half"></i><em>西侧温控面板</em></button><button class="device-point" data-category="hvac" type="button" style="left:49%;top:24%" data-device="北侧温控面板" data-code="30F-WK-18-X02"><i class="fa-solid fa-temperature-half"></i><em>北侧温控面板</em></button><button class="device-point" data-category="hvac" type="button" style="left:73%;top:27%" data-device="东侧温控面板" data-code="30F-WK-08-X03"><i class="fa-solid fa-temperature-half"></i><em>东侧温控面板</em></button><button class="device-point" data-category="smart" type="button" style="left:34%;top:51%" data-device="走廊空气传感器" data-code="30F-CG-05-X01"><i class="fa-solid fa-wind"></i><em>走廊空气传感器</em></button><button class="device-point" data-category="hvac" type="button" style="left:50%;top:48%" data-device="电梯厅温控面板" data-code="30F-WK-01-X09"><i class="fa-solid fa-temperature-half"></i><em>电梯厅温控面板</em></button><button class="device-point" data-category="smart" type="button" style="left:66%;top:52%" data-device="设备间控制器" data-code="30F-KZ-12-X04"><i class="fa-solid fa-microchip"></i><em>设备间控制器</em></button><button class="device-point" data-category="hvac" type="button" style="left:28%;top:75%" data-device="南侧温控面板" data-code="30F-WK-26-X05"><i class="fa-solid fa-temperature-half"></i><em>南侧温控面板</em></button><button class="device-point" data-category="smart" type="button" style="left:72%;top:75%" data-device="办公室温湿度传感器" data-code="30F-CG-21-X06"><i class="fa-solid fa-droplet"></i><em>办公室温湿度传感器</em></button></div><aside class="floor-legend" aria-label="设备图例"><div><i>●</i>室内环境传感器</div><div><i>▣</i>门禁读卡器</div><div><i>◉</i>半球摄像头</div><div><i>▤</i>紧急按钮</div><div><i>≋</i>热量表</div><div><i>♧</i>风阀</div><div><i>!</i>警报</div><div><i>↗</i>手报</div><div><i>▥</i>输入输出模块</div><div><i>◎</i>普通计量分水表</div><div><i>▣</i>控制面板</div><div><i>≈</i>排风机</div></aside><div class="floor-filters" role="group" aria-label="设备显示筛选"><label><input type="checkbox" data-filter="all" checked>全选</label><label><input type="checkbox" data-filter="smart" checked>智能化系统</label><label><input type="checkbox" data-filter="fire" checked>火灾消防系统</label><label><input type="checkbox" data-filter="water" checked>给排水系统</label><label><input type="checkbox" data-filter="hvac" checked>空调系统</label><label><input type="checkbox" data-filter="lighting" checked>智能照明系统</label><label><input type="checkbox" data-filter="power" checked>供配电系统</label></div><span class="floor-plan-label">15F 楼层平面图</span></div>
+          <div class="room-overlay"><span class="room-label" style="left:27%;top:25%">办公区01</span><span class="room-label" style="left:50%;top:25%">办公区02</span><span class="room-label" style="left:73%;top:25%">办公区03</span><span class="room-label" style="left:26%;top:50%">办公区05</span><span class="room-label" style="left:50%;top:49%">电梯厅</span><span class="room-label" style="left:73%;top:50%">办公区12</span><span class="room-label" style="left:28%;top:76%">办公区07</span><span class="room-label" style="left:72%;top:76%">办公区10</span></div>
+          <div class="floor-options"><label><input type="checkbox" id="roomInfoToggle">房间信息</label><label><input type="checkbox" id="devicePointToggle" checked>设备点位</label></div>
+          <div class="scene-label">BUILDING DIGITAL TWIN · LIVE SCENE</div>
+          <div class="scene-horizon"></div><div class="scene-river"></div><div class="ground"></div>
+          <div class="ghost one"></div><div class="ghost two"></div><div class="ghost three"></div><div class="ghost four"></div><div class="horizon-trees"></div>
+          <div class="road road-a"></div><div class="road road-b"></div>
+          <div class="main-building">
+            <div class="tower"><div class="roof"></div><div class="sign">中建科创</div><div class="tower-side"></div></div>
+            <div class="podium"><div class="roof-courtyard"></div></div>
+          </div>
+          <div class="scene-tree tree-1"></div><div class="scene-tree tree-2"></div><div class="scene-tree tree-3"></div><div class="scene-tree tree-4"></div><div class="scene-tree tree-5"></div>
+          <div class="scene-glow" aria-hidden="true"></div><div class="scene-scan" aria-hidden="true"></div><div class="bottom-fade" aria-hidden="true"></div>
+          <button class="scene-control scene-control-video left" type="button" aria-label="视频播放" title="视频播放" data-tooltip="视频播放" aria-pressed="false"><i class="fa-solid fa-clapperboard"></i><span class="scene-control-tooltip">视频播放</span></button>
+        </section>
+<aside class="mep-right" aria-label="机电系统右侧看板">
+          <section class="info-panel mep-panel mep-count-panel default-mep-panel">
+            <h2 class="panel-title">设备数量及状态统计<span></span></h2>
+            <div class="mep-summary"><div class="mep-summary-card"><span>设备总数</span><b id="mepTotal">11521</b></div><div class="mep-summary-card alert"><span>设备故障率</span><b id="mepFaultRate">0%</b></div></div>
+            <div class="mep-count-layout"><div><div class="mep-donut"><div><strong id="mepOnlineCount">11233</strong><small>在线设备</small></div></div><span class="mep-donut-caption">在线 <b id="mepOnlineRate">98%</b></span></div><div><div class="mep-donut offline"><div><strong id="mepOfflineCount">288</strong><small>离线设备</small></div></div><span class="mep-donut-caption">离线 <b id="mepOfflineRate">2%</b></span></div></div>
+          </section>
+          <section class="info-panel mep-panel mep-monitor default-mep-panel">
+            <h2 class="panel-title">实时/历史运行监测<span></span></h2>
+            <div class="mep-mini-tabs"><button class="active" type="button">今日</button><button type="button">本周</button><button type="button">本月</button></div>
+            <svg class="mep-chart" viewBox="0 0 340 157" role="img" aria-label="机电设备运行监测图"><path class="mep-chart-fill" d="M36 124 L36 45 L72 45 L108 46 L144 45 L180 45 L216 45 L252 45 L288 45 L324 45 L324 124 Z"></path><line class="mep-chart-grid" x1="36" y1="45" x2="324" y2="45"></line><line class="mep-chart-grid" x1="36" y1="84" x2="324" y2="84"></line><line class="mep-chart-grid" x1="36" y1="124" x2="324" y2="124"></line><text class="mep-chart-unit" x="4" y="16">单位(%)</text><text class="mep-chart-axis" x="4" y="48">100</text><text class="mep-chart-axis" x="10" y="87">50</text><text class="mep-chart-axis" x="15" y="127">0</text><text class="mep-chart-axis mep-chart-x-axis" x="26" y="145">0:00</text><text class="mep-chart-axis mep-chart-x-axis" x="87" y="145">04:00</text><text class="mep-chart-axis mep-chart-x-axis" x="148" y="145">08:00</text><text class="mep-chart-axis mep-chart-x-axis" x="209" y="145">12:00</text><text class="mep-chart-axis mep-chart-x-axis" x="270" y="145">16:00</text><text class="mep-chart-axis mep-chart-x-axis" x="314" y="145">20:00</text><path class="mep-chart-line" d="M36 123 C58 121 78 120 96 121 S124 120 142 121 S171 119 188 120 S216 119 234 120 S263 119 282 120 S306 119 324 119"></path></svg>
+            <div class="mep-chart-tooltip" role="status" aria-live="polite"></div>
+          </section>
+          <section class="info-panel mep-panel mep-alarm default-mep-panel">
+            <h2 class="panel-title">设备报警<span></span></h2>
+            <div class="mep-alarm-tabs" role="tablist" aria-label="设备报警统计周期"><button class="active" type="button" role="tab" aria-selected="true">今日</button><button type="button" role="tab" aria-selected="false">本周</button><button type="button" role="tab" aria-selected="false">本月</button><button type="button" role="tab" aria-selected="false">本年</button></div>
+            <div class="mep-alarm-summary"><div class="mep-alarm-count"><span id="mepAlarmCount">6</span><small>报警总数</small></div><div class="mep-alarm-status"><span>未处理 <b id="mepPendingAlarms">5</b></span><span>已处理 <b id="mepHandledAlarms">1</b></span></div></div>
+            <div class="mep-alarm-title">报警消息</div>
+            <div class="mep-alarm-item"><strong>告警</strong><span>【设备离线】1号楼1F强电井</span><b>未处理</b><br><span>光伏并网逆变器100kW-逆变器故障　2026-08-28 08:02:20</span></div>
+            <div class="mep-alarm-item"><strong>预警</strong><span>【设备离线】1号楼1F强电井</span><b>未处理</b><br><span>光伏并网逆变器100kW-逆变器故障　2026-08-28 07:46:46</span></div>
+            <div class="mep-alarm-item"><strong>提醒</strong><span>【设备离线】地下B2设备间</span><b>已处理</b><br><span>给排水泵组通讯异常　2026-08-28 07:30:12</span></div>
+          </section>
+          <section class="info-panel mep-panel meeting-panel">
+            <h2 class="panel-title">联动场景控制<span></span></h2>
+            <div class="meeting-body"><div class="scene-total"><i class="fa-solid fa-sliders"></i><span>场景控制器总数</span><b>4</b></div><table class="scene-table"><thead><tr><th>控制器名称</th><th>末端设备数量</th><th>状态</th><th>操作</th></tr></thead><tbody><tr><td>1号楼经理办公室</td><td>3</td><td>在线</td><td><button class="scene-device-trigger" type="button" data-controller="1号楼经理办公室">查看</button></td></tr><tr><td>1号楼-CK-05</td><td>74</td><td>在线</td><td><button class="scene-device-trigger" type="button" data-controller="1号楼-CK-05">查看</button></td></tr><tr><td>1号楼-MK-05</td><td>6</td><td>在线</td><td><button class="scene-device-trigger" type="button" data-controller="1号楼-MK-05">查看</button></td></tr><tr><td>1号楼-MK-01</td><td>6</td><td>在线</td><td><button class="scene-device-trigger" type="button" data-controller="1号楼-MK-01">查看</button></td></tr></tbody></table></div>
+          </section>
+          <section class="info-panel mep-panel meeting-panel">
+            <h2 class="panel-title">背景音乐系统<span></span></h2>
+            <div class="meeting-body"><div class="broadcast-grid"><article class="broadcast-card"><strong>地下室<i class="fa-solid fa-volume-high"></i></strong><span>设备数量<b>7</b></span></article><article class="broadcast-card"><strong>1号楼屋面<i class="fa-solid fa-volume-high"></i></strong><span>设备数量<b>1</b></span></article><article class="broadcast-card"><strong>室外地区<i class="fa-solid fa-volume-high"></i></strong><span>设备数量<b>2</b></span></article><article class="broadcast-card"><strong>1号楼地上1-5层<i class="fa-solid fa-volume-high"></i></strong><span>设备数量<b>2</b></span></article><article class="broadcast-card"><strong>2号楼地上1-5层<i class="fa-solid fa-volume-high"></i></strong><span>设备数量<b>2</b></span></article><article class="broadcast-card"><strong>3号楼地上1-5层<i class="fa-solid fa-volume-high"></i></strong><span>设备数量<b>1</b></span></article><article class="broadcast-card"><strong>4号楼地上1-5层<i class="fa-solid fa-volume-high"></i></strong><span>设备数量<b>1</b></span></article></div></div>
+          </section>
+          <section class="info-panel mep-panel parking-panel parking-entry-video-panel"><h2 class="panel-title">出入口视频监控<span></span></h2><div class="parking-body"><div class="parking-video parking-video-large"><img src="assets/jinshan-building.png" alt="负一层入口模拟监控画面"><span>负一层入口视频　2026-08-28 16:42:19</span></div><div class="parking-video parking-video-large"><img src="assets/jinshan-building-v2.png" alt="负一层出口模拟监控画面"><span>负一层出口视频　2026-08-28 16:42:19</span></div></div></section>
+          <section class="info-panel mep-panel parking-panel parking-grid-video-panel"><h2 class="panel-title">停车场视频监控<span></span></h2><div class="parking-body"><div class="security-actions"><button type="button">全局监控</button></div><div class="parking-video-grid"><div class="parking-video"><img src="assets/jinshan-building.png" alt="B1车库模拟监控"><span>B1-01</span></div><div class="parking-video"><img src="assets/jinshan-building-v2.png" alt="B1车道模拟监控"><span>B1-02</span></div><div class="parking-video"><img src="assets/jinshan-building.png" alt="B2车库模拟监控"><span>B2-01</span></div><div class="parking-video"><img src="assets/jinshan-building-v2.png" alt="B2车道模拟监控"><span>B2-02</span></div><div class="parking-video"><img src="assets/jinshan-building.png" alt="B3车库模拟监控"><span>B3-01</span></div><div class="parking-video"><img src="assets/jinshan-building-v2.png" alt="B3车道模拟监控"><span>B3-02</span></div></div></div></section>
+          <section class="info-panel mep-panel security-panel security-monitor-panel"><h2 class="panel-title">监控系统<span></span></h2><div class="security-body"><div class="security-actions"><button type="button">查看系统图</button></div><div class="security-stat-grid"><div class="security-stat"><span>设备总数</span><b>416</b></div><div class="security-stat alert"><span>设备故障率</span><b>0%</b></div></div><div class="security-rings"><div><div class="security-ring"><strong>416</strong></div><span class="security-ring-label">在线 <b>100%</b></span></div><div><div class="security-ring offline"><strong>0</strong></div><span class="security-ring-label">离线 <b>0%</b></span></div></div></div></section>
+          <section class="info-panel mep-panel security-panel security-record-panel"><h2 class="panel-title">系统告警/联动记录<span></span></h2><div class="security-body"><div class="security-record security-alert-record"><div class="security-record-meta"><strong>瞬时</strong><span>● 瞬时</span></div><div class="security-record-main"><span>区域入侵</span><time>2019-01-02 15:17:24</time></div></div><div class="security-record security-alert-record"><div class="security-record-meta"><strong>瞬时</strong><span>● 瞬时</span></div><div class="security-record-main"><span>视频丢失</span><time>2018-08-16 10:25:59</time></div></div></div></section>
+          <section class="info-panel mep-panel security-panel security-key-video-panel"><h2 class="panel-title">关键区域监控<span></span></h2><div class="security-body"><div class="security-actions"><button class="global-monitor-trigger" type="button">全局监控</button></div><div class="security-video-grid"><div class="security-video"><img src="assets/jinshan-building.png" alt="一层大厅模拟监控"><span>1F大厅</span></div><div class="security-video"><img src="assets/jinshan-building-v2.png" alt="首层入口模拟监控"><span>首层入口</span></div><div class="security-video"><img src="assets/jinshan-building.png" alt="电梯厅模拟监控"><span>电梯厅</span></div><div class="security-video"><img src="assets/jinshan-building-v2.png" alt="地下车库模拟监控"><span>B1车库</span></div><div class="security-video"><img src="assets/jinshan-building.png" alt="消防通道模拟监控"><span>消防通道</span></div><div class="security-video"><img src="assets/jinshan-building-v2.png" alt="设备机房模拟监控"><span>设备机房</span></div></div></div></section>
+          <section class="info-panel mep-panel network-panel network-summary-panel"><h2 class="panel-title">信息网络<span></span></h2><div class="network-body"><div class="network-summary-toolbar"><button class="network-topology-trigger" type="button">拓扑图</button></div><div class="network-tabs network-tabs-dual"><button class="active" type="button">设备网 <i class="fa-solid fa-circle-check" aria-hidden="true"></i></button><button type="button">公网</button></div><div class="parking-section-title">设备分类</div><div class="network-category"><div><b>1</b>防火墙</div><div><b>35</b>交换机</div><div><b>0</b>WAC</div></div></div></section>
+          <section class="info-panel mep-panel network-panel network-status-panel"><h2 class="panel-title">设备运行状态<span></span></h2><div class="network-body network-state"><div class="network-ring"><strong>36<small>设备总数</small></strong></div><div class="network-legend network-status-legend"><span class="online-count">在线 <b>36</b></span><span class="offline-count">离线 <b>0</b></span><span class="online-rate">在线率 <b>100%</b></span><span class="offline-rate">离线率 <b>0%</b></span></div></div></section>
+          <section class="info-panel mep-panel mep-alarm network-panel network-alarm"><h2 class="panel-title">系统报警<span></span></h2><div class="mep-alarm-tabs" role="tablist" aria-label="系统报警周期"><button class="active" type="button">今日</button><button type="button">本周</button><button type="button">本月</button><button type="button">本年</button></div><div class="mep-alarm-summary"><div class="mep-alarm-count"><span>7</span><small>报警总数</small></div><div class="mep-alarm-status"><span>未处理 <b>6</b></span><span>已处理 <b>1</b></span></div></div><div class="mep-alarm-title">报警消息</div><div class="mep-alarm-item"><strong>告警</strong><span>【设备离线】1号楼1F弱电井</span><b>未处理</b><br><span>光伏并网逆变器100kW-逆变器故障　2026-08-28 08:02:20</span></div><div class="mep-alarm-item"><strong>预警</strong><span>【设备离线】1号楼1F弱电井</span><b>未处理</b><br><span>光伏并网逆变器100kW-逆变器故障　2026-08-28 07:46:46</span></div><div class="mep-alarm-item"><strong>提醒</strong><span>【设备离线】地下B2设备间</span><b>已处理</b><br><span>给排水泵组通讯异常　2026-08-28 07:30:12</span></div></section>
+          <section class="info-panel mep-panel mep-alarm meeting-panel meeting-alarm">
+            <h2 class="panel-title">设备报警<span></span></h2>
+            <div class="mep-alarm-tabs" role="tablist" aria-label="会议办公设备报警周期"><button class="active" type="button">今日</button><button type="button">本周</button><button type="button">本月</button><button type="button">本年</button></div>
+            <div class="mep-alarm-summary"><div class="mep-alarm-count"><span>2</span><small>报警总数</small></div><div class="mep-alarm-status"><span>未处理 <b>2</b></span><span>已处理 <b>0</b></span></div></div>
+            <div class="mep-alarm-title">报警消息</div><div class="mep-alarm-item"><strong>危急</strong><span>【设备报警】4楼公共广播</span><b>未处理</b><br><span>设备离线　01/12 4:59:59</span></div><div class="mep-alarm-item"><strong>紧急</strong><span>【设备报警】3楼公共广播</span><b>未处理</b><br><span>设备离线　01/12 5:30:59</span></div>
+          </section>
+          <section class="info-panel mep-panel room-stat-panel"><h2 class="panel-title">空间类型统计<span></span></h2><div class="room-stat-body"><div class="room-ring"><div><strong>1875</strong><small>总面积<br>(m²)</small></div><div class="room-ring-tooltip"><b>空间类型占比</b><span>办公 32%</span><span>商业 8%</span><span>车位 15%</span><span>弱电井 4%</span><span>弱电机房 5%</span><span>数据中心机房 4%</span><span>消控室 4%</span><span>网络机房 4%</span><span>供配电设备用房 8%</span><span>茶水间 4%</span><span>卫生间 5%</span><span>设备竖井 4%</span><span>其他 3%</span></div></div><div class="room-stat-legend space-type-legend"><span><i style="--legend:#3147c7"></i>办公</span><span><i style="--legend:#e4973d"></i>商业</span><span><i style="--legend:#55d7d2"></i>车位</span><span><i style="--legend:#9d55c6"></i>弱电井</span><span><i style="--legend:#6882d0"></i>弱电机房</span><span><i style="--legend:#48d2c8"></i>数据中心机房</span><span><i style="--legend:#ff6f61"></i>消控室</span><span><i style="--legend:#62d1dc"></i>网络机房</span><span><i style="--legend:#e95454"></i>供配电设备用房</span><span><i style="--legend:#df8f31"></i>茶水间</span><span><i style="--legend:#79d15e"></i>卫生间</span><span><i style="--legend:#62c76a"></i>设备竖井</span><span><i style="--legend:#e7b94d"></i>其他</span></div></div></section>
+          <section class="info-panel mep-panel room-stat-panel"><h2 class="panel-title">使用类型统计<span></span></h2><div class="room-stat-body"><div class="room-ring usage-ring"><div><strong>1875</strong><small>总面积<br>(m²)</small></div><div class="room-ring-tooltip"><b>使用类型占比</b><span>租赁 42% · 788m²</span><span>租售 18% · 338m²</span><span>出售 24% · 450m²</span><span>自用 16% · 299m²</span></div></div><div class="room-stat-legend"><span><i style="--legend:#f4c13d"></i>租赁</span><span><i style="--legend:#55d7d2"></i>租售</span><span><i style="--legend:#6882d0"></i>出售</span><span><i style="--legend:#86d863"></i>自用</span></div></div></section>
+          <section class="info-panel mep-panel room-stat-panel"><h2 class="panel-title">设备统计<span></span></h2><div class="room-stat-body"><div class="room-ring device-stat-ring"><div><strong>375</strong><small>设备总数<br>(个)</small></div><div class="room-ring-tooltip"><b>设备类型占比</b><span>供配电系统 18% · 68个</span><span>给排水系统 12% · 45个</span><span>光伏系统 8% · 30个</span><span>智能化系统 20% · 75个</span><span>智能照明系统 14% · 52个</span><span>火灾消防系统 16% · 60个</span><span>空调系统 12% · 45个</span></div></div><div class="room-stat-legend"><span><i style="--legend:#6882d0"></i>供配电系统</span><span><i style="--legend:#ff8a3d"></i>给排水系统</span><span><i style="--legend:#62d1dc"></i>光伏系统</span><span><i style="--legend:#6bd170"></i>智能化系统</span><span><i style="--legend:#f6c43d"></i>智能照明系统</span><span><i style="--legend:#ff6f61"></i>火灾消防系统</span><span><i style="--legend:#78d665"></i>空调系统</span></div></div></section>
+        </aside>
+      </section>
+    </main>
+    <div class="device-modal global-monitor-modal" id="globalMonitorModal" role="dialog" aria-modal="true" aria-labelledby="globalMonitorTitle">
+      <div class="device-dialog global-monitor-dialog">
+        <button class="device-dialog-close" id="globalMonitorClose" type="button" aria-label="关闭全局监控">×</button>
+        <div class="device-dialog-head" id="globalMonitorTitle">全局监控</div>
+        <div class="global-monitor-layout">
+          <aside class="global-monitor-sidebar">
+            <h3 class="global-section-title">设备统计</h3>
+            <div class="camera-total"><i class="fa-solid fa-camera"></i><span>摄像机总数<strong>433</strong></span></div>
+            <div class="camera-stats"><div><i class="fa-solid fa-video"></i><span>枪式摄像机<strong>132</strong></span></div><div><i class="fa-solid fa-camera"></i><span>半球摄像机<strong>290</strong></span></div><div><i class="fa-solid fa-circle-dot"></i><span>球型摄像机<strong>11</strong></span></div></div>
+            <h3 class="global-section-title">设备列表</h3>
+            <label class="camera-floor-select">选择楼层<select aria-label="选择监控楼层"><option>全部楼层</option><option>1栋</option><option>2栋</option><option>3栋</option><option>4栋</option></select></label>
+            <div class="camera-list"><b>433(全部)</b><span class="active">负一层防火隔间</span><span>8层vip电梯厅</span><span>17层西北侧过道</span><span>负一层变压器室2</span><span>8层东南侧室外</span><span>首层东侧室外</span><span>负二层地下室穿梭电梯</span><span>3层消防电梯厅</span><span>23层东北侧过道</span><span>20层消防电梯厅</span><span>32层东南侧办公区</span><span>29层东南侧弱电间</span><span>3层电梯厅</span><span>19层西北侧过道</span><span>机房层北侧通道</span><span>7层西北侧过道</span><span>8层南侧过道</span></div>
+          </aside>
+          <section class="global-monitor-main">
+            <div class="global-video-heading"><h3 class="global-section-title">视频监控</h3><div class="global-view-switch" role="tablist" aria-label="视频视图切换"><button type="button" data-view="single" title="单视图" aria-label="单视图"><span class="view-glyph view-glyph-single" aria-hidden="true"></span></button><button type="button" data-view="4" class="active" title="四视图" aria-label="四视图"><span class="view-glyph view-glyph-4" aria-hidden="true"></span></button><button type="button" data-view="9" title="九视图" aria-label="九视图"><span class="view-glyph view-glyph-9" aria-hidden="true"></span></button><button type="button" data-view="12" title="十二视图" aria-label="十二视图"><span class="view-glyph view-glyph-12" aria-hidden="true"></span></button></div></div>
+            <div class="global-video-grid view-4">
+              <div class="global-video"><span>屋面电梯机房门口</span><img src="assets/jinshan-building.png" alt="屋面电梯机房门口监控"></div><div class="global-video"><span>35层vip电梯厅</span><img src="assets/jinshan-building-v2.png" alt="35层vip电梯厅监控"></div><div class="global-video"><span>屋面北侧上人屋面</span><img src="assets/jinshan-building.png" alt="屋面北侧上人屋面监控"></div><div class="global-video"><span>35楼南过道</span><img src="assets/jinshan-building-v2.png" alt="35楼南过道监控"></div><div class="global-video"><span>35层西侧过道</span><img src="assets/jinshan-building.png" alt="35层西侧过道监控"></div>
+              <div class="global-video"><span>屋面空调水泵房</span><img src="assets/jinshan-building-v2.png" alt="屋面空调水泵房监控"></div><div class="global-video"><span>屋面西过道</span><img src="assets/jinshan-building.png" alt="屋面西过道监控"></div><div class="global-video"><span>35层侧电梯厅</span><img src="assets/jinshan-building-v2.png" alt="35层侧电梯厅监控"></div><div class="global-video"><span>35层东侧电梯厅</span><img src="assets/jinshan-building.png" alt="35层东侧电梯厅监控"></div><div class="global-video"><span>屋面东过道</span><img src="assets/jinshan-building-v2.png" alt="屋面东过道监控"></div>
+              <div class="global-video"><span>35层东侧领导办公室</span><img src="assets/jinshan-building.png" alt="35层东侧领导办公室监控"></div><div class="global-video"><span>屋面稳压水泵房</span><img src="assets/jinshan-building-v2.png" alt="屋面稳压水泵房监控"></div><div class="global-video"><span>首层2号楼梯入口</span><img src="assets/jinshan-building.png" alt="首层2号楼梯入口监控"></div><div class="global-video"><span>首层西南角停车场入口</span><img src="assets/jinshan-building-v2.png" alt="首层西南角停车场入口监控"></div><div class="global-video"><span>穿梭电梯厅</span><img src="assets/jinshan-building.png" alt="穿梭电梯厅监控"></div>
+            </div>
+            <div class="global-monitor-pagination"><span>共416条记录</span><button type="button">‹</button><button class="active" type="button">1</button><b>...</b><button type="button">4</button><button type="button">5</button><button type="button">6</button><button type="button">7</button><button type="button">8</button><b>...</b><button type="button">21</button><button type="button">›</button></div>
+          </section>
+        </div>
+      </div>
+    </div>
+    <div class="device-modal controller-device-modal" id="controllerDeviceModal" role="dialog" aria-modal="true" aria-labelledby="controllerDeviceTitle">
+      <div class="device-dialog controller-device-dialog">
+        <button class="device-dialog-close" id="controllerDeviceClose" type="button" aria-label="关闭关联设备信息">×</button>
+        <div class="device-dialog-head" id="controllerDeviceTitle">控制器名称</div>
+        <div class="controller-device-content"><div class="controller-device-table"><div class="controller-device-head"><span>末端设备名称</span><span>实时数据</span><span>设备状态</span></div><div id="controllerDeviceRows"></div></div></div>
+      </div>
+    </div>
+    <div class="device-modal weak-overview-diagram-modal" id="weakOverviewDiagramModal" role="dialog" aria-modal="true" aria-labelledby="weakOverviewDiagramTitle">
+      <div class="device-dialog weak-overview-diagram-dialog">
+        <button class="device-dialog-close" id="weakOverviewDiagramClose" type="button" aria-label="关闭弱电系统图">×</button>
+        <div class="device-dialog-head" id="weakOverviewDiagramTitle">弱电系统图</div>
+        <div class="security-diagram-body"><img src="assets/weak-overview-system-diagram.png" alt="局自用办公网布线系统图"></div>
+      </div>
+    </div>
+    <div class="device-modal parking-record-modal" id="parkingRecordModal" role="dialog" aria-modal="true" aria-labelledby="parkingRecordTitle">
+      <div class="device-dialog parking-record-dialog">
+        <button class="device-dialog-close" id="parkingRecordClose" type="button" aria-label="关闭停车记录">×</button>
+        <div class="device-dialog-head" id="parkingRecordTitle">停车通行记录</div>
+        <form class="parking-record-filters" id="parkingRecordFilters">
+          <label>车牌号<input type="search" name="plate" placeholder="请输入车牌号"></label>
+          <label>进出时间<span class="parking-date-range"><input type="datetime-local" name="start"><i>至</i><input type="datetime-local" name="end"></span></label>
+          <button type="submit">查询</button><button type="reset">重置</button>
+        </form>
+        <div class="parking-record-table-wrap">
+          <table class="parking-record-table"><colgroup><col class="parking-record-col-gate"><col class="parking-record-col-status"><col class="parking-record-col-time"><col class="parking-record-col-plate"><col class="parking-record-col-user"><col class="parking-record-col-fee"></colgroup><thead><tr><th>闸机口</th><th>进出状态</th><th>进出时间</th><th>车牌号</th><th>用户类型</th><th>停车费</th></tr></thead>
+            <tbody>
+              <tr data-plate="闽D A8623" data-time="2026-09-04T08:20"><td>西侧入口道闸</td><td class="entry">入场</td><td>2026-09-04 08:20:16 至 2026-09-04 08:45:10</td><td>闽D A8623</td><td>月租用户</td><td>¥0.00</td></tr>
+              <tr data-plate="闽D P1208" data-time="2026-09-04T08:35"><td>南侧入口道闸</td><td class="entry">入场</td><td>2026-09-04 08:35:42 至 2026-09-04 09:02:18</td><td>闽D P1208</td><td>临时用户</td><td>¥0.00</td></tr>
+              <tr data-plate="闽D 7K526" data-time="2026-09-04T09:05"><td>西侧出口道闸</td><td class="exit">出场</td><td>2026-09-04 09:05:31 至 2026-09-04 09:05:31</td><td>闽D 7K526</td><td>访客用户</td><td>¥8.00</td></tr>
+              <tr data-plate="闽D C9916" data-time="2026-09-04T09:18"><td>南侧出口道闸</td><td class="exit">出场</td><td>2026-09-04 09:18:09 至 2026-09-04 09:18:09</td><td>闽D C9916</td><td>临时用户</td><td>¥6.00</td></tr>
+              <tr data-plate="闽D J6210" data-time="2026-09-04T09:42"><td>西侧入口道闸</td><td class="entry">入场</td><td>2026-09-04 09:42:53 至 2026-09-04 10:06:27</td><td>闽D J6210</td><td>月租用户</td><td>¥0.00</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="device-modal security-diagram-modal" id="securitySystemDiagramModal" role="dialog" aria-modal="true" aria-labelledby="securityDiagramTitle">
+      <div class="device-dialog security-diagram-dialog">
+        <button class="device-dialog-close" id="securityDiagramClose" type="button" aria-label="关闭系统图">×</button>
+        <div class="device-dialog-head" id="securityDiagramTitle">系统图</div>
+        <div class="security-diagram-body"><img src="assets/1-36c15cd0.png" alt="竖向通风系统图"></div>
+      </div>
+    </div>
+    <div class="device-modal passage-modal" id="passageModal" role="dialog" aria-modal="true" aria-labelledby="passageDialogTitle">
+      <div class="device-dialog passage-dialog">
+        <button class="device-dialog-close" id="passageDialogClose" type="button" aria-label="关闭人行通行记录">×</button>
+        <div class="device-dialog-head" id="passageDialogTitle">人行通行记录</div>
+        <div class="passage-content">
+          <form class="passage-filters" id="passageFilters">
+            <label>通行时间 <span class="passage-date-range"><input type="text" value="2025-01-09 00:00:00" aria-label="通行开始时间"><i>→</i><input type="text" value="2025-01-09 23:59:59" aria-label="通行结束时间"><b>▣</b></span></label>
+            <label>通行结果 <select aria-label="通行结果"><option value="all">全部</option><option value="success">成功</option><option value="failure">失败</option></select></label>
+            <button type="submit">查询</button>
+          </form>
+          <div class="passage-table-wrap">
+            <table class="passage-table">
+              <thead><tr><th>序号</th><th>姓名</th><th>通行方式</th><th>门禁设备</th><th>通行位置</th><th>通行时间</th><th>通行方向</th><th>操作</th></tr></thead>
+              <tbody>
+                <tr data-result="success"><td>1</td><td>孙笑平</td><td>不分进出</td><td>1号楼-MK-18</td><td>1号楼</td><td>2025-01-09 15:46:42</td><td>成功</td><td><button class="passage-photo-trigger" type="button">查看</button></td></tr>
+                <tr data-result="failure"><td>2</td><td>孙笑平</td><td>不分进出</td><td>1号楼-MK-18</td><td>1号楼</td><td>2025-01-09 15:46:34</td><td>失败</td><td><button class="passage-photo-trigger" type="button">查看</button></td></tr>
+                <tr data-result="success"><td>3</td><td>孙笑平</td><td>不分进出</td><td>1号楼-MK-18</td><td>1号楼</td><td>2025-01-09 15:46:29</td><td>成功</td><td><button class="passage-photo-trigger" type="button">查看</button></td></tr>
+                <tr data-result="success"><td>4</td><td>保洁</td><td>不分进出</td><td>1F-高区电梯间闸机2通道</td><td>1F-高区电梯间2通道刷卡进</td><td>2025-01-09 15:46:12</td><td>成功</td><td><button class="passage-photo-trigger" type="button">查看</button></td></tr>
+                <tr data-result="failure"><td>5</td><td>保洁</td><td>不分进出</td><td>1F-高区电梯间闸机2通道</td><td>1F-高区电梯间2通道刷卡进</td><td>2025-01-09 15:46:11</td><td>失败</td><td><button class="passage-photo-trigger" type="button">查看</button></td></tr>
+                <tr data-result="success"><td>6</td><td>保洁</td><td>不分进出</td><td>1F-高区电梯间闸机2通道</td><td>1F-高区电梯间2通道刷卡进</td><td>2025-01-09 15:46:08</td><td>成功</td><td><button class="passage-photo-trigger" type="button">查看</button></td></tr>
+                <tr data-result="failure"><td>7</td><td>-</td><td>不分进出</td><td>B2F-MJKZ-01</td><td>B2层生活水泵房东南侧-消防门5号</td><td>2025-01-09 15:44:44</td><td>失败</td><td><button class="passage-photo-trigger" type="button">查看</button></td></tr>
+                <tr data-result="success"><td>8</td><td>-</td><td>不分进出</td><td>B2F-MJKZ-01</td><td>B2层生活水泵房东南侧-消防门5号</td><td>2025-01-09 15:44:44</td><td>成功</td><td><button class="passage-photo-trigger" type="button">查看</button></td></tr>
+                <tr data-result="success"><td>9</td><td>施怡返</td><td>不分进出</td><td>1F-高区电梯间闸机2通道</td><td>1F-高区电梯间2通道刷卡进</td><td>2025-01-09 15:44:32</td><td>成功</td><td><button class="passage-photo-trigger" type="button">查看</button></td></tr>
+                <tr data-result="failure"><td>10</td><td>廖艳文</td><td>不分进出</td><td>1号楼-MK-02</td><td>1号楼</td><td>2025-01-09 15:42:42</td><td>失败</td><td><button class="passage-photo-trigger" type="button">查看</button></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="device-modal passage-photo-modal" id="passagePhotoModal" role="dialog" aria-modal="true" aria-labelledby="passagePhotoTitle">
+      <div class="device-dialog passage-photo-dialog">
+        <button class="device-dialog-close" id="passagePhotoClose" type="button" aria-label="关闭通行照片">×</button>
+        <div class="device-dialog-head" id="passagePhotoTitle">通行照片</div>
+        <div class="passage-photo-body"><div class="passage-photo-empty"><i class="fa-regular fa-image"></i><span>暂无通行照片</span></div></div>
+      </div>
+    </div>
+    <div class="device-modal network-topology-modal" id="networkTopologyModal" role="dialog" aria-modal="true" aria-labelledby="networkTopologyTitle">
+      <div class="device-dialog network-topology-dialog">
+        <button class="device-dialog-close" id="networkTopologyClose" type="button" aria-label="关闭信息网络拓扑图">×</button>
+        <div class="device-dialog-head" id="networkTopologyTitle">信息网络拓扑图</div>
+        <div class="security-diagram-body"><img src="assets/network-topology.png" alt="信息网络拓扑图"></div>
+      </div>
+    </div>
+    <div class="device-modal network-simple-room-modal" id="networkSimpleRoomModal" role="dialog" aria-modal="true" aria-labelledby="networkSimpleRoomTitle">
+      <div class="device-dialog network-simple-room-dialog">
+        <button class="device-dialog-close" id="networkSimpleRoomClose" type="button" aria-label="关闭房间详情">×</button>
+        <div class="device-dialog-head" id="networkSimpleRoomTitle">房间详情</div>
+        <div class="network-simple-room-content"><div class="network-detail-table"><div class="network-detail-row table-head"><span>设备名称</span><span>设备状态</span><span>操作</span></div><div id="networkSimpleRoomRows"></div></div></div>
+      </div>
+    </div>
+    <div class="device-modal network-room-detail-modal" id="networkRoomDetailModal" role="dialog" aria-modal="true" aria-labelledby="networkRoomDetailTitle">
+      <div class="device-dialog network-room-detail-dialog">
+        <button class="device-dialog-close" id="networkRoomDetailClose" type="button" aria-label="关闭房间详情">×</button>
+        <div class="device-dialog-head" id="networkRoomDetailTitle">房间详情-1F数据中心机房</div>
+        <div class="network-detail-tabs" role="tablist" aria-label="房间详情分类"><button class="active" type="button" data-network-detail-view="environment">环境监测</button><button type="button" data-network-detail-view="devices">设备概览</button><button type="button" data-network-detail-view="ups">UPS监测</button></div>
+        <section class="network-detail-view active" data-network-detail-pane="environment">
+          <div class="network-chart-head"><strong>近24h环境指数变化趋势</strong><label><select id="networkEnvironmentMetric" aria-label="环境监测指标"><option value="temperature">温度</option><option value="humidity">湿度</option></select></label></div>
+          <div class="network-chart-legend"><span class="high">最高温度</span><span class="low">最低温度</span></div>
+          <svg class="network-detail-chart environment-chart" viewBox="0 0 620 254" role="img" aria-label="近24小时环境温度趋势"><text x="22" y="25">单位(℃)</text><text x="20" y="52">25</text><text x="20" y="92">20</text><text x="20" y="132">15</text><text x="20" y="172">10</text><text x="26" y="212">5</text><text x="28" y="242">0</text><g class="network-chart-grid"><line x1="56" y1="48" x2="526" y2="48"></line><line x1="56" y1="88" x2="526" y2="88"></line><line x1="56" y1="128" x2="526" y2="128"></line><line x1="56" y1="168" x2="526" y2="168"></line><line x1="56" y1="208" x2="526" y2="208"></line></g><path class="network-chart-area" d="M70 82 L125 83 L180 80 L235 84 L290 86 L345 85 L345 208 L70 208 Z"></path><path class="network-chart-line high-line" d="M70 80 L125 81 L180 78 L235 82 L290 84 L345 83"></path><path class="network-chart-line low-line" d="M70 84 L125 85 L180 82 L235 86 L290 88 L345 87"></path><line class="network-chart-axis" x1="56" y1="208" x2="526" y2="208"></line><text x="54" y="230">00:00</text><text x="157" y="230">05:00</text><text x="263" y="230">10:00</text><text x="370" y="230">15:00</text><text x="476" y="230">20:00</text><text x="540" y="208">时</text></svg>
+        </section>
+        <section class="network-detail-view" data-network-detail-pane="devices"><div class="network-detail-table"><div class="network-detail-row table-head"><span>设备名称</span><span>设备状态</span><span>操作</span></div><div class="network-detail-row"><span>长-冷通道后门温湿度</span><span>在线</span><button class="network-device-detail-trigger" type="button" data-device="长-冷通道后门温湿度" data-code="1F-DC-TH-01" data-position="1F数据中心机房冷通道后门">查看</button></div><div class="network-detail-row"><span>短-冷通道前门温湿度</span><span>在线</span><button class="network-device-detail-trigger" type="button" data-device="短-冷通道前门温湿度" data-code="1F-DC-TH-02" data-position="1F数据中心机房冷通道前门">查看</button></div><div class="network-detail-row"><span>短-冷通道后门温湿度</span><span>在线</span><button class="network-device-detail-trigger" type="button" data-device="短-冷通道后门温湿度" data-code="1F-DC-TH-03" data-position="1F数据中心机房冷通道后门">查看</button></div><div class="network-detail-row"><span>长-冷通道前门温湿度</span><span>在线</span><button class="network-device-detail-trigger" type="button" data-device="长-冷通道前门温湿度" data-code="1F-DC-TH-04" data-position="1F数据中心机房冷通道前门">查看</button></div></div></section>
+        <section class="network-detail-view" data-network-detail-pane="ups"><div class="network-chart-head"><strong>近24hUPS指标变化趋势</strong><label><select id="networkUpsPhase" aria-label="UPS相别"><option value="A">A相</option><option value="B">B相</option><option value="C">C相</option></select></label></div><div class="network-chart-legend single"><span class="high">电压</span></div><svg class="network-detail-chart ups-chart" viewBox="0 0 620 254" role="img" aria-label="近24小时UPS电压趋势"><text x="22" y="25">单位(V)</text><text x="20" y="52">25</text><text x="20" y="92">20</text><text x="20" y="132">15</text><text x="20" y="172">10</text><text x="26" y="212">5</text><text x="28" y="242">0</text><g class="network-chart-grid"><line x1="56" y1="48" x2="526" y2="48"></line><line x1="56" y1="88" x2="526" y2="88"></line><line x1="56" y1="128" x2="526" y2="128"></line><line x1="56" y1="168" x2="526" y2="168"></line><line x1="56" y1="208" x2="526" y2="208"></line></g><path class="network-chart-area ups-area" d="M70 74 L125 75 L180 73 L235 77 L290 76 L345 76 L345 208 L70 208 Z"></path><path class="network-chart-line high-line ups-line" d="M70 74 L125 75 L180 73 L235 77 L290 76 L345 76"></path><line class="network-chart-axis" x1="56" y1="208" x2="526" y2="208"></line><text x="54" y="230">00:00</text><text x="157" y="230">05:00</text><text x="263" y="230">10:00</text><text x="370" y="230">15:00</text><text x="476" y="230">20:00</text><text x="540" y="208">时</text></svg></section>
+      </div>
+    </div>
+    <div class="device-modal alarm-message-modal" id="alarmMessageModal" role="dialog" aria-modal="true" aria-labelledby="alarmMessageTitle">
+      <div class="device-dialog alarm-message-dialog"><button class="device-dialog-close" id="alarmMessageClose" type="button" aria-label="关闭报警消息">×</button><div class="alarm-message-tabs" role="tablist"><button class="active" type="button" data-alarm-view="messages">报警消息</button><button type="button" data-alarm-view="stats">报警统计</button></div><div class="alarm-message-view-pane active" data-alarm-pane="messages"><div class="alarm-message-filters"><select><option>全部报警类型</option><option>设备离线</option><option>设备属性</option></select><select><option>全部报警等级</option><option>告警</option><option>紧急</option></select><select><option>全部报警状态</option><option>未处理</option><option>已处理</option></select><button type="button">查询</button><button type="button">批处理</button></div><div class="alarm-message-table"><div class="alarm-message-row table-head"><span>序号</span><span>报警设备</span><span>报警类型</span><span>报警消息</span><span>报警等级</span><span>报警时间</span><span>报警状态</span><span>操作</span></div><div class="alarm-message-row"><span>1</span><span>光伏并网逆变器20KW</span><span>设备离线</span><span>逆变器设备掉线告警，位置:5F5F强电间</span><span>告警</span><span>2026-09-08 03:00:00</span><span>未处理</span><button class="alarm-message-view" type="button" data-device="光伏并网逆变器20KW" data-code="5F-PV-INV-20" data-position="科创大厦/5F/5F强电间">查看</button></div><div class="alarm-message-row"><span>2</span><span>1F10号电梯前室PM4</span><span>设备属性</span><span>信息发布设备离线告警，位置:1F1F总部区电梯厅</span><span>告警</span><span>2026-09-08 02:49:45</span><span>未处理</span><button class="alarm-message-view" type="button" data-device="1F10号电梯前室PM4" data-code="1F-PM4" data-position="科创大厦/1F/总部区电梯厅">查看</button></div></div></div><div class="alarm-message-view-pane alarm-statistics" data-alarm-pane="stats"><div class="alarm-stat-toolbar"><span>统计周期</span><button class="active">今日</button><button>本周</button><button>本月</button><button>本年</button></div><div class="alarm-stat-grid"><section><h3>报警趋势</h3><div class="alarm-trend"><span>单位(次)</span><div class="trend-line"></div><div class="trend-axis"><b>0</b><b>2</b><b>4</b><b>8</b><b>12</b></div></div></section><section><h3>报警类型</h3><div class="alarm-donut"><strong>11<small>报警总数</small></strong></div><div class="alarm-stat-rows"><span><i class="dot red"></i>设备属性 <b>9个</b><em>81.82%</em></span><span><i class="dot orange"></i>设备离线 <b>2个</b><em>18.18%</em></span></div></section><section><h3>报警排行</h3><div class="alarm-bars"><span>1F<i style="--bar:100%">6</i></span><span>B1<i style="--bar:34%">2</i></span><span>3F<i style="--bar:17%">1</i></span><span>5F<i style="--bar:17%">1</i></span><span>B3<i style="--bar:17%">1</i></span></div></section><section><h3>报警状态</h3><div class="alarm-donut status"><strong>11<small>报警总数</small></strong></div><div class="alarm-stat-rows"><span>未处理 <b>11个</b><em>100%</em></span><span>已处理 <b>0个</b><em>0%</em></span></div></section><section><h3>报警系统分布</h3><div class="system-grid"><span>暖通系统<b>0</b></span><span>电气系统<b>0</b></span><span>给排水系统<b>0</b></span><span>消防系统<b>0</b></span><span>电梯系统<b>0</b></span><span>燃气系统<b>0</b></span></div></section><section><h3>报警处理</h3><div class="alarm-donut handled"><strong>0<small>处理报警</small></strong></div><div class="alarm-stat-rows"><span>转工单 <b>0个</b><em>100%</em></span><span>误报 <b>0个</b><em>100%</em></span><span>处理 <b>0个</b><em>100%</em></span></div></section></div></div></div>
+    </div>
+    <div class="device-modal" id="deviceModal" role="dialog" aria-modal="true" aria-labelledby="deviceDialogTitle">
+      <div class="device-dialog">
+        <button class="device-dialog-close" id="deviceDialogClose" type="button" aria-label="关闭设备详情">×</button>
+        <div class="device-dialog-head" id="deviceDialogTitle">设备详情-30楼办公区西侧温控面板</div>
+        <div class="device-tabs" role="tablist" aria-label="设备详情分类"><button class="active" type="button" role="tab" data-pane="ledger">设备台账</button><button type="button" role="tab" data-pane="monitor">设备监测</button><button type="button" role="tab" data-pane="alarm">设备报警</button><button type="button" role="tab" data-pane="maintain">设备维保</button><button type="button" role="tab" data-pane="inspect">设备巡检</button><button type="button" role="tab" data-pane="downstream">下游设备</button><button type="button" role="tab" data-pane="qr">设备二维码</button></div>
+        <section class="device-pane active" data-pane="ledger"><h3 class="device-section-title">系统分类</h3><div class="device-fields two"><div class="device-field"><label>所属系统</label><strong>空调系统/空调通风系统/控制面板</strong></div><div class="device-field"><label>品牌型号</label><strong>RTC-626</strong></div></div><h3 class="device-section-title">设备基本信息</h3><div class="device-fields"><div class="device-field"><label>设备名称</label><strong data-device-name>30楼办公区西侧温控面板</strong></div><div class="device-field"><label>设备编号</label><strong data-device-code>30F-WK-32-X07</strong></div><div class="device-field"><label>供货商</label><strong>艾科</strong></div><div class="device-field"><label>供货商联系方式</label><strong>13928325240</strong></div><div class="device-field"><label>出厂日期</label><strong>2024-07-27</strong></div><div class="device-field"><label>安装日期</label><strong>2024-10-24</strong></div><div class="device-field"><label>所属房间</label><strong>30F办公区</strong></div><div class="device-field"><label>安装位置</label><strong data-device-position>30楼办公区西侧温控面板-7</strong></div><div class="device-field"><label>设备编码</label><strong>001_KT04KTTF15_2022</strong></div></div></section>
+<section class="device-pane" data-pane="monitor"><div class="monitor-controls"><div class="device-field monitor-power"><label>开关控制</label><div class="power-buttons"><button class="active" type="button">开启</button><button type="button">关闭</button></div></div><div class="device-field monitor-speed"><label>风速模式</label><div class="speed-buttons"><button class="active" type="button">自动</button><button type="button">低速</button><button type="button">中速</button><button type="button">高速</button></div></div><div class="device-field monitor-reading"><label>室内温度<time>2026-09-09 16:04:53</time></label><strong>26℃</strong></div><div class="device-field monitor-reading"><label>室内湿度<time>2026-09-09 16:04:53</time></label><strong>48.50%RH</strong></div></div></section>
+<section class="device-pane" data-pane="alarm"><h3 class="device-section-title">设备报警记录</h3><details class="alarm-record" open><summary><time>2025-10-10 17:24:07</time><span><strong>【设备报警】</strong> 设备离线</span></summary><div class="alarm-record-detail"><div class="device-field"><label>报警类型</label><strong>设备离线</strong></div><div class="device-field"><label>报警级别</label><strong>告警</strong></div><div class="device-field"><label>报警状态</label><strong>已处理</strong></div><div class="device-field alarm-record-location"><label>报警位置</label><strong>科创大厦/30F/30F办公区</strong></div></div><div class="alarm-process"><h4>处理详情</h4><div class="alarm-process-item"><time>2025-10-10 17:40:02</time><div><strong>处理人：张工</strong><span>处理详情：现场检查设备通讯线路，重新连接并恢复设备在线状态。</span></div></div><div class="alarm-process-item"><time>2025-10-10 17:45:18</time><div><strong>处理人：李工</strong><span>处理详情：复核设备运行数据，确认报警已消除并完成处理。</span></div></div></div></details><details class="alarm-record"><summary><time>2025-10-10 17:24:06</time><span><strong>【设备报警】</strong> 温控面板设备离线告警</span></summary><div class="alarm-record-detail"><div class="device-field"><label>报警类型</label><strong>设备离线</strong></div><div class="device-field"><label>报警级别</label><strong>告警</strong></div><div class="device-field"><label>报警状态</label><strong>已处理</strong></div><div class="device-field alarm-record-location"><label>报警位置</label><strong>科创大厦/30F/30F办公区</strong></div></div><div class="alarm-process"><h4>处理详情</h4><div class="alarm-process-item"><time>2025-10-10 17:35:22</time><div><strong>处理人：王工</strong><span>处理详情：重启温控面板并检查网络连接，设备通信恢复正常。</span></div></div></div></details><details class="alarm-record"><summary><time>2025-10-10 17:23:44</time><span><strong>【设备报警】</strong> 设备离线</span></summary><div class="alarm-record-detail"><div class="device-field"><label>报警类型</label><strong>设备离线</strong></div><div class="device-field"><label>报警级别</label><strong>告警</strong></div><div class="device-field"><label>报警状态</label><strong>未处理</strong></div><div class="device-field alarm-record-location"><label>报警位置</label><strong>科创大厦/30F/30F办公区</strong></div></div></details></section>
+        <section class="device-pane" data-pane="maintain"><div class="empty-table-head"><span>维保名称</span><span>执行人</span><span>负责部门</span><span>开始时间</span><span>完成时间</span><span>执行结果</span></div><div class="empty-state"><i class="fa-solid fa-box-open"></i><span>暂无数据</span></div></section>
+        <section class="device-pane" data-pane="inspect"><div class="empty-table-head"><span>巡检名称</span><span>执行人</span><span>负责部门</span><span>开始时间</span><span>完成时间</span><span>执行结果</span></div><div class="empty-state"><i class="fa-solid fa-box-open"></i><span>暂无数据</span></div></section>
+        <section class="device-pane" data-pane="downstream"><div class="empty-table-head downstream-table-head"><span>设备名称</span><span>设备编码</span><span>所属房源</span><span>安装位置</span><span>是否智能化</span></div><div class="empty-state"><i class="fa-solid fa-box-open"></i><span>暂无数据</span></div></section>
+        <section class="device-pane" data-pane="qr"><div class="device-qr" aria-label="设备二维码"></div><div class="device-qr-label"><span data-device-name>30楼办公区西侧温控面板</span>（<span data-device-code>30F-WK-32-X07</span>）</div></section>
+      </div>
+    </div>
+    <div class="device-modal alarm-action-modal" id="falseAlarmModal" role="dialog" aria-modal="true"><div class="device-dialog alarm-action-dialog form-dialog"><button class="device-dialog-close" data-close-alarm-action="falseAlarmModal" type="button">×</button><div class="device-dialog-head">误报确认</div><p class="alarm-action-question">是否确认该报警为误报</p><label class="false-alarm-description">误报说明<textarea required placeholder="请输入误报说明"></textarea></label><div class="alarm-action-buttons"><button data-close-alarm-action="falseAlarmModal">取消</button><button class="primary" data-close-alarm-action="falseAlarmModal" data-confirm-false-alarm type="button">确定</button></div></div></div>
+    <div class="device-modal alarm-action-modal" id="processAlarmModal" role="dialog" aria-modal="true"><div class="device-dialog alarm-action-dialog form-dialog"><button class="device-dialog-close" data-close-alarm-action="processAlarmModal" type="button">×</button><div class="device-dialog-head">处理确认</div><label>处理人<select><option>管理员</option><option>张工</option><option>李工</option></select></label><label>处理时间<input type="datetime-local"></label><label>备注<textarea></textarea></label><div class="alarm-action-buttons"><button data-close-alarm-action="processAlarmModal">取消</button><button class="primary" data-close-alarm-action="processAlarmModal">确定</button></div></div></div>
+    <div class="device-modal alarm-action-modal" id="workOrderAlarmModal" role="dialog" aria-modal="true"><div class="device-dialog alarm-action-dialog form-dialog"><button class="device-dialog-close" data-close-alarm-action="workOrderAlarmModal" type="button">×</button><div class="device-dialog-head">转工单确认</div><p class="alarm-action-question">是否确认将该报警转为工单</p><label>联系人<input type="text" placeholder="请输入联系人"></label><label>联系电话<input type="tel" placeholder="请输入联系电话"></label><label>工单类型<select><option>室内报修</option><option>公区报修</option></select></label><label>工单分类<select><option>设备故障</option><option>设备离线</option><option>环境异常</option><option>其他</option></select></label><label>紧急程度<select><option>一般</option><option>紧急</option></select></label><label>上传图片<input type="file" accept="image/*"></label><label>报修内容<textarea placeholder="请输入报修内容"></textarea></label><div class="alarm-action-buttons"><button data-close-alarm-action="workOrderAlarmModal">取消</button><button class="primary" data-close-alarm-action="workOrderAlarmModal">确定</button></div></div></div>
+    <div class="device-modal logout-confirm-modal" id="logoutConfirmModal" role="dialog" aria-modal="true" aria-labelledby="logoutConfirmTitle"><div class="device-dialog logout-confirm-dialog"><button class="device-dialog-close" id="logoutConfirmClose" type="button" aria-label="关闭退出提示">×</button><div class="device-dialog-head" id="logoutConfirmTitle">退出登录</div><p class="logout-confirm-question">确认退出当前账号</p><div class="alarm-action-buttons"><button id="logoutCancelButton" type="button">取消</button><button class="primary" id="logoutConfirmButton" type="button">确定</button></div></div></div>
+  </div>
+  </div>
+  <template id="requirementDocument">
+    <section class="requirement-section" data-requirement-section><h3>需求说明</h3><div class="requirement-section-body"><p>弱电系统按系统总览、会议办公、智慧停车、综合安防和信息网络展示设备、空间、通行、视频、网络及报警信息。</p></div></section>
+    <section class="requirement-section" data-requirement-section><h3>操作入口</h3><div class="requirement-section-body"><p>可视化大屏 -&gt; 弱电系统</p></div></section>
+    <section class="requirement-section" data-requirement-section><h3>交互动作</h3><div class="requirement-section-body"><ol><li><strong>系统切换：</strong>点击系统总览、会议办公、智慧停车、综合安防、信息网络切换看板。</li><li><strong>会议办公：</strong>查看会议室总数、空闲、使用中、故障/停用数量及占比；在会议室列表查看会议室、位置、状态和预约时间。</li><li><strong>会议办公联动场景：</strong>查看场景控制器总数、控制器名称、末端设备数量和状态；点击“查看”打开对应控制器详情。</li><li><strong>背景音乐系统：</strong>按区域查看广播分区及设备数量。</li><li><strong>设备报警：</strong>切换今日、本周、本月、本年，查看报警总数、未处理、已处理及报警消息。</li><li><strong>房间信息：</strong>开启房间信息后查看空间类型统计、使用类型统计和设备统计；鼠标悬浮图表查看分类占比及明细。</li><li><strong>智慧停车：</strong>查看车位、进出场、占用率和停车视频；点击停车记录打开记录弹窗，可按车牌和时间查询。</li><li><strong>综合安防：</strong>查看设备在线率、故障率、系统告警和关键区域视频；点击全局监控或系统图打开对应弹窗。</li><li><strong>信息网络：</strong>在数据中心机房、消控室、弱电井和网络机房区域分别切换同类房源；数据中心机房查看环境监测、设备概览和UPS监测，消控室/弱电井查看设备概览，网络机房切换设备网/公网、查看设备分类并点击“拓扑图”打开信息网络拓扑弹窗；设备运行状态和系统报警按当前网络范围同步统计。</li></ol></div></section>
+    <section class="requirement-section" data-requirement-section><h3>数据来源</h3><div class="requirement-section-body requirement-table-wrap">
+      <h4>系统总览</h4><table><thead><tr><th>字段名称</th><th>数据来源</th></tr></thead><tbody><tr><td>子系统设备总数</td><td>后台-设备管理-设备台账，按弱电系统分类汇总。</td></tr><tr><td>在线/离线设备</td><td>IoT平台设备连接状态。</td></tr><tr><td>系统报警</td><td>后台-报警信息，按弱电子系统和楼层过滤。</td></tr><tr><td>系统视频</td><td>视频监控平台摄像机流及摄像机台账。</td></tr></tbody></table>
+      <h4>会议办公</h4><table><thead><tr><th>字段名称</th><th>数据来源</th></tr></thead><tbody><tr><td>会议室总数</td><td>后台-房源管理-空间类型为“会议室”的房源数量。</td></tr><tr><td>空闲数量</td><td>第三方会议预约系统当前无预约且可使用的会议室数量。</td></tr><tr><td>使用中数量</td><td>第三方会议预约系统当前已签到或处于预约时段内的会议室数量。</td></tr><tr><td>故障/停用数量</td><td>后台-房源管理会议室状态及设备/运维停用标记。</td></tr><tr><td>空闲/使用中/故障占比</td><td>对应状态数量÷会议室总数×100%。</td></tr><tr><td>会议室名称</td><td>后台-房源管理会议室房源名称。</td></tr><tr><td>会议室位置</td><td>后台-房源管理会议室所属楼栋、楼层及位置字段。</td></tr><tr><td>会议室状态</td><td>第三方会议预约系统预约状态，结合后台房源及设备停用状态。</td></tr><tr><td>预约时间</td><td>第三方会议预约系统当前预约记录的开始时间、结束时间。</td></tr><tr><td>场景控制器总数</td><td>后台-设备管理中会议办公系统场景控制器设备台账数量。</td></tr><tr><td>控制器名称</td><td>后台-设备管理场景控制器设备名称。</td></tr><tr><td>末端设备数量</td><td>场景控制器关联的末端设备数量。</td></tr><tr><td>控制器状态</td><td>IoT平台场景控制器在线、离线状态。</td></tr><tr><td>场景控制器详情</td><td>后台-设备管理场景控制器及其关联末端设备明细。</td></tr><tr><td>广播分区</td><td>后台-设备管理背景音乐系统的区域/分区配置。</td></tr><tr><td>广播设备数量</td><td>后台-设备管理按背景音乐广播分区关联的设备台账数量。</td></tr><tr><td>报警统计周期</td><td>设备报警按今日、本周、本月、本年切换的时间范围。</td></tr><tr><td>报警总数</td><td>后台-报警信息中会议办公系统范围内按所选周期筛选的报警记录数量。</td></tr><tr><td>未处理数量</td><td>后台-报警信息中会议办公系统报警状态为“未处理”的记录数量。</td></tr><tr><td>已处理数量</td><td>后台-报警信息中会议办公系统报警状态为“已处理”的记录数量。</td></tr><tr><td>报警等级</td><td>后台-报警信息中的报警等级字段。</td></tr><tr><td>报警位置/设备</td><td>后台-报警信息中的报警位置及关联设备字段。</td></tr><tr><td>报警描述</td><td>后台-报警信息中的报警描述字段。</td></tr><tr><td>报警时间</td><td>后台-报警信息中的报警发生时间字段。</td></tr><tr><td>报警状态</td><td>后台-报警信息中的处理状态字段。</td></tr></tbody></table>
+      <h4>智慧停车</h4><table><thead><tr><th>字段名称</th><th>数据来源</th></tr></thead><tbody><tr><td>车位总数</td><td>第三方智慧停车系统车位台账。</td></tr><tr><td>剩余车位</td><td>第三方智慧停车系统实时车位状态。</td></tr><tr><td>入场数/出场数</td><td>第三方智慧停车系统车辆进出场记录，按统计周期汇总。</td></tr><tr><td>车位占用率</td><td>剩余车位、使用中车位与车位总数计算。</td></tr><tr><td>停车视频</td><td>视频监控平台停车场摄像机实时视频流。</td></tr><tr><td>停车记录</td><td>第三方智慧停车系统车辆记录，支持车牌、开始时间、结束时间筛选。</td></tr></tbody></table>
+      <h4>综合安防</h4><table><thead><tr><th>字段名称</th><th>数据来源</th></tr></thead><tbody><tr><td>安防设备总数</td><td>后台-设备管理中综合安防分类设备台账。</td></tr><tr><td>在线设备/在线率</td><td>IoT平台及视频监控、门禁平台在线状态。</td></tr><tr><td>离线设备/故障率</td><td>平台设备状态及后台报警信息计算。</td></tr><tr><td>系统告警/联动记录</td><td>综合安防平台告警及联动事件记录。</td></tr><tr><td>关键区域视频</td><td>视频监控平台配置的重点区域摄像机视频流。</td></tr><tr><td>全局监控</td><td>视频监控平台摄像机列表及实时流。</td></tr></tbody></table>
+      <h4>信息网络</h4><table><thead><tr><th>字段名称</th><th>数据来源</th></tr></thead><tbody><tr><td>数据中心机房</td><td>后台-房源管理-房源类型为“弱电机房”的房源数据。</td></tr><tr><td>数据中心机房切换</td><td>后台-房源管理-房源类型为“弱电机房”的全部房源；多个机房时按房源逐个切换。</td></tr><tr><td>环境监测</td><td>当前数据中心机房关联的环境监测设备台账及IoT实时数据。</td></tr><tr><td>环境监测指标</td><td>当前数据中心机房环境监测设备上报的温度、湿度指标。</td></tr><tr><td>环境趋势</td><td>当前数据中心机房环境监测设备近24小时历史温度、湿度数据。</td></tr><tr><td>设备概览</td><td>后台-设备管理中所属房间为当前数据中心机房的设备台账。</td></tr><tr><td>设备名称</td><td>当前数据中心机房设备台账中的设备名称。</td></tr><tr><td>设备状态</td><td>当前数据中心机房设备的IoT在线、离线或故障状态。</td></tr><tr><td>UPS监测</td><td>当前数据中心机房关联UPS设备的IoT实时监测数据。</td></tr><tr><td>UPS相别</td><td>UPS设备A相、B相、C相监测通道配置。</td></tr><tr><td>UPS电压趋势</td><td>当前数据中心机房UPS设备近24小时历史电压数据。</td></tr><tr><td>消控室</td><td>后台-房源管理-房源类型为“消控室”的房源数据。</td></tr><tr><td>消控室切换</td><td>后台-房源管理-房源类型为“消控室”的全部房源；多个消控室时按房源逐个切换。</td></tr><tr><td>消控室设备数量</td><td>后台-设备管理中所属房间为当前消控室的设备台账数量。</td></tr><tr><td>消控室在线数量</td><td>当前消控室设备的IoT在线状态数量。</td></tr><tr><td>消控室离线数量</td><td>当前消控室设备的IoT离线状态数量。</td></tr><tr><td>消控室故障数量</td><td>当前消控室设备状态及报警信息中的故障数量。</td></tr><tr><td>消控室设备名称/状态</td><td>当前消控室设备台账名称及IoT设备状态。</td></tr><tr><td>弱电井</td><td>后台-房源管理-房源类型为“弱电井”的房源数据。</td></tr><tr><td>弱电井切换</td><td>后台-房源管理-房源类型为“弱电井”的全部房源；多个弱电井时按房源逐个切换。</td></tr><tr><td>弱电井设备数量</td><td>后台-设备管理中所属房间为当前弱电井的设备台账数量。</td></tr><tr><td>弱电井在线数量</td><td>当前弱电井设备的IoT在线状态数量。</td></tr><tr><td>弱电井离线数量</td><td>当前弱电井设备的IoT离线状态数量。</td></tr><tr><td>弱电井故障数量</td><td>当前弱电井设备状态及报警信息中的故障数量。</td></tr><tr><td>弱电井设备名称/状态</td><td>当前弱电井设备台账名称及IoT设备状态。</td></tr><tr><td>网络机房</td><td>后台-房源管理-房源类型为“网络机房”的房源数据。</td></tr><tr><td>网络机房切换</td><td>后台-房源管理-房源类型为“网络机房”的全部房源；多个网络机房时按房源逐个切换。</td></tr><tr><td>网络类型</td><td>当前网络机房的设备网/公网切换配置。</td></tr><tr><td>设备分类</td><td>当前网络机房设备台账按设备分类汇总的防火墙、交换机、WAC数量。</td></tr><tr><td>网络拓扑</td><td>点击“拓扑图”后展示当前网络机房对应的信息网络拓扑图。</td></tr><tr><td>设备总数</td><td>当前网络机房网络设备台账数量。</td></tr><tr><td>在线数量</td><td>当前网络机房网络设备的IoT/网络平台在线状态数量。</td></tr><tr><td>离线数量</td><td>当前网络机房网络设备的IoT/网络平台离线状态数量。</td></tr><tr><td>在线率</td><td>在线数量÷设备总数×100%。</td></tr><tr><td>离线率</td><td>离线数量÷设备总数×100%。</td></tr><tr><td>统计周期</td><td>系统报警按今日、本周、本月、本年切换的时间范围。</td></tr><tr><td>报警总数</td><td>后台-报警信息中当前信息网络/网络机房范围内、按所选统计周期筛选的报警记录数量。</td></tr><tr><td>未处理数量</td><td>后台-报警信息中当前范围内报警状态为“未处理”的记录数量。</td></tr><tr><td>已处理数量</td><td>后台-报警信息中当前范围内报警状态为“已处理”的记录数量。</td></tr><tr><td>报警等级</td><td>后台-报警信息中的报警等级字段。</td></tr><tr><td>报警位置/设备</td><td>后台-报警信息中的报警位置及关联设备字段。</td></tr><tr><td>报警描述</td><td>后台-报警信息中的报警描述字段。</td></tr><tr><td>报警时间</td><td>后台-报警信息中的报警发生时间字段。</td></tr><tr><td>报警状态</td><td>后台-报警信息中的处理状态字段。</td></tr></tbody></table>
+    </div></section>
+  </template>
+  <script src="app.js"></script>
+  <script src="requirement.js"></script>
+  <script>
+    (function () {
+      var messageButton = document.querySelector('.header-icon[aria-label="消息提醒"]');
+      var logoutButton = document.querySelector('.header-icon[aria-label="退出系统"]');
+      var profileButton = document.getElementById('profileButton');
+      var messageModal = document.getElementById('alarmMessageModal');
+      var logoutModal = document.getElementById('logoutConfirmModal');
+      var profilePopover = document.getElementById('profilePopover');
+      if (messageButton) messageButton.onclick = function (event) { event.preventDefault(); if (messageModal) messageModal.classList.add('open'); };
+      if (logoutButton) logoutButton.onclick = function (event) { event.preventDefault(); if (logoutModal) logoutModal.classList.add('open'); };
+      if (profileButton) profileButton.onclick = function (event) { event.preventDefault(); if (profilePopover) profilePopover.hidden = !profilePopover.hidden; };
+    }());
+  </script>
+</body>
+</html>
+
+

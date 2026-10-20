@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>设备分类 - 科学岛管廊监控中心</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/tob-ui.css">
+  <style>
+    .category-page .page-head { display: none; }
+    .category-filter-card { padding: 16px 24px; }
+    .category-filter-card .filter-actions { grid-template-columns: repeat(3, minmax(180px, 1fr)) auto auto; }
+    .category-toolbar { padding: 16px 24px 0; margin-bottom: 12px; }
+    .category-table { min-width: 920px; }
+    .category-table tbody tr { cursor: pointer; }
+    .category-table td, .category-table th { white-space: nowrap; }
+    .category-code { color: var(--text-secondary); font-family: Consolas, monospace; }
+    .category-remark { max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .category-actions { white-space: nowrap; }
+    .category-actions .table-action { margin-right: 14px; }
+    .category-form { display: grid; gap: 16px; }
+    .category-form .form-item { margin: 0; }
+    .category-form .textarea { min-height: 96px; }
+    .category-tree-select { position: relative; }
+    .category-tree-trigger { display: flex; align-items: center; justify-content: space-between; gap: 12px; text-align: left; cursor: pointer; }
+    .category-tree-trigger [data-tree-label] { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-title); }
+    .category-tree-trigger [data-tree-label].is-placeholder { color: var(--text-secondary); }
+    .category-tree-trigger i { flex: 0 0 auto; color: var(--text-secondary); transition: transform .18s ease; }
+    .category-tree-select.is-open .category-tree-trigger i { transform: rotate(180deg); }
+    .category-tree-panel { position: absolute; z-index: 600; top: calc(100% + 4px); left: 0; right: 0; display: none; max-height: 300px; overflow-y: auto; padding: 8px; border: 1px solid var(--line); border-radius: var(--radius-md); background: #fff; box-shadow: 0 12px 32px rgba(26, 28, 31, .12); }
+    .category-tree-select.is-open .category-tree-panel { display: block; }
+    .category-tree-children { margin-left: 12px; padding-left: 16px; border-left: 1px solid var(--line); }
+    .category-tree-row { display: flex; align-items: center; min-height: 36px; gap: 8px; }
+    .category-tree-toggle { width: 20px; height: 20px; flex: 0 0 20px; padding: 0; border: 1px solid var(--text-secondary); background: #fff; color: var(--text-primary); font-size: 12px; line-height: 18px; cursor: pointer; }
+    .category-tree-toggle.is-leaf { visibility: hidden; cursor: default; }
+    .category-tree-option { flex: 1; min-width: 0; padding: 6px 8px; border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--text-primary); text-align: left; cursor: pointer; font-size: 14px; line-height: 20px; }
+    .category-tree-option:hover { background: var(--primary-bg); color: var(--primary); }
+    .category-tree-option.is-selected { background: var(--primary-light); color: var(--primary); font-weight: 600; }
+    .category-icon-cell { color: var(--primary); font-size: 16px; }
+    .category-icon-field { position: relative; }
+    .category-icon-trigger { display: flex; align-items: center; justify-content: flex-start; gap: 10px; text-align: left; cursor: pointer; }
+    .category-icon-trigger i { width: 20px; color: var(--primary); text-align: center; }
+    .category-icon-trigger span { color: var(--text-primary); }
+    .category-icon-trigger .is-placeholder { color: var(--text-secondary); }
+    .category-icon-picker { position: absolute; z-index: 700; top: calc(100% + 4px); left: 0; width: 320px; max-height: 270px; overflow-y: auto; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-md); background: #fff; box-shadow: var(--shadow-popover); }
+    .category-icon-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+    .category-icon-option { min-height: 42px; display: grid; place-items: center; gap: 2px; padding: 5px 2px; border: 1px solid transparent; border-radius: var(--radius-sm); background: #fff; color: var(--text-secondary); cursor: pointer; }
+    .category-icon-option i { color: var(--primary); font-size: 17px; }
+    .category-icon-option span { max-width: 48px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; }
+    .category-icon-option:hover, .category-icon-option.is-selected { border-color: var(--primary); background: var(--primary-light); color: var(--primary); }
+    .category-empty { height: 180px !important; }
+    @media (max-width: 900px) { .category-filter-card .filter-actions { grid-template-columns: repeat(2, minmax(160px, 1fr)) auto auto; } }
+    @media (max-width: 640px) { .category-filter-card .filter-actions { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body class="category-page" data-menu-key="device.category" data-page-section="设备管理" data-page-title="设备分类">
+  <div class="app-shell">
+    <aside id="app-sidebar" class="sidebar"></aside>
+    <header id="app-header" class="header"></header>
+    <main class="main">
+      <div class="screen-frame stack">
+        <section class="card filters category-filter-card">
+          <div class="filter-actions">
+            <label class="form-field"><span class="form-label">设备分类名称</span><input class="form-control" data-filter="name" placeholder="请输入"></label>
+            <label class="form-field"><span class="form-label">分类编码</span><input class="form-control" data-filter="code" placeholder="请输入"></label>
+            <label class="form-field"><span class="form-label">所属系统</span><div class="category-tree-select" data-tree-select="filter-system"><button class="form-control category-tree-trigger" type="button" data-tree-trigger aria-haspopup="tree" aria-expanded="false"><span data-tree-label class="is-placeholder">请选择</span><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></button><div class="category-tree-panel" data-tree-panel role="tree"></div><input type="hidden" data-filter="system"></div></label>
+            <button class="btn btn-secondary" type="button" data-action="reset">重置</button>
+            <button class="btn btn-primary" type="button" data-action="search">搜索</button>
+          </div>
+        </section>
+        <section class="card category-list-card">
+          <div class="card-title-row category-toolbar"><h2 class="card-title">设备分类列表</h2><button class="btn btn-primary" type="button" data-action="create"><i class="fa-solid fa-plus"></i> 新增</button></div>
+          <div class="table-wrap"><table class="table category-table" aria-label="设备分类列表"><thead><tr><th>设备分类名称</th><th>分类编码</th><th>所属系统</th><th>显示排序</th><th>图标</th><th>备注</th><th>操作</th></tr></thead><tbody id="categoryTableBody"></tbody></table></div>
+          <div class="pagination"><span>共 <strong id="categoryCount">0</strong> 条记录，每页 10 条</span><span class="page-item" data-page-action="prev">‹</span><span class="page-item active" data-page-number="1">1</span><span class="page-item" data-page-action="next">›</span></div>
+        </section>
+      </div>
+    </main>
+  </div>
+  <script src="../../../app/config/menu.js?v=nav-hide-1"></script>
+  <script src="../../../app/data/system-types.js"></script>
+  <script src="../../../app/data/device-categories.js"></script>
+  <script src="../../../app/components/sidebar.js?v=nav-home-1"></script>
+  <script src="../../../app/components/header.js?v=nav-home-1"></script>
+  <script src="../../../app/components/drawer.js"></script>
+  <script src="../../../app/components/requirement.js"></script>
+  <script>
+    const systemTypes = window.APP_SYSTEM_TYPES || [];
+    const systemNames = systemTypes.map((item) => item.name);
+    const categories = (window.APP_DEVICE_CATEGORIES || []).map((item) => ({ ...item }));
+    const tableBody = document.getElementById("categoryTableBody");
+    const pageSize = 10;
+    let filteredCategories = [...categories];
+    let currentPage = 1;
+    const esc = (value) => String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
+    const attr = (value) => esc(value).replaceAll("'", "&#39;");
+    function systemById(id) { return systemTypes.find((item) => String(item.id) === String(id)); }
+    function systemChildren(parentId) { return systemTypes.filter((item) => (item.parent || null) === parentId); }
+    function systemPath(item) { const path = []; let current = item; while (current) { path.unshift(current.name); current = systemById(current.parent); } return path; }
+    function renderTreeNodes(root, parentId = null) {
+      const children = systemChildren(parentId);
+      const collapsed = root._treeCollapsed || new Set();
+      root._treeCollapsed = collapsed;
+      return children.map((item) => { const hasChildren = systemChildren(item.id).length > 0; const expanded = !collapsed.has(item.id); return `<div class="category-tree-node"><div class="category-tree-row"><button class="category-tree-toggle${hasChildren ? "" : " is-leaf"}" type="button" data-tree-toggle="${item.id}" aria-label="${expanded ? "收起" : "展开"}">${hasChildren ? (expanded ? "−" : "+") : ""}</button><button class="category-tree-option${root.dataset.treeValue === item.name ? " is-selected" : ""}" type="button" data-tree-option="${item.id}" role="treeitem">${esc(item.name)}</button></div>${hasChildren && expanded ? `<div class="category-tree-children">${renderTreeNodes(root, item.id)}</div>` : ""}</div>`; }).join("");
+    }
+    function renderTreeSelect(root) {
+      const selected = systemTypes.find((item) => item.name === root.dataset.treeValue);
+      const label = root.querySelector("[data-tree-label]");
+      label.textContent = selected ? systemPath(selected).join(" / ") : "请选择";
+      label.classList.toggle("is-placeholder", !selected);
+      root.querySelector("[data-tree-panel]").innerHTML = renderTreeNodes(root) || '<div class="category-tree-empty">暂无系统类型</div>';
+    }
+    function bindTreeSelect(root) {
+      if (!root || root.dataset.treeBound) return;
+      root.dataset.treeBound = "true";
+      root.querySelector("[data-tree-trigger]").addEventListener("click", () => { const open = !root.classList.contains("is-open"); document.querySelectorAll(".category-tree-select.is-open").forEach((item) => { item.classList.remove("is-open"); item.querySelector("[data-tree-trigger]").setAttribute("aria-expanded", "false"); }); root.classList.toggle("is-open", open); root.querySelector("[data-tree-trigger]").setAttribute("aria-expanded", String(open)); });
+      root.querySelector("[data-tree-panel]").addEventListener("click", (event) => { const toggle = event.target.closest("[data-tree-toggle]"); if (toggle && !toggle.classList.contains("is-leaf")) { event.preventDefault(); event.stopPropagation(); const id = Number(toggle.dataset.treeToggle); if (root._treeCollapsed.has(id)) root._treeCollapsed.delete(id); else root._treeCollapsed.add(id); renderTreeSelect(root); root.classList.add("is-open"); root.querySelector("[data-tree-trigger]").setAttribute("aria-expanded", "true"); return; } const option = event.target.closest("[data-tree-option]"); if (!option) return; const item = systemById(option.dataset.treeOption); root.dataset.treeValue = item.name; root.querySelector('input[type="hidden"]').value = item.name; renderTreeSelect(root); root.classList.remove("is-open"); root.querySelector("[data-tree-trigger]").setAttribute("aria-expanded", "false"); });
+      renderTreeSelect(root);
+    }
+    function resetTreeSelect(root) { root.dataset.treeValue = ""; root.querySelector('input[type="hidden"]').value = ""; root._treeCollapsed = new Set(); renderTreeSelect(root); }
+    function renderSystemOptions() {
+      bindTreeSelect(document.querySelector('[data-tree-select="filter-system"]'));
+    }
+    function renderCategories() {
+      const totalPages = Math.max(1, Math.ceil(filteredCategories.length / pageSize));
+      currentPage = Math.min(currentPage, totalPages);
+      const pageItems = filteredCategories.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+      tableBody.innerHTML = pageItems.length ? pageItems.map((item) => `<tr data-id="${item.id}"><td>${esc(item.name)}</td><td class="category-code">${esc(item.code)}</td><td>${esc(item.system)}</td><td>${item.sort}</td><td class="category-icon-cell"><i class="fa-solid ${attr(item.icon || "fa-layer-group")}" title="${attr(item.icon || "fa-layer-group")}"></i></td><td class="category-remark" title="${attr(item.remark)}">${esc(item.remark) || "-"}</td><td class="category-actions"><button class="table-action" type="button" data-category-action="edit" data-id="${item.id}">编辑</button><button class="table-action status-danger" type="button" data-category-action="delete" data-id="${item.id}">删除</button></td></tr>`).join("") : '<tr><td class="empty-cell category-empty" colspan="7">暂无数据</td></tr>';
+      document.getElementById("categoryCount").textContent = filteredCategories.length;
+      document.querySelector('[data-page-number="1"]').textContent = currentPage;
+      document.querySelector('[data-page-action="prev"]').classList.toggle("disabled", currentPage <= 1);
+      document.querySelector('[data-page-action="next"]').classList.toggle("disabled", currentPage >= totalPages);
+    }
+    function categoryById(id) { return categories.find((item) => String(item.id) === String(id)); }
+    function openCategoryDrawer(mode, category = {}) {
+      const isEdit = mode === "edit";
+      const title = isEdit ? "编辑设备分类" : "新增设备分类";
+      const iconValue = category.icon || "fa-layer-group";
+      const iconNames = ["layer-group","building","elevator","camera","video","door-open","shield-halved","bolt","fire","fan","water","plug","lightbulb","temperature-half","gauge-high","gear","server","database","house","warehouse","stairs","bell","circle-check","circle-exclamation","location-dot","wifi","display","truck","car","box","tools","clipboard","chart-line","cube","leaf","sun","key"];
+      const iconPicker = `<div class="category-icon-picker" data-category-icon-picker hidden><div class="category-icon-grid">${iconNames.map((name) => { const full = `fa-${name}`; return `<button class="category-icon-option${iconValue === full ? " is-selected" : ""}" type="button" data-category-icon="${full}" title="${full}"><i class="fa-solid ${full}"></i><span>${name}</span></button>`; }).join("")}</div></div>`;
+      const body = `<div class="category-form"><label class="form-field form-item"><span class="form-label form-required">设备分类名称</span><input class="form-control" data-category-field="name" value="${attr(category.name)}" placeholder="请输入"></label><label class="form-field form-item"><span class="form-label form-required">分类编码</span><input class="form-control" data-category-field="code" value="${attr(category.code)}" placeholder="请输入"></label><label class="form-field form-item"><span class="form-label form-required">所属系统</span><div class="category-tree-select" data-tree-select="drawer-system" data-tree-value="${attr(category.system)}"><button class="form-control category-tree-trigger" type="button" data-tree-trigger aria-haspopup="tree" aria-expanded="false"><span data-tree-label></span><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></button><div class="category-tree-panel" data-tree-panel role="tree"></div><input type="hidden" data-category-field="system" value="${attr(category.system)}"></div></label><label class="form-field form-item"><span class="form-label form-required">显示排序</span><input class="form-control" data-category-field="sort" type="number" min="1" value="${category.sort || 1}" placeholder="请输入"></label><div class="form-field form-item category-icon-field"><span class="form-label form-required">图标</span><button class="form-control category-icon-trigger" type="button" data-category-icon-trigger><i class="fa-solid ${attr(iconValue)}" data-category-icon-preview></i><span data-category-icon-label>${attr(iconValue)}</span><i class="fa-solid fa-chevron-down" aria-hidden="true" style="margin-left:auto;color:var(--text-secondary)"></i></button><input type="hidden" data-category-field="icon" value="${attr(iconValue)}">${iconPicker}</div><label class="form-field form-item"><span class="form-label">备注</span><textarea class="form-control textarea" data-category-field="remark" placeholder="请输入">${esc(category.remark)}</textarea></label></div>`;
+      window.openAppDrawer({ title, subtitle: "设备管理 · 设备分类", body, footer: '<button class="btn btn-secondary" type="button" data-drawer-close>取消</button><button class="btn btn-primary" type="button" data-save-category>确认</button>' });
+      bindTreeSelect(document.querySelector('[data-tree-select="drawer-system"]'));
+      document.querySelector("[data-save-category]").addEventListener("click", () => {
+        const values = Object.fromEntries(["name", "code", "system", "sort", "icon", "remark"].map((key) => [key, document.querySelector(`[data-category-field="${key}"]`).value.trim()]));
+        if (!values.name || !values.code || !values.system || !values.sort) { window.openAppConfirm({ title: "提示", message: "请填写完整的设备分类信息。", confirmText: "知道了" }); return; }
+        if (isEdit) Object.assign(category, { ...values, sort: Number(values.sort) });
+        else categories.push({ id: Date.now(), ...values, sort: Number(values.sort) });
+        filteredCategories = [...categories];
+        currentPage = 1;
+        window.closeAppDrawer();
+        renderCategories();
+      });
+    }
+    function filterCategories() {
+      const filters = Object.fromEntries([...document.querySelectorAll("[data-filter]")].map((input) => [input.dataset.filter, input.value.trim()]));
+      filteredCategories = categories.filter((item) => (!filters.name || item.name.includes(filters.name)) && (!filters.code || item.code.includes(filters.code)) && (!filters.system || item.system === filters.system));
+      currentPage = 1;
+      renderCategories();
+    }
+    renderSystemOptions();
+    renderCategories();
+    document.addEventListener("click", (event) => {
+      const action = event.target.closest("[data-action]")?.dataset.action;
+      if (action === "create") openCategoryDrawer("create");
+      if (action === "reset") { document.querySelectorAll("[data-filter]").forEach((input) => { input.value = ""; }); resetTreeSelect(document.querySelector('[data-tree-select="filter-system"]')); filteredCategories = [...categories]; currentPage = 1; renderCategories(); }
+      if (action === "search") filterCategories();
+      const rowAction = event.target.closest("[data-category-action]");
+      if (rowAction) { const category = categoryById(rowAction.dataset.id); if (rowAction.dataset.categoryAction === "edit") openCategoryDrawer("edit", category); if (rowAction.dataset.categoryAction === "delete") window.openAppConfirm({ title: "提示", message: `确认删除设备分类「${category.name}」吗？`, onConfirm: () => { categories.splice(categories.indexOf(category), 1); filterCategories(); } }); }
+      const iconTrigger = event.target.closest("[data-category-icon-trigger]");
+      if (iconTrigger) { const picker = iconTrigger.parentElement.querySelector("[data-category-icon-picker]"); document.querySelectorAll("[data-category-icon-picker]").forEach((item) => { if (item !== picker) item.hidden = true; }); picker.hidden = !picker.hidden; }
+      const iconOption = event.target.closest("[data-category-icon]");
+      if (iconOption) { const field = iconOption.closest(".category-icon-field"); const icon = iconOption.dataset.categoryIcon; field.querySelector('[data-category-field="icon"]').value = icon; field.querySelector("[data-category-icon-preview]").className = `fa-solid ${icon}`; field.querySelector("[data-category-icon-label]").textContent = icon; field.querySelectorAll("[data-category-icon]").forEach((item) => item.classList.toggle("is-selected", item === iconOption)); field.querySelector("[data-category-icon-picker]").hidden = true; }
+      const pageNumber = event.target.closest("[data-page-number]");
+      const pageAction = event.target.closest("[data-page-action]");
+      if (pageNumber) { currentPage = Number(pageNumber.textContent); renderCategories(); }
+      if (pageAction) { const totalPages = Math.max(1, Math.ceil(filteredCategories.length / pageSize)); currentPage = pageAction.dataset.pageAction === "prev" ? Math.max(1, currentPage - 1) : Math.min(totalPages, currentPage + 1); renderCategories(); }
+      if (!event.target.closest(".category-tree-select")) document.querySelectorAll(".category-tree-select.is-open").forEach((item) => { item.classList.remove("is-open"); item.querySelector("[data-tree-trigger]").setAttribute("aria-expanded", "false"); });
+      if (!event.target.closest(".category-icon-field")) document.querySelectorAll("[data-category-icon-picker]").forEach((item) => { item.hidden = true; });
+    });
+    document.querySelectorAll("[data-filter]").forEach((input) => input.addEventListener("keydown", (event) => { if (event.key === "Enter") filterCategories(); }));
+  </script>
+</body>
+</html>
+

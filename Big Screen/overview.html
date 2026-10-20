@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>科学岛管廊监控中心</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="viewport">
+    <main class="screen" id="screenShell" data-page="overview">
+      <header class="hud-header">
+        <div class="project-mark">
+          <div class="project-name">科学岛管廊监控中心</div>
+          <div class="project-meta"><span id="clockTime">14:29:28</span><span><i class="fa-solid fa-cloud" aria-hidden="true"></i>25~32℃</span><span id="clockDate">星期四</span><span id="currentDate">2026.08.27</span></div>
+        </div>
+        <div class="system-title">科学岛管廊监控中心</div>
+        <div class="header-tools">
+          <div class="company"><img class="company-logo" src="assets/cscec-logo.png" alt="中国建筑标志"><span>中国建筑第四工程局有限公司<small>CHINA CONSTRUCTION FOURTH ENGINEERING DIVISION CORP. LTD</small></span></div>
+          
+          <button class="header-icon" type="button" aria-label="用户中心"><i class="fa-regular fa-user"></i></button>
+          <button class="header-icon" type="button" aria-label="消息提醒"><i class="fa-regular fa-bell"></i></button>
+          <button class="header-icon" type="button" aria-label="退出系统"><i class="fa-solid fa-power-off"></i></button>
+        </div>
+      </header>
+      <nav class="module-nav" aria-label="系统模块导航">
+        <button class="active" type="button" aria-current="page">总览</button>
+        <button type="button">机电系统</button>
+        <button type="button">弱电系统</button>
+        <button type="button">能源管理</button>
+        <button type="button">运营管理</button>
+      </nav>
+      <section class="workspace ">
+        <aside class="rail left-rail" aria-label="建筑运营信息">
+          <section class="info-panel overview-panel">
+            <h2 class="panel-title">建筑概况<span></span></h2>
+            <div class="panel-inner">
+              <div class="overview-row"><span>建筑名称</span><b>科学岛管廊监控中心</b></div>
+              <div class="overview-row"><span>建筑规模</span><b>1-4号楼，每栋5层</b></div>
+              <div class="overview-row"><span>开工日期</span><b>2022年4月17日</b><span>竣工日期</span><b>2024年9月29日</b></div>
+              <div class="overview-row"><span>项目定位</span><b>建筑科技范 创新总部科研</b></div>
+              <div class="overview-row"><span>建设单位</span><b>中国建筑第四工程局有限公司</b></div>
+              <div class="overview-row"><span>设计单位</span><b>中国建筑第四工程局有限公司</b></div>
+              <div class="overview-row"><span>施工单位</span><b>中国建筑第四工程局有限公司</b></div>
+            </div>
+          </section>
+
+          <section class="info-panel awards-panel">
+            <h2 class="panel-title">荣誉展示<span></span></h2>
+            <div class="award-grid">
+              <div class="award"><span class="award-badge"><i class="fa-solid fa-star"></i></span><span>绿色三星</span></div>
+              <div class="award"><span class="award-badge"><i class="fa-solid fa-star"></i></span><span>近零能耗建筑</span></div>
+              <div class="award"><span class="award-badge"><i class="fa-solid fa-star"></i></span><span>国家装配式建筑</span></div>
+              <div class="award certificate certificate-carousel" aria-label="荣誉证书轮播">
+                <div class="certificate-stage" tabindex="0">
+                  <div class="certificate-slide active"><img src="assets/carbon-neutral-certificate.png" alt="金级碳中和建筑标识证书"></div>
+                  <div class="certificate-slide certificate-generated"><div><strong>绿色建筑</strong>三星级<br>示范证书</div></div>
+                  <div class="certificate-slide certificate-generated"><div><strong>WELL</strong>健康建筑<br>认证证书</div></div>
+                  <div class="certificate-hover"><button class="preview-button" type="button" aria-label="预览荣誉证书">预览</button></div>
+                </div>
+                <div class="certificate-carousel-nav" role="tablist" aria-label="荣誉证书页码"><button class="carousel-dot active" type="button" role="tab" aria-selected="true" aria-label="第1张证书"></button><button class="carousel-dot" type="button" role="tab" aria-selected="false" aria-label="第2张证书"></button><button class="carousel-dot" type="button" role="tab" aria-selected="false" aria-label="第3张证书"></button></div>
+              </div>
+              <div class="award"><span class="award-badge"><i class="fa-solid fa-star"></i></span><span>全领域中和</span></div>
+              <div class="award"><span class="award-badge"><i class="fa-solid fa-star"></i></span><span>LEED金级</span></div>
+              <div class="award"><span class="award-badge"><i class="fa-solid fa-star"></i></span><span>WELL认证</span></div>
+            </div>
+          </section>
+
+          <section class="info-panel people-panel">
+            <h2 class="panel-title">人员统计<span></span></h2>
+            <div class="people-statistics-body">
+              <div class="people-period-tabs" role="tablist" aria-label="人员统计周期"><button class="active" type="button" data-people-period="today" aria-selected="true">今日</button><button type="button" data-people-period="week" aria-selected="false">本周</button><button type="button" data-people-period="month" aria-selected="false">本月</button><button type="button" data-people-period="year" aria-selected="false">本年</button></div>
+              <h3 class="people-section-title">人员类型</h3>
+              <div class="people-main">
+                <div class="people-side"><label>办公人员</label><strong id="peopleOfficeCount">683</strong></div>
+                <div class="people-ring" id="peopleTypeRing"><div><strong id="peopleTotalCount">683</strong><small>人员总数</small></div></div>
+                <div class="people-side"><label>访客</label><strong id="peopleVisitorCount">0</strong></div>
+              </div>
+              <h3 class="people-section-title">通行次数</h3>
+              <div class="people-trend-chart"><span>单位（次）</span><svg viewBox="0 0 320 100" role="img" aria-label="人员通行次数折线图"><g class="people-chart-grid"><line x1="30" y1="15" x2="312" y2="15"></line><line x1="30" y1="43" x2="312" y2="43"></line><line x1="30" y1="71" x2="312" y2="71"></line></g><g class="people-chart-y"><text x="8" y="18">10</text><text x="14" y="46">5</text><text x="14" y="74">0</text></g><path class="people-chart-area" id="peopleTrendArea"></path><path class="people-chart-line" id="peopleTrendLine"></path><g class="people-chart-points" id="peopleTrendPoints"></g><g class="people-chart-x" id="peopleTrendAxis"></g></svg></div>
+            </div>
+          </section>
+
+          <section class="info-panel vehicle-panel">
+            <h2 class="panel-title">车辆统计<span></span></h2>
+            <div class="vehicle-body">
+              <div class="vehicle-total"><div class="vehicle-total-icon"><i class="fa-solid fa-square-parking"></i></div><span>剩余车位 / 车位总数</span><strong>199<small>/199</small></strong></div>
+              <div class="vehicle-floor-grid">
+                <div class="vehicle-floor"><div><span>B1</span><b>54<small>/54</small></b></div><div class="vehicle-ring" style="--value:100%"><i></i></div></div>
+                <div class="vehicle-floor"><div><span>B2</span><b>145<small>/145</small></b></div><div class="vehicle-ring" style="--value:100%"><i></i></div></div>
+              </div>
+              <div class="vehicle-detail-grid"><div><span>普通车位</span><b>22</b></div><div><span>使用中</span><b>0</b></div><div><span>空余</span><b>22</b></div></div>
+            </div>
+          </section>
+        </aside>
+<section class="building-scene image-mode" aria-label="科学岛管廊监控中心建筑效果图">
+          <img class="building-reference" src="assets/public-building-centered.png" alt="科学岛管廊监控中心建筑效果图">
+          <nav class="operation-dock" id="operationDock" aria-label="运营管理子模块"><button class="active" type="button" data-operation="asset" aria-pressed="true">资产管理</button><button type="button" data-operation="management" aria-pressed="false">运营管理</button></nav>
+          <nav class="system-subnav" id="systemSubnav" aria-label="当前系统子系统"></nav>
+          <nav class="system-dock" id="systemDock" aria-label="机电主系统">
+            <button class="active" type="button" data-system="overview">系统总览</button><button type="button" data-system="hvac">暖通空调</button><button type="button" data-system="electric">电气系统</button><button type="button" data-system="water">给排水系统</button><button type="button" data-system="fire">消防系统</button><button type="button" data-system="elevator">电梯系统</button><button type="button" data-system="gas">燃气系统</button><button type="button" data-system="solar">光伏系统</button><button type="button" data-system="ventilation">自然通风</button>
+          </nav>
+          <nav class="weak-dock" id="weakDock" aria-label="弱电子系统"><button class="active" type="button" data-system="weak-overview">系统总览</button><button type="button" data-system="meeting">会议办公</button><button type="button" data-system="parking">智慧停车</button><button type="button" data-system="security">综合安防</button><button type="button" data-system="network">信息网络</button></nav>
+          <div class="floor-control"><button class="floor-button" type="button" aria-label="打开楼层选择" aria-expanded="false"><i class="fa-solid fa-building" aria-hidden="true"></i></button><div class="floor-menu" role="listbox" aria-label="楼层列表"><button type="button" data-floor="37F">37F</button><button type="button" data-floor="36F">36F</button><button type="button" data-floor="35F">35F</button><button type="button" data-floor="34F">34F</button><button type="button" data-floor="33F">33F</button><button type="button" data-floor="32F">32F</button><button type="button" data-floor="31F">31F</button><button type="button" data-floor="30F">30F</button><button type="button" data-floor="29F">29F</button><button type="button" data-floor="28F">28F</button><button type="button" data-floor="27F">27F</button><button type="button" data-floor="26F">26F</button><button type="button" data-floor="25F">25F</button><button type="button" data-floor="24F">24F</button><button type="button" data-floor="23F">23F</button><button type="button" data-floor="22F">22F</button><button type="button" data-floor="21F">21F</button><button type="button" data-floor="20F">20F</button><button type="button" data-floor="19F">19F</button><button type="button" data-floor="18F">18F</button><button type="button" data-floor="17F">17F</button><button type="button" data-floor="16F">16F</button><button class="active" type="button" data-floor="15F">15F</button><button type="button" data-floor="14F">14F</button><button type="button" data-floor="13F">13F</button><button type="button" data-floor="12F">12F</button><button type="button" data-floor="11F">11F</button><button type="button" data-floor="10F">10F</button><button type="button" data-floor="9F">9F</button><button type="button" data-floor="8F">8F</button><button type="button" data-floor="7F">7F</button><button type="button" data-floor="6F">6F</button><button type="button" data-floor="5F">5F</button><button type="button" data-floor="4F">4F</button><button type="button" data-floor="3F">3F</button><button type="button" data-floor="2F">2F</button><button type="button" data-floor="1F">1F</button><button type="button" data-floor="B1">B1</button></div></div>
+          <div class="floor-plan"><div class="floor-plan-stage"><img src="assets/floor-plan-15f.png" alt="15F楼层平面图"><button class="device-point" data-category="hvac" type="button" style="left:26%;top:27%" data-device="西侧温控面板" data-code="30F-WK-32-X07"><i class="fa-solid fa-temperature-half"></i><em>西侧温控面板</em></button><button class="device-point" data-category="hvac" type="button" style="left:49%;top:24%" data-device="北侧温控面板" data-code="30F-WK-18-X02"><i class="fa-solid fa-temperature-half"></i><em>北侧温控面板</em></button><button class="device-point" data-category="hvac" type="button" style="left:73%;top:27%" data-device="东侧温控面板" data-code="30F-WK-08-X03"><i class="fa-solid fa-temperature-half"></i><em>东侧温控面板</em></button><button class="device-point" data-category="smart" type="button" style="left:34%;top:51%" data-device="走廊空气传感器" data-code="30F-CG-05-X01"><i class="fa-solid fa-wind"></i><em>走廊空气传感器</em></button><button class="device-point" data-category="hvac" type="button" style="left:50%;top:48%" data-device="电梯厅温控面板" data-code="30F-WK-01-X09"><i class="fa-solid fa-temperature-half"></i><em>电梯厅温控面板</em></button><button class="device-point" data-category="smart" type="button" style="left:66%;top:52%" data-device="设备间控制器" data-code="30F-KZ-12-X04"><i class="fa-solid fa-microchip"></i><em>设备间控制器</em></button><button class="device-point" data-category="hvac" type="button" style="left:28%;top:75%" data-device="南侧温控面板" data-code="30F-WK-26-X05"><i class="fa-solid fa-temperature-half"></i><em>南侧温控面板</em></button><button class="device-point" data-category="smart" type="button" style="left:72%;top:75%" data-device="办公室温湿度传感器" data-code="30F-CG-21-X06"><i class="fa-solid fa-droplet"></i><em>办公室温湿度传感器</em></button></div><aside class="floor-legend" aria-label="设备图例"><div><i>●</i>室内环境传感器</div><div><i>▣</i>门禁读卡器</div><div><i>◉</i>半球摄像头</div><div><i>▤</i>紧急按钮</div><div><i>≋</i>热量表</div><div><i>♧</i>风阀</div><div><i>!</i>警报</div><div><i>↗</i>手报</div><div><i>▥</i>输入输出模块</div><div><i>◎</i>普通计量分水表</div><div><i>▣</i>控制面板</div><div><i>≈</i>排风机</div></aside><div class="floor-filters" role="group" aria-label="设备显示筛选"><label><input type="checkbox" data-filter="all" checked>全选</label><label><input type="checkbox" data-filter="smart" checked>智能化系统</label><label><input type="checkbox" data-filter="fire" checked>火灾消防系统</label><label><input type="checkbox" data-filter="water" checked>给排水系统</label><label><input type="checkbox" data-filter="hvac" checked>空调系统</label><label><input type="checkbox" data-filter="lighting" checked>智能照明系统</label><label><input type="checkbox" data-filter="power" checked>供配电系统</label></div><span class="floor-plan-label">15F 楼层平面图</span></div>
+          <div class="room-overlay"><span class="room-label" style="left:27%;top:25%">办公区01</span><span class="room-label" style="left:50%;top:25%">办公区02</span><span class="room-label" style="left:73%;top:25%">办公区03</span><span class="room-label" style="left:26%;top:50%">办公区05</span><span class="room-label" style="left:50%;top:49%">电梯厅</span><span class="room-label" style="left:73%;top:50%">办公区12</span><span class="room-label" style="left:28%;top:76%">办公区07</span><span class="room-label" style="left:72%;top:76%">办公区10</span></div>
+          <div class="floor-options"><label><input type="checkbox" id="roomInfoToggle">房间信息</label><label><input type="checkbox" id="devicePointToggle" checked>设备点位</label></div>
+          <div class="scene-label">BUILDING DIGITAL TWIN · LIVE SCENE</div>
+          <div class="scene-horizon"></div><div class="scene-river"></div><div class="ground"></div>
+          <div class="ghost one"></div><div class="ghost two"></div><div class="ghost three"></div><div class="ghost four"></div><div class="horizon-trees"></div>
+          <div class="road road-a"></div><div class="road road-b"></div>
+          <div class="main-building">
+            <div class="tower"><div class="roof"></div><div class="sign">中建科创</div><div class="tower-side"></div></div>
+            <div class="podium"><div class="roof-courtyard"></div></div>
+          </div>
+          <div class="scene-tree tree-1"></div><div class="scene-tree tree-2"></div><div class="scene-tree tree-3"></div><div class="scene-tree tree-4"></div><div class="scene-tree tree-5"></div>
+          <div class="scene-glow" aria-hidden="true"></div><div class="scene-scan" aria-hidden="true"></div><div class="bottom-fade" aria-hidden="true"></div>
+          <button class="scene-control scene-control-video left" type="button" aria-label="视频播放" title="视频播放" data-tooltip="视频播放" aria-pressed="false"><i class="fa-solid fa-clapperboard"></i><span class="scene-control-tooltip">视频播放</span></button>
+        </section>
+<aside class="rail right-rail" aria-label="能源环境信息"><section class="info-panel energy-panel">
+            <h2 class="panel-title">能源管理<span></span></h2>
+            <div class="gauge-grid">
+              <div class="gauge"><div class="gauge-ring" style="--gauge-color:#55e5e2"><strong>3619531</strong><small>kW.h</small></div><label>电耗</label><div class="gauge-meta"><span>月度</span><b>36.2万</b><span>年度</span><b>239.89万</b></div></div>
+              <div class="gauge"><div class="gauge-ring" style="--gauge-color:#3ca6e9"><strong>2436</strong><small>t</small></div><label>水耗</label><div class="gauge-meta"><span>月度</span><b>2436</b><span>年度</span><b>1.86万</b></div></div>
+              <div class="gauge"><div class="gauge-ring" style="--gauge-color:#f2c837"><strong>4143861</strong><small>kW</small></div><label>冷量</label><div class="gauge-meta"><span>月度</span><b>414386</b><span>年度</span><b>260.73万</b></div></div>
+              <div class="gauge"><div class="gauge-ring" style="--gauge-color:#ef725c"><strong>3166.70</strong><small>kW.h</small></div><label>光伏</label><div class="gauge-meta"><span>月度</span><b>3166.70</b><span>年度</span><b>2.26万</b></div></div>
+            </div>
+          </section>
+
+          <section class="info-panel environment-panel">
+            <h2 class="panel-title">环境指标<span></span></h2>
+            <div class="environment-floor-picker" id="environmentFloorPicker"><button class="environment-floor-trigger" type="button" aria-expanded="false"><i class="fa-solid fa-building" aria-hidden="true"></i><span>1栋 5F</span><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></button><div class="environment-floor-menu" role="radiogroup" aria-label="环境指标楼层选择"></div></div>
+            <div class="environment-content">
+              <div class="environment-core" aria-label="环境舒适度"><span class="core-orbit" aria-hidden="true"></span><span class="core-orb"><i class="fa-solid fa-seedling" aria-hidden="true"></i></span><span class="core-platform" aria-hidden="true"></span><span class="core-label">环境舒适度</span></div>
+              <div class="environment-metric left metric-1"><strong>20.9</strong><span>平均温度(℃)</span></div><div class="environment-metric right metric-2"><strong>69.1</strong><span>平均湿度(%RH)</span></div>
+              <div class="environment-metric left metric-3"><strong>576.0</strong><span>CO₂(ppm)</span></div><div class="environment-metric right metric-4"><strong>27.0</strong><span>PM2.5(μg/m³)</span></div>
+              <div class="environment-metric left metric-5"><strong>0.032</strong><span>甲醛(mg/m³)</span></div><div class="environment-metric right metric-6"><strong>0.1</strong><span>TVOC(mg/m³)</span></div>
+            </div>
+          </section>
+          <section class="info-panel carbon-overview-panel">
+            <h2 class="panel-title">碳排放数据<span></span></h2>
+            <div class="carbon-periods" role="tablist" aria-label="碳排放统计周期"><button class="active" type="button" role="tab" aria-selected="true" data-carbon-period="today">今日</button><button type="button" role="tab" aria-selected="false" data-carbon-period="month">本月</button><button type="button" role="tab" aria-selected="false" data-carbon-period="week">本周</button><button type="button" role="tab" aria-selected="false" data-carbon-period="year">本年</button></div>
+            <div class="carbon-building-grid" aria-label="各楼栋碳排放量"><article><span>1号楼碳排</span><strong data-carbon-building="0">26.55</strong><small>tCO₂e</small></article><article><span>2号楼碳排</span><strong data-carbon-building="1">23.86</strong><small>tCO₂e</small></article><article><span>3号楼碳排</span><strong data-carbon-building="2">21.48</strong><small>tCO₂e</small></article><article><span>4号楼碳排</span><strong data-carbon-building="3">19.62</strong><small>tCO₂e</small></article></div>
+            <div class="carbon-record-list"><article><i class="fa-solid fa-bolt" aria-hidden="true"></i><div><strong>智能电表1号楼</strong><span>1号楼1层</span></div><div><b>碳排放量 3.36</b><small>tCO₂e · 2026-09-05</small></div></article><article><i class="fa-solid fa-snowflake" aria-hidden="true"></i><div><strong>智能冷量表1号楼</strong><span>1号楼2层</span></div><div><b>碳排放量 3.12</b><small>tCO₂e · 2026-09-05</small></div></article><article><i class="fa-solid fa-droplet" aria-hidden="true"></i><div><strong>智能水表1号楼</strong><span>1号楼3层</span></div><div><b>碳排放量 2.86</b><small>tCO₂e · 2026-09-05</small></div></article></div>
+          </section></aside>
+      </section>
+    </main>
+    <div class="preview-modal" id="certificateModal" role="dialog" aria-modal="true" aria-labelledby="certificateModalTitle">
+      <button class="preview-close" id="certificateClose" type="button" aria-label="关闭证书预览">×</button>
+      <span id="certificateModalTitle" hidden>荣誉证书预览</span>
+      <img id="certificatePreview" src="assets/carbon-neutral-certificate.png" alt="荣誉证书大图预览">
+    </div>
+    <div class="device-modal" id="deviceModal" role="dialog" aria-modal="true" aria-labelledby="deviceDialogTitle">
+      <div class="device-dialog">
+        <button class="device-dialog-close" id="deviceDialogClose" type="button" aria-label="关闭设备详情">×</button>
+        <div class="device-dialog-head" id="deviceDialogTitle">设备详情-30楼办公区西侧温控面板</div>
+        <div class="device-tabs" role="tablist" aria-label="设备详情分类"><button class="active" type="button" role="tab" data-pane="ledger">设备台账</button><button type="button" role="tab" data-pane="monitor">设备监测</button><button type="button" role="tab" data-pane="alarm">设备报警</button><button type="button" role="tab" data-pane="maintain">设备维保</button><button type="button" role="tab" data-pane="inspect">设备巡检</button><button type="button" role="tab" data-pane="downstream">下游设备</button><button type="button" role="tab" data-pane="qr">设备二维码</button></div>
+        <section class="device-pane active" data-pane="ledger"><h3 class="device-section-title">系统分类</h3><div class="device-fields two"><div class="device-field"><label>所属系统</label><strong>空调系统/空调通风系统/控制面板</strong></div><div class="device-field"><label>品牌型号</label><strong>RTC-626</strong></div></div><h3 class="device-section-title">设备基本信息</h3><div class="device-fields"><div class="device-field"><label>设备名称</label><strong data-device-name>30楼办公区西侧温控面板</strong></div><div class="device-field"><label>设备编号</label><strong data-device-code>30F-WK-32-X07</strong></div><div class="device-field"><label>供货商</label><strong>艾科</strong></div><div class="device-field"><label>供货商联系方式</label><strong>13928325240</strong></div><div class="device-field"><label>出厂日期</label><strong>2024-07-27</strong></div><div class="device-field"><label>安装日期</label><strong>2024-10-24</strong></div><div class="device-field"><label>所属房间</label><strong>30F办公区</strong></div><div class="device-field"><label>安装位置</label><strong data-device-position>30楼办公区西侧温控面板-7</strong></div><div class="device-field"><label>设备编码</label><strong>001_KT04KTTF15_2022</strong></div></div></section>
+<section class="device-pane" data-pane="monitor"><div class="monitor-controls"><div class="device-field monitor-power"><label>开关控制</label><div class="power-buttons"><button class="active" type="button">开启</button><button type="button">关闭</button></div></div><div class="device-field monitor-speed"><label>风速模式</label><div class="speed-buttons"><button class="active" type="button">自动</button><button type="button">低速</button><button type="button">中速</button><button type="button">高速</button></div></div><div class="device-field monitor-reading"><label>室内温度<time>2026-09-09 16:04:53</time></label><strong>26℃</strong></div><div class="device-field monitor-reading"><label>室内湿度<time>2026-09-09 16:04:53</time></label><strong>48.50%RH</strong></div></div></section>
+        <section class="device-pane" data-pane="alarm"><h3 class="device-section-title">设备报警记录</h3><details class="alarm-record" open><summary><time>2025-10-10 17:24:07</time><span><strong>【设备报警】</strong> 设备离线</span></summary><div class="alarm-record-detail"><div class="device-field"><label>报警类型</label><strong>设备离线</strong></div><div class="device-field"><label>报警级别</label><strong>告警</strong></div><div class="device-field"><label>报警状态</label><strong>已处理</strong></div><div class="device-field alarm-record-location"><label>报警位置</label><strong>科创大厦/30F/30F办公区</strong></div></div><div class="alarm-process"><h4>处理详情</h4><div class="alarm-process-item"><time>2025-10-10 17:40:02</time><div><strong>处理人：张工</strong><span>处理详情：现场检查设备通讯线路，重新连接并恢复设备在线状态。</span></div></div><div class="alarm-process-item"><time>2025-10-10 17:45:18</time><div><strong>处理人：李工</strong><span>处理详情：复核设备运行数据，确认报警已消除并完成处理。</span></div></div></div></details><details class="alarm-record"><summary><time>2025-10-10 17:24:06</time><span><strong>【设备报警】</strong> 温控面板设备离线告警</span></summary><div class="alarm-record-detail"><div class="device-field"><label>报警类型</label><strong>设备离线</strong></div><div class="device-field"><label>报警级别</label><strong>告警</strong></div><div class="device-field"><label>报警状态</label><strong>已处理</strong></div><div class="device-field alarm-record-location"><label>报警位置</label><strong>科创大厦/30F/30F办公区</strong></div></div><div class="alarm-process"><h4>处理详情</h4><div class="alarm-process-item"><time>2025-10-10 17:35:22</time><div><strong>处理人：王工</strong><span>处理详情：重启温控面板并检查网络连接，设备通信恢复正常。</span></div></div></div></details><details class="alarm-record"><summary><time>2025-10-10 17:23:44</time><span><strong>【设备报警】</strong> 设备离线</span></summary><div class="alarm-record-detail"><div class="device-field"><label>报警类型</label><strong>设备离线</strong></div><div class="device-field"><label>报警级别</label><strong>告警</strong></div><div class="device-field"><label>报警状态</label><strong>未处理</strong></div><div class="device-field alarm-record-location"><label>报警位置</label><strong>科创大厦/30F/30F办公区</strong></div></div></details></section>
+        <section class="device-pane" data-pane="maintain"><div class="empty-table-head"><span>维保名称</span><span>执行人</span><span>负责部门</span><span>开始时间</span><span>完成时间</span><span>执行结果</span></div><div class="empty-state"><i class="fa-solid fa-box-open"></i><span>暂无数据</span></div></section>
+        <section class="device-pane" data-pane="inspect"><div class="empty-table-head"><span>巡检名称</span><span>执行人</span><span>负责部门</span><span>开始时间</span><span>完成时间</span><span>执行结果</span></div><div class="empty-state"><i class="fa-solid fa-box-open"></i><span>暂无数据</span></div></section>
+        <section class="device-pane" data-pane="downstream"><div class="empty-table-head downstream-table-head"><span>设备名称</span><span>设备编码</span><span>所属房源</span><span>安装位置</span><span>是否智能化</span></div><div class="empty-state"><i class="fa-solid fa-box-open"></i><span>暂无数据</span></div></section>
+        <section class="device-pane" data-pane="qr"><div class="device-qr" aria-label="设备二维码"></div><div class="device-qr-label"><span data-device-name>30楼办公区西侧温控面板</span>（<span data-device-code>30F-WK-32-X07</span>）</div></section>
+      </div>
+    </div>
+  </div>
+  </div>
+  <template id="requirementDocument">
+    <section class="requirement-section" data-requirement-section>
+      <h3>需求说明</h3>
+      <div class="requirement-section-body"><p>总览页集中展示项目建筑概况、荣誉、人员、车辆、能源、环境和设备报警信息，并支持从建筑主体切换至楼层视图查看关联设备。</p></div>
+    </section>
+    <section class="requirement-section" data-requirement-section>
+      <h3>操作入口</h3>
+      <div class="requirement-section-body"><p>可视化大屏 -&gt; 总览</p></div>
+    </section>
+    <section class="requirement-section" data-requirement-section>
+      <h3>交互动作</h3>
+      <div class="requirement-section-body">
+        <ol>
+          <li><strong>建筑主体视图：</strong>中间默认展示主体建筑外观二维平面图，点击“楼层切换”按钮向下展开楼栋/楼层切换面板，运行数据/报警数据。</li>
+          <li><strong>楼层视图：</strong>点击某层，中间视图展示“楼层平面图”，同时左右两边看板数据，展示当前楼层下关联的设备、设备数据及状态统计、实时/历史运行监测、设备报警数据。</li>
+          <li><strong>楼层视图设备详情：</strong>展示当前楼层关联的设备、设备图例，点击设备打开设备详情弹窗；勾选房间信息按钮，右侧面板展示当前楼层的空间类型统计、使用类型统计、设备统计。</li>
+          <li><strong>设备详情点位：</strong>获取后台-设备管理-设备点位选择点位渲染；设备图例/设备图标由后台-设备分类中动态上传。</li>
+          <li><strong>房间信息：</strong>空间类型统计后台-房源管理-房源类型面积占比，鼠标 hover 饼图显示各类型占比数据；使用类型统计后台-房源管理-租售属性占比；设备统计获取设备管理中各子系统设备占比数量。</li>
+        </ol>
+      </div>
+    </section>
+    <section class="requirement-section" data-requirement-section>
+      <h3>数据来源</h3>
+      <div class="requirement-section-body requirement-table-wrap">
+        <h4>建筑概况</h4>
+        <table><thead><tr><th>字段名称</th><th>数据来源</th></tr></thead><tbody>
+          <tr><td>建筑名称</td><td>获取后台-项目管理，建筑名称。</td></tr>
+          <tr><td>建筑规模</td><td>获取后台-项目管理，建筑规模。</td></tr>
+          <tr><td>开工日期</td><td>获取后台-项目管理，开工日期。</td></tr>
+          <tr><td>竣工日期</td><td>获取后台-项目管理，竣工日期。</td></tr>
+          <tr><td>项目定位</td><td>获取后台-项目管理，项目定位。</td></tr>
+          <tr><td>建设单位</td><td>获取后台-项目管理，建设单位。</td></tr>
+          <tr><td>设计单位</td><td>获取后台-项目管理，设计单位。</td></tr>
+          <tr><td>施工单位</td><td>获取后台-项目管理，施工单位。</td></tr>
+        </tbody></table>
+
+        <h4>荣誉展示</h4>
+        <table><thead><tr><th>字段名称</th><th>数据来源</th><th>交互动作</th></tr></thead><tbody>
+          <tr><td>荣誉奖项</td><td>获取后台-项目管理-扩展信息，荣誉奖项上传。</td><td>轮播滚动。</td></tr>
+          <tr><td>荣誉证书</td><td>获取后台-项目管理-扩展信息，荣誉证书上传。</td><td>轮播滚动，点击预览大图，支持下载。</td></tr>
+        </tbody></table>
+
+        <h4>人员统计</h4>
+        <table><thead><tr><th>字段名称</th><th>数据来源</th></tr></thead><tbody>
+          <tr><td>人员总数</td><td>对接第三方人员通行系统获取。</td></tr>
+          <tr><td>访客</td><td>对接第三方人员通行系统获取。</td></tr>
+          <tr><td>人员分区-低中区</td><td>对接第三方人员通行系统获取。</td></tr>
+          <tr><td>人员分区-高区</td><td>对接第三方人员通行系统获取。</td></tr>
+        </tbody></table>
+
+        <h4>车辆统计</h4>
+        <table><thead><tr><th>字段名称</th><th>数据来源</th></tr></thead><tbody>
+          <tr><td>车位总数</td><td>对接第三方智慧停车系统获取。</td></tr>
+          <tr><td>剩余车位</td><td>对接第三方智慧停车系统获取。</td></tr>
+          <tr><td>使用中</td><td>对接第三方智慧停车系统获取。</td></tr>
+          <tr><td>剩余</td><td>对接第三方智慧停车系统获取。</td></tr>
+        </tbody></table>
+
+        <h4>能源管理</h4>
+        <table><thead><tr><th>字段名称</th><th>数据来源</th></tr></thead><tbody>
+          <tr><td>电耗</td><td>1、通过象形动效展示数据实时变化，例如电表转动一圈，数值相应增加。<br>2、月度：获取后台能源管理-用电概览本月用电量。<br>3、年度：获取后台能源管理-用电概览本年用电量。</td></tr>
+          <tr><td>水耗</td><td>1、通过象形动效展示数据实时变化，例如水表转动一圈，数值相应增加。<br>2、月度：获取后台能源管理-用水概览本月用水量。<br>3、年度：获取后台能源管理-用水概览本年用水量。</td></tr>
+          <tr><td>冷量</td><td>1、通过象形动效展示数据实时变化，例如冷量表转动一圈，数值相应增加。<br>2、月度：获取后台能源管理-冷量概览本月冷量。<br>3、年度：获取后台能源管理-冷量概览本年冷量。</td></tr>
+          <tr><td>光伏</td><td>1、通过象形动效展示数据实时变化，例如光伏电表转动一圈，数值相应增加。<br>2、月度：获取后台能源管理-光伏概览本月发电量。<br>3、年度：获取后台能源管理-光伏概览本年发电量。</td></tr>
+        </tbody></table>
+
+        <h4>环境指标</h4>
+        <table><thead><tr><th>字段名称</th><th>数据来源</th></tr></thead><tbody>
+          <tr><td>自持</td><td>自持环境指标：获取后台所有自持房源下关联设备的环境指标平均值；<br>1、平均温度：自持房源下关联设备平均温度；通过象形动效展示数据实时变化，例如温度表变红代表温度升高，数值相应增加；<br>2、平均湿度：自持房源下关联设备平均湿度；<br>3、CO2：自持房源下关联设备 CO2；<br>4、PM2.5：自持房源下关联设备 PM2.5；<br>5、甲醛：自持房源下关联设备甲醛；<br>6、TVOC：自持房源下关联设备 TVOC。</td></tr>
+          <tr><td>租区</td><td>租区环境指标：获取后台所有租区房源下关联设备的环境指标平均值；<br>1、平均温度：租区房源下关联设备平均温度；通过象形动效展示数据实时变化，例如温度表变红代表温度升高，数值相应增加；<br>2、平均湿度：租区房源下关联设备平均湿度；<br>3、CO2：租区房源下关联设备 CO2；<br>4、PM2.5：租区房源下关联设备 PM2.5；<br>5、甲醛：租区房源下关联设备甲醛；<br>6、TVOC：租区房源下关联设备 TVOC。</td></tr>
+        </tbody></table>
+
+        <h4>报警管理</h4>
+        <table><thead><tr><th>字段名称</th><th>数据来源</th></tr></thead><tbody>
+          <tr><td>报警总数</td><td>统计管理后台-报警信息中状态为未处理、处理中和已处理的报警总数。</td></tr>
+          <tr><td>未处理</td><td>统计管理后台-报警信息中状态为未处理的报警总数。</td></tr>
+          <tr><td>已处理</td><td>统计管理后台-报警信息中状态为已处理的报警总数。</td></tr>
+          <tr><td>报警消息</td><td>获取管理后台-报警信息数据，展示报警等级、报警设备、报警位置、报警描述、报警时间和报警状态信息。</td></tr>
+        </tbody></table>
+
+        <h4>设备详情</h4>
+        <table><thead><tr><th>字段名称</th><th>数据来源</th></tr></thead><tbody>
+          <tr><td>设备点位坐标</td><td>获取后台-设备管理-设备点位选择点位渲染。</td></tr>
+          <tr><td>设备分类图例</td><td>获取后台-设备分类中动态上传的设备分类图例。</td></tr>
+          <tr><td>设备图标</td><td>获取后台-设备分类中动态上传的设备图标。</td></tr>
+          <tr><td>设备台账</td><td>获取管理后台-设备管理信息。</td></tr>
+          <tr><td>设备监测</td><td>获取管理后台-IoT平台数据，包括物模型属性定义和物模型功能定义；<br>1、属性定义：实时获取 IoT 平台配置的设备属性定义数据，包括属性名称、值和实时时间；<br>2、功能定义：实时获取 IoT 平台配置的设备功能定义数据，包括功能名称和功能按钮，用于下发控制设备指令。</td></tr>
+          <tr><td>设备报警</td><td>获取后台报警信息-设备报警记录，包括报警记录和处理详情。</td></tr>
+          <tr><td>设备维保</td><td>获取后台-保养管理数据。</td></tr>
+          <tr><td>设备巡检</td><td>获取后台-巡检管理数据。</td></tr>
+          <tr><td>下游设备</td><td>获取后台-设备管理-设备层级中当前主设备关联的下游设备。</td></tr>
+          <tr><td>设备二维码</td><td>获取设备二维码信息，包括设备二维码、设备名称、设备编码，支持下载。</td></tr>
+        </tbody></table>
+      </div>
+    </section>
+  </template>
+  <script src="app.js"></script>
+  <script src="requirement.js"></script>
+</body>
+</html>
+
+

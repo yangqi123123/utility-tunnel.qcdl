@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>性能分析 - 科学岛管廊监控中心</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/tob-ui.css">
+  <link rel="stylesheet" href="../../assets/css/service-center.css?v=3">
+  <link rel="stylesheet" href="../../assets/css/network.css">
+</head>
+<body class="service-center-page" data-menu-key="network.performance" data-page-section="网络管理" data-page-title="性能分析">
+  <div class="app-shell">
+    <aside id="app-sidebar" class="sidebar"></aside>
+    <header id="app-header" class="header"></header>
+    <main class="main">
+      <div class="screen-frame service-dashboard">
+        <section class="card filters" style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap">
+          <div>
+            <span class="form-label">时间粒度</span>
+            <div style="display:flex;gap:6px;margin-top:6px">
+              <button class="chart-period network-period active" type="button" data-period="24小时">24小时</button>
+              <button class="chart-period network-period" type="button" data-period="7天">7天</button>
+              <button class="chart-period network-period" type="button" data-period="30天">30天</button>
+            </div>
+          </div>
+          <label class="form-field"><span class="form-label">分析对象</span>
+            <select class="form-control" id="objectFilter" style="min-width:220px"></select>
+          </label>
+          <button class="btn btn-secondary btn-sm" type="button" id="exportBtn"><i class="fa-solid fa-download"></i> 导出报表</button>
+        </section>
+
+        <section class="performance-kpis">
+          <article class="performance-kpi"><span class="kpi-icon blue"><i class="fa-solid fa-chart-area"></i></span><div><span>带宽峰值利用率</span><strong id="peakBw">82.6%</strong><em id="periodHint">周期：24小时</em></div></article>
+          <article class="performance-kpi"><span class="kpi-icon amber"><i class="fa-solid fa-stopwatch"></i></span><div><span>平均延迟</span><strong id="avgLat">12.8 ms</strong></div></article>
+          <article class="performance-kpi"><span class="kpi-icon green"><i class="fa-solid fa-percent"></i></span><div><span>平均丢包</span><strong id="avgLoss">0.07%</strong></div></article>
+          <article class="performance-kpi"><span class="kpi-icon red"><i class="fa-solid fa-server"></i></span><div><span>主机 CPU / 内存</span><strong id="hostRes">—</strong></div></article>
+        </section>
+
+        <section class="performance-grid">
+          <article class="service-card performance-chart-card">
+            <header class="service-card-header performance-card-head"><div><h2>带宽 / 延迟趋势</h2></div><span id="objectLabel">全网</span></header>
+            <div class="chart-wrap"><div class="chart-y-axis"><span>100%</span><span>75%</span><span>50%</span><span>25%</span><span>0%</span></div><div class="line-chart"><div class="chart-grid-lines"><i></i><i></i><i></i><i></i><i></i></div><div class="chart-area"></div><div class="chart-line"></div><div class="chart-labels"><span>T0</span><span>T1</span><span>T2</span><span>T3</span><span>T4</span><span>T5</span><span>T6</span></div></div></div>
+            <div class="chart-legend"><span><i class="legend-blue"></i>带宽利用率</span><b id="bottleneck">瓶颈提示：峰值带宽 82.6%，建议关注核心上联</b></div>
+          </article>
+          <article class="service-card performance-health-card">
+            <header class="service-card-header performance-card-head"><div><h2>服务主机资源趋势</h2></div></header>
+            <div class="health-list">
+              <div class="health-row"><span>CPU</span><b id="cpuNow">—</b><div><i id="cpuBar" style="width:0%"></i></div></div>
+              <div class="health-row"><span>内存</span><b id="memNow">—</b><div><i id="memBar" style="width:0%"></i></div></div>
+              <div class="health-row"><span>磁盘峰值</span><b id="diskNow">—</b><div><i id="diskBar" style="width:0%"></i></div></div>
+            </div>
+            <div class="health-footer"><span>CPU 趋势 <span class="sparkline" id="cpuSpark"></span></span><span>内存 <span class="sparkline" id="memSpark"></span></span></div>
+          </article>
+        </section>
+      </div>
+    </main>
+  </div>
+  <script src="../../../app/config/menu.js?v=nav-hide-1"></script>
+  <script src="../../../app/components/sidebar.js?v=nav-home-1"></script>
+  <script src="../../../app/components/header.js?v=nav-home-1"></script>
+  <script src="../../../app/data/network-data.js"></script>
+  <script>
+    let period = "24小时";
+    const peaks = { "24小时": "82.6%", "7天": "88.1%", "30天": "91.4%" };
+
+    function spark(el, arr) {
+      el.innerHTML = arr.map((v) => `<i style="height:${Math.max(12, v)}%"></i>`).join("");
+    }
+
+    function render() {
+      document.getElementById("periodHint").textContent = "周期：" + period;
+      document.getElementById("peakBw").textContent = peaks[period];
+      document.getElementById("bottleneck").textContent = `瓶颈提示：峰值带宽 ${peaks[period]}，建议关注核心上联`;
+      const obj = document.getElementById("objectFilter").value;
+      document.getElementById("objectLabel").textContent = obj || "全网";
+      const h = NETWORK_STORE.getHost();
+      const s = NETWORK_STORE.getHostSummary();
+      document.getElementById("hostRes").textContent = `${s.cpuUsage}% / ${s.memUsage}%`;
+      document.getElementById("cpuNow").textContent = h.cpu.usage + "%";
+      document.getElementById("memNow").textContent = h.memory.usage + "%";
+      document.getElementById("diskNow").textContent = s.diskMax + "%";
+      document.getElementById("cpuBar").style.width = h.cpu.usage + "%";
+      document.getElementById("memBar").style.width = h.memory.usage + "%";
+      document.getElementById("diskBar").style.width = s.diskMax + "%";
+      spark(document.getElementById("cpuSpark"), h.cpuTrend);
+      spark(document.getElementById("memSpark"), h.memTrend);
+      if (obj && obj !== "全网" && obj !== "服务主机") {
+        const d = NETWORK_STORE.getDevice(obj);
+        if (d) {
+          document.getElementById("avgLat").textContent = d.latencyMs + " ms";
+          document.getElementById("avgLoss").textContent = d.loss;
+        }
+      } else {
+        document.getElementById("avgLat").textContent = "12.8 ms";
+        document.getElementById("avgLoss").textContent = "0.07%";
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const sel = document.getElementById("objectFilter");
+      sel.innerHTML = `<option value="全网">全网</option><option value="服务主机">服务主机</option>` +
+        NETWORK_STORE.listDevices().map((d) => `<option value="${d.id}">${d.name}</option>`).join("");
+      document.querySelectorAll("[data-period]").forEach((b) => b.addEventListener("click", () => {
+        period = b.dataset.period;
+        document.querySelectorAll("[data-period]").forEach((x) => x.classList.toggle("active", x === b));
+        render();
+      }));
+      sel.addEventListener("change", render);
+      document.getElementById("exportBtn").addEventListener("click", () => alert("已导出性能分析报表（原型）"));
+      render();
+    });
+  </script>
+</body>
+</html>

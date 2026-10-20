@@ -1,0 +1,876 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>设备监测 - 科学岛管廊监控中心</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/tob-ui.css">
+  <link rel="stylesheet" href="../../assets/css/home-monitor.css?v=5">
+  <link rel="stylesheet" href="../../assets/css/monitoring.css">
+  <link rel="stylesheet" href="../../assets/css/base-map.css?v=1">
+  <link rel="stylesheet" href="../../assets/vendor/leaflet/leaflet.css">
+</head>
+<body class="dm-page" data-menu-key="home" data-page-section="科学岛管廊监控中心" data-page-title="设备监测">
+<div class="app-shell">
+  <aside id="app-sidebar" class="sidebar"></aside>
+  <header id="app-header" class="header"></header>
+  <main class="main">
+    <div class="dm-root">
+      <section class="dm-metrics">
+        <article class="dm-metric">
+          <span class="dm-metric-icon"><i class="fa-solid fa-layer-group"></i></span>
+          <div class="dm-metric-label">设备总数 <i class="fa-regular fa-circle-question" title="平台已接入的全部设备数量"></i></div>
+          <strong class="dm-metric-value" id="dmMetricTotal">—</strong>
+          <p class="dm-metric-sub">覆盖 <b id="dmMetricSystems">11</b> 个子系统</p>
+        </article>
+        <article class="dm-metric dm-metric--online">
+          <span class="dm-metric-icon"><i class="fa-solid fa-circle-check"></i></span>
+          <div class="dm-metric-label">在线 / 正常 <i class="fa-regular fa-circle-question" title="心跳正常且在线的设备数量"></i></div>
+          <strong class="dm-metric-value" id="dmMetricOnline">—</strong>
+          <p class="dm-metric-sub"><b id="dmMetricOnlineRate">—</b> 在线率</p>
+        </article>
+        <article class="dm-metric dm-metric--warn">
+          <span class="dm-metric-icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
+          <div class="dm-metric-label">预警设备 <i class="fa-regular fa-circle-question" title="监测指标越限、进入预警区间的设备"></i></div>
+          <strong class="dm-metric-value" id="dmMetricWarn">—</strong>
+          <p class="dm-metric-sub dm-metric-sub--clip" id="dmMetricWarnSystems">—</p>
+        </article>
+        <article class="dm-metric dm-metric--fault">
+          <span class="dm-metric-icon"><i class="fa-solid fa-plug-circle-xmark"></i></span>
+          <div class="dm-metric-label">故障 / 离线 <i class="fa-regular fa-circle-question" title="故障停机或通信中断的设备"></i></div>
+          <strong class="dm-metric-value" id="dmMetricFault">—</strong>
+          <p class="dm-metric-sub"><b id="dmMetricFaultRate">—</b> 需处理</p>
+        </article>
+      </section>
+
+      <section class="dm-stage" id="dmStage">
+        <div class="dm-map" id="dmMap" aria-label="设备态势地图"></div>
+
+        <button class="dm-side-toggle dm-side-toggle--left" type="button" data-dm-collapse="left" title="收起面板" aria-label="收起左侧面板"><i class="fa-solid fa-chevron-left"></i></button>
+        <button class="dm-side-toggle dm-side-toggle--right" type="button" data-dm-collapse="right" title="收起面板" aria-label="收起右侧面板"><i class="fa-solid fa-chevron-right"></i></button>
+
+        <aside class="dm-panel dm-left">
+          <div class="dm-statusbar" id="dmStatusBar">
+            <button class="dm-chip is-active" type="button" data-dm-status="all"><i></i>全部</button>
+            <button class="dm-chip" type="button" data-dm-status="online"><i></i>在线</button>
+            <button class="dm-chip" type="button" data-dm-status="offline"><i></i>离线</button>
+            <button class="dm-chip" type="button" data-dm-status="warn"><i></i>预警</button>
+          </div>
+          <div class="dm-tabs">
+            <button class="dm-tab is-active" type="button" data-dm-mode="system">系统类型</button>
+            <button class="dm-tab" type="button" data-dm-mode="space">空间类型</button>
+          </div>
+          <div class="dm-tree" id="dmTree" role="tree" aria-label="系统类型 / 空间类型"></div>
+        </aside>
+
+        <aside class="dm-panel dm-right">
+          <div class="dm-panel-head">
+            <h2>设备监测明细</h2>
+            <p id="dmScope">所属系统：全部系统</p>
+          </div>
+          <div class="dm-table-wrap" id="dmTableWrap">
+            <table class="dm-table dm-point-table">
+              <thead>
+                <tr>
+                  <th class="dm-col-index">序号</th>
+                  <th>设备名称</th>
+                  <th>设备编码</th>
+                  <th>设备状态</th>
+                  <th>所属系统</th>
+                  <th class="dm-col-op">操作</th>
+                </tr>
+              </thead>
+              <tbody id="dmTableBody"></tbody>
+            </table>
+          </div>
+          <div class="dm-panel-foot dm-panel-foot--pager">
+            <span class="dm-pager-total">共 <b id="dmPointCount">0</b> 个监测点位</span>
+            <span class="dm-page-list" id="dmPointPager"></span>
+          </div>
+        </aside>
+
+        <div class="dm-legend" id="dmLegend">
+          <div class="dm-legend-head">图例 <span id="dmLegendScope">全部系统</span></div>
+          <div class="dm-legend-body" id="dmLegendBody"></div>
+        </div>
+
+        <div class="dm-map-tools">
+          <button type="button" data-dm-map="zoom-in"><i class="fa-solid fa-plus"></i> 放大</button>
+          <button type="button" data-dm-map="zoom-out"><i class="fa-solid fa-minus"></i> 缩小</button>
+          <button type="button" data-dm-map="reset"><i class="fa-solid fa-crosshairs"></i> 复位</button>
+          <button type="button" data-dm-map="fullscreen"><i class="fa-solid fa-expand"></i> 全屏</button>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<div class="dm-modal-mask" id="dmModalMask">
+  <section class="dm-modal" role="dialog" aria-modal="true" aria-labelledby="dmModalTitle">
+    <header class="dm-modal-head">
+      <h2 id="dmModalTitle">设备详情</h2>
+      <button class="dm-modal-close" type="button" data-dm-close aria-label="关闭">×</button>
+    </header>
+    <div class="dm-modal-tabs" role="tablist">
+      <button class="dm-modal-tab is-active" type="button" role="tab" data-dm-tab="info">设备信息</button>
+      <button class="dm-modal-tab" type="button" role="tab" data-dm-tab="live">实时数据</button>
+      <button class="dm-modal-tab" type="button" role="tab" data-dm-tab="history">历史数据</button>
+    </div>
+    <div class="dm-modal-body">
+      <div data-dm-panel="info"></div>
+      <div data-dm-panel="live" hidden></div>
+      <div data-dm-panel="history" hidden></div>
+    </div>
+  </section>
+</div>
+
+  <script src="../../assets/vendor/leaflet/leaflet.js"></script>
+  <script src="../../../app/components/base-map.js"></script>
+  <script src="../../../app/components/device-detail-info.js"></script>
+  <script src="../../../app/config/menu.js?v=nav-hide-1"></script>
+<script src="../../../app/data/system-types.js"></script>
+<script src="../../../app/data/device-categories.js"></script>
+<script src="../../../app/data/device-monitor-data.js"></script>
+<script src="../../../app/components/sidebar.js?v=nav-home-1"></script>
+<script src="../../../app/components/header.js?v=nav-home-1"></script>
+<script src="../../../app/components/drawer.js"></script>
+<script src="../../../app/components/requirement.js"></script>
+<script>
+(function () {
+  "use strict";
+  var D = window.DEVICE_MONITOR_DATA || { systems: [], devices: [], spatialTree: [] };
+  var DEVICES = D.devices || [];
+  var REPORT_TIME = D.reportTime || "";
+  var PAGE_SIZE = 10;
+  var POINT_PAGE_SIZE = 10;
+  var STATUS_TEXT = { online: "在线 / 正常", warn: "预警", fault: "故障", offline: "离线" };
+  var STATUS_SHORT = { online: "在线", warn: "预警", fault: "故障", offline: "离线" };
+  /* 左侧筛选：在线 / 离线 / 预警 —— 离线合并“故障”，与顶部「故障 / 离线」卡片口径一致 */
+  var STATUS_FILTER = { online: ["online"], offline: ["offline", "fault"], warn: ["warn"] };
+  var CHART_COLORS = ["#135AFA", "#14C9BA", "#F7BA1E", "#F53F57", "#9359E3", "#2E9BD6"];
+  var VIDEO_SYSTEM = "视频监控系统";
+  /* 视频监控画面（复用视频监控-实时视频组件的画面资源） */
+  var LIVE_IMAGE = "../../assets/images/access-gate.jpg";
+  var PTZ_PAD = [
+    ["up-left", "fa-arrow-up-left", "向左上"], ["up", "fa-arrow-up", "向上"], ["up-right", "fa-arrow-up-right", "向右上"],
+    ["left", "fa-arrow-left", "向左"], ["stop", "fa-stop", "停止"], ["right", "fa-arrow-right", "向右"],
+    ["down-left", "fa-arrow-down-left", "向左下"], ["down", "fa-arrow-down", "向下"], ["down-right", "fa-arrow-down-right", "向右下"]
+  ];
+
+  var state = {
+    mode: "system",
+    system: "all",
+    /* 空间筛选按完整路径（项目→管廊→舱室→区段），避免同名舱室/区段联动选中 */
+    spacePath: { project: "", corridor: "", room: "", section: "" },
+    status: "all",
+    hidden: {},
+    collapsed: {},
+    panels: { left: false, right: false },
+    tablePage: 1,
+    current: null,
+    tab: "info",
+    history: [],
+    historyRows: [],
+    historyPage: 1,
+    from: "",
+    to: "",
+    period: "today",
+    chartMetrics: [0, 1]
+  };
+
+  var el = function (id) { return document.getElementById(id); };
+  var esc = function (v) { return String(v === undefined || v === null ? "" : v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); };
+  var fmt = function (n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ","); };
+  var dec = function (value, decimals) { return Number(value).toFixed(decimals); };
+  var byId = function (id) { return DEVICES.filter(function (d) { return d.id === id; })[0]; };
+  var emptySpacePath = function () { return { project: "", corridor: "", room: "", section: "" }; };
+  var spacePathKey = function (path) {
+    path = path || emptySpacePath();
+    return [path.project || "", path.corridor || "", path.room || "", path.section || ""].join("\u0001");
+  };
+  var hasSpaceFilter = function () {
+    var path = state.spacePath || emptySpacePath();
+    return !!(path.project || path.corridor || path.room || path.section);
+  };
+  var spacePathLabel = function () {
+    var path = state.spacePath || emptySpacePath();
+    return [path.project, path.corridor, path.room, path.section].filter(Boolean).join(" / ");
+  };
+  var matchesSpacePath = function (device, path) {
+    path = path || emptySpacePath();
+    if (path.project && device.project !== path.project) return false;
+    if (path.corridor && device.corridor !== path.corridor) return false;
+    if (path.room && device.room !== path.room) return false;
+    if (path.section && device.section !== path.section) return false;
+    return true;
+  };
+
+  /* 空间层级默认折叠到舱室层，避免树过长（折叠键带完整路径，同名舱室互不影响） */
+  (D.spatialTree || []).forEach(function (p) {
+    p.corridors.forEach(function (c) {
+      c.cabins.forEach(function (b) {
+        state.collapsed["cabin:" + p.name + "/" + c.name + "/" + b.name] = true;
+      });
+    });
+  });
+
+  /* ---------------- 过滤 ---------------- */
+  function matches(device, opts) {
+    opts = opts || {};
+    if (!opts.ignoreSystem && state.system !== "all" && device.system !== state.system) return false;
+    if (!opts.ignoreHidden && state.hidden[device.type]) return false;
+    if (!opts.ignoreStatus && state.status !== "all") {
+      var filter = STATUS_FILTER[state.status] || [state.status];
+      if (filter.indexOf(device.status) < 0) return false;
+    }
+    if (!opts.ignoreSpace && hasSpaceFilter() && !matchesSpacePath(device, state.spacePath)) return false;
+    return true;
+  }
+  function visibleDevices() { return DEVICES.filter(function (d) { return matches(d); }); }
+  function legendPool() { return DEVICES.filter(function (d) { return matches(d, { ignoreHidden: true }); }); }
+  function treePool() { return DEVICES.filter(function (d) { return matches(d, { ignoreSystem: true }); }); }
+  function countOfPath(path) { return treePool().filter(function (d) { return matchesSpacePath(d, path); }).length; }
+
+  /* ---------------- 顶部统计 ---------------- */
+  function renderMetrics() {
+    var sum = { total: 0, online: 0, warn: 0, fault: 0, offline: 0 };
+    (D.systems || []).forEach(function (s) {
+      sum.total += s.total; sum.online += s.online; sum.warn += s.warn; sum.fault += s.fault; sum.offline += s.offline;
+    });
+    el("dmMetricTotal").textContent = fmt(sum.total);
+    el("dmMetricOnline").textContent = fmt(sum.online);
+    el("dmMetricWarn").textContent = fmt(sum.warn);
+    el("dmMetricFault").textContent = fmt(sum.fault + sum.offline);
+    el("dmMetricSystems").textContent = (D.systems || []).length;
+    el("dmMetricOnlineRate").textContent = (sum.online / sum.total * 100).toFixed(1) + "%";
+    el("dmMetricFaultRate").textContent = ((sum.fault + sum.offline) / sum.total * 100).toFixed(1) + "%";
+    /* 第三张卡的小文案改为展示预警设备所在的系统类型 */
+    var warnSystems = (D.systems || []).filter(function (s) { return s.warn > 0; });
+    var sub = el("dmMetricWarnSystems");
+    if (sub) {
+      var names = warnSystems.map(function (s) { return s.name; });
+      var head = names.slice(0, 2).join("、");
+      sub.textContent = names.length <= 2 ? (names.join("、") + " 共 " + names.length + " 个系统")
+        : head + " 等 " + names.length + " 个系统";
+      sub.title = warnSystems.map(function (s) { return s.name + "：" + s.warn + " 台"; }).join("\n");
+    }
+  }
+
+  /* ---------------- 左侧树 ---------------- */
+  function treeRow(level, kind, value, name, count, options) {
+    options = options || {};
+    var active = false;
+    if (kind === "system") active = state.system === value;
+    else active = spacePathKey(options.path) === spacePathKey(state.spacePath);
+    var key = options.collapseKey || "";
+    var hasToggle = !!key;
+    var expanded = hasToggle && !state.collapsed[key];
+    var toggle = hasToggle
+      ? '<button class="dm-tree-toggle" type="button" data-dm-toggle="' + esc(key) + '" aria-label="' + (expanded ? "收起" : "展开") + '">' + (expanded ? "−" : "+") + "</button>"
+      : '<button class="dm-tree-toggle is-leaf" type="button" tabindex="-1" aria-hidden="true"></button>';
+    var path = options.path || emptySpacePath();
+    return '<div class="dm-tree-row' + (active ? " is-active" : "") + '" data-dm-kind="' + esc(kind) + '" data-dm-value="' + esc(value) + '"'
+      + ' data-dm-project="' + esc(path.project || "") + '"'
+      + ' data-dm-corridor="' + esc(path.corridor || "") + '"'
+      + ' data-dm-room="' + esc(path.room || "") + '"'
+      + ' data-dm-section="' + esc(path.section || "") + '"'
+      + ' role="treeitem" style="padding-left:' + (level * 14 + 6) + 'px">'
+      + toggle
+      + '<span class="dm-tree-name" title="' + esc(name) + '">' + esc(name) + "</span>"
+      + '<span class="dm-tree-count">' + count + "</span>"
+      + "</div>";
+  }
+
+  function renderTree() {
+    var host = el("dmTree");
+    if (!host) return;
+    var html = "";
+    if (state.mode === "system") {
+      var pool = treePool();
+      html += treeRow(0, "system", "all", "全部系统", pool.length, { collapseKey: "systemRoot" });
+      if (!state.collapsed.systemRoot) {
+        (D.systems || []).forEach(function (s) {
+          var count = pool.filter(function (d) { return d.system === s.name; }).length;
+          html += treeRow(1, "system", s.name, s.name, count);
+        });
+      }
+    } else {
+      (D.spatialTree || []).forEach(function (project) {
+        var projectPath = { project: project.name, corridor: "", room: "", section: "" };
+        html += treeRow(0, "project", project.name, project.name, countOfPath(projectPath), { collapseKey: "project:" + project.name, path: projectPath });
+        if (state.collapsed["project:" + project.name]) return;
+        project.corridors.forEach(function (corridor) {
+          var corridorPath = { project: project.name, corridor: corridor.name, room: "", section: "" };
+          var corridorKey = "corridor:" + project.name + "/" + corridor.name;
+          html += treeRow(1, "corridor", corridor.name, corridor.name, countOfPath(corridorPath), { collapseKey: corridorKey, path: corridorPath });
+          if (state.collapsed[corridorKey]) return;
+          corridor.cabins.forEach(function (cabin) {
+            var cabinPath = { project: project.name, corridor: corridor.name, room: cabin.name, section: "" };
+            var cabinKey = "cabin:" + project.name + "/" + corridor.name + "/" + cabin.name;
+            html += treeRow(2, "room", cabin.name, cabin.name, countOfPath(cabinPath), { collapseKey: cabinKey, path: cabinPath });
+            if (state.collapsed[cabinKey]) return;
+            cabin.sections.forEach(function (section) {
+              var sectionPath = { project: project.name, corridor: corridor.name, room: cabin.name, section: section };
+              html += treeRow(3, "section", section, section, countOfPath(sectionPath), { path: sectionPath });
+            });
+          });
+        });
+      });
+    }
+    host.innerHTML = html || '<div class="dm-tree-empty">暂无可选维度</div>';
+  }
+
+  /* ---------------- 图例 ---------------- */
+  function renderLegend() {
+    var host = el("dmLegendBody");
+    if (!host) return;
+    var names = [];
+    legendPool().forEach(function (d) { if (names.indexOf(d.type) < 0) names.push(d.type); });
+    el("dmLegendScope").textContent = state.system === "all" ? "全部系统" : state.system;
+    if (!names.length) { host.innerHTML = '<div class="dm-legend-empty">当前系统暂无设备分类</div>'; return; }
+    host.innerHTML = names.map(function (name) {
+      var style = (D.categoryStyles || {})[name] || { color: "#6B7B8C" };
+      var off = !!state.hidden[name];
+      return '<button class="dm-legend-item' + (off ? " is-off" : "") + '" type="button" data-dm-cat="' + esc(name) + '" title="' + (off ? "点击显示" : "点击隐藏") + '">'
+        + '<i class="fa-solid ' + (off ? "fa-square" : "fa-square-check") + '"></i>'
+        + '<i class="dm-legend-swatch" style="--dm-c:' + esc(style.color) + '"></i>'
+        + "<span>" + esc(name) + "</span></button>";
+    }).join("");
+  }
+
+  /* ---------------- 右侧明细（分页） ---------------- */
+  function pointPages(total) { return Math.max(1, Math.ceil(total / POINT_PAGE_SIZE)); }
+
+  function renderTable() {
+    var list = visibleDevices();
+    var pages = pointPages(list.length);
+    state.tablePage = Math.min(Math.max(1, state.tablePage), pages);
+    var rows = list.slice((state.tablePage - 1) * POINT_PAGE_SIZE, state.tablePage * POINT_PAGE_SIZE);
+    var body = el("dmTableBody");
+    if (body) {
+      body.innerHTML = rows.length ? rows.map(function (d, index) {
+        /* 明细表统一单行省略：文本放进 title，鼠标悬浮显示完整内容 */
+        return '<tr data-dm-id="' + esc(d.id) + '">'
+          + '<td class="dm-col-index">' + ((state.tablePage - 1) * POINT_PAGE_SIZE + index + 1) + "</td>"
+          + '<td class="dm-cell-name" title="' + esc(d.name) + '">' + esc(d.name) + "</td>"
+          + '<td class="dm-cell-code" title="' + esc(d.code) + '">' + esc(d.code) + "</td>"
+          + '<td title="' + esc(STATUS_TEXT[d.status] || STATUS_SHORT[d.status]) + '"><span class="dm-state ' + d.status + '"><i></i>' + STATUS_SHORT[d.status] + "</span></td>"
+          + '<td title="' + esc(d.system) + '">' + esc(d.system) + "</td>"
+          + '<td class="dm-col-op"><button class="dm-link" type="button" data-dm-view="' + esc(d.id) + '">查看</button></td>'
+          + "</tr>";
+      }).join("") : '<tr><td class="dm-empty" colspan="6">当前筛选条件下暂无监测点位</td></tr>';
+    }
+    renderPointPager(list.length, pages);
+    el("dmPointCount").textContent = list.length;
+    var scope = "所属系统：" + (state.system === "all" ? "全部系统" : state.system);
+    if (hasSpaceFilter()) scope += "　空间维度：" + spacePathLabel();
+    el("dmScope").textContent = scope;
+  }
+
+  function renderPointPager(total, pages) {
+    var host = el("dmPointPager");
+    if (!host) return;
+    if (!total) { host.innerHTML = ""; return; }
+    var html = '<button class="dm-page-btn" type="button" data-dm-point-page="prev"' + (state.tablePage <= 1 ? " disabled" : "") + ' aria-label="上一页"><i class="fa-solid fa-angle-left"></i></button>';
+    for (var i = 1; i <= pages; i += 1) {
+      html += '<button class="dm-page-btn' + (i === state.tablePage ? " is-active" : "") + '" type="button" data-dm-point-page="' + i + '" aria-label="第 ' + i + ' 页">' + i + "</button>";
+    }
+    html += '<button class="dm-page-btn" type="button" data-dm-point-page="next"' + (state.tablePage >= pages ? " disabled" : "") + ' aria-label="下一页"><i class="fa-solid fa-angle-right"></i></button>';
+    html += '<span class="dm-pager-size">每页 ' + POINT_PAGE_SIZE + " 条</span>";
+    host.innerHTML = html;
+  }
+
+  /* ---------------- 地图 ---------------- */
+  var map = null;
+  var markerLayer = null;
+  var baseMap = null;
+  function initMap() {
+    var host = el("dmMap");
+    if (!host) return;
+    /* 底图复用共享组件（与应急调度台等页面同一套在线底图 + 本地保底底图） */
+    baseMap = window.BASE_MAP ? window.BASE_MAP.create(host, { center: D.mapCenter || [30.4595, 114.4296], zoom: 14 }) : null;
+    map = baseMap ? baseMap.map : null;
+    if (!map) return;
+    markerLayer = L.layerGroup().addTo(map);
+    renderMap();
+    window.setTimeout(function () { map.invalidateSize(); }, 150);
+  }
+  function renderMap() {
+    if (!map || !markerLayer) return;
+    markerLayer.clearLayers();
+    visibleDevices().forEach(function (d) {
+      var cls = "dm-marker" + (d.status === "online" ? "" : " is-" + d.status);
+      var icon = L.divIcon({
+        className: "dm-marker-wrap",
+        html: '<span class="' + cls + '" style="--dm-c:' + esc(d.color) + '"><i class="fa-solid ' + esc(d.icon) + '"></i></span>',
+        iconSize: [24, 24], iconAnchor: [12, 12]
+      });
+      var marker = L.marker([d.lat, d.lng], { icon: icon, riseOnHover: true, keyboard: false });
+      window.BASE_MAP && window.BASE_MAP.bindTip(marker, d.name);
+      marker.on("click", function () { openDetail(d.id); });
+      marker.addTo(markerLayer);
+    });
+  }
+
+  /* ---------------- 渲染聚合 ---------------- */
+  function renderAll() {
+    renderMetrics();
+    renderTree();
+    renderLegend();
+    renderTable();
+    renderMap();
+  }
+
+  /* ---------------- 设备详情弹窗 ---------------- */
+
+  function renderInfo() {
+    var d = state.current;
+    el("dmModalTitle").textContent = "设备详情";
+    document.querySelector('[data-dm-panel="info"]').innerHTML = window.DEVICE_DETAIL_INFO.html(d, esc);
+  }
+
+  function isVideoDevice(d) { return !!(d && (d.video || d.system === VIDEO_SYSTEM)); }
+
+  /* 视频监控设备的实时数据：实时视频画面（复用视频监控-实时视频组件） */
+  function videoFeedHtml(d) {
+    var offline = d.status === "offline";
+    var statusText = offline ? "离线" : d.status === "warn" ? "预警" : "在线";
+    var screen = '<div class="video-screen' + (offline ? " is-offline" : "") + '" data-dm-live-time="' + esc(REPORT_TIME) + '">';
+    screen += offline
+      ? '<div class="dm-feed-offline"><i class="fa-solid fa-video-slash"></i><span>视频信号中断</span><em>' + (d.lastOnline ? "最后在线 " + esc(d.lastOnline) : "该点位当前离线") + "</em></div>"
+      : '<img src="' + LIVE_IMAGE + '" alt="' + esc(d.name) + '实时监控画面">';
+    if (!offline && d.ptz) {
+      screen += '<button type="button" class="video-ptz-trigger" data-dm-ptz-toggle aria-label="' + esc(d.name) + '云台控制" title="云台控制"><i class="fa-solid fa-arrows-up-down-left-right"></i></button>';
+    }
+    screen += '<button type="button" class="video-fullscreen" data-dm-fullscreen aria-label="全屏查看' + esc(d.name) + '" title="全屏查看"><i class="fa-solid fa-expand"></i></button>';
+    if (!offline && d.ptz) screen += videoPtzHtml(d, statusText);
+    screen += "</div>";
+    return '<div class="dm-live-video"><div class="video-feed" data-dm-feed="' + esc(d.id) + '">'
+      + '<div class="video-feed-title"><span>' + esc(d.name) + '</span><span class="dm-feed-status is-' + esc(d.status) + '">' + statusText + "</span></div>"
+      + screen + "</div></div>";
+  }
+
+  function videoPtzHtml(d, statusText) {
+    return '<div class="video-ptz" id="dmLivePtz" hidden>'
+      + '<div class="video-ptz-head"><span>云台控制</span></div>'
+      + '<button type="button" class="video-ptz-close" data-dm-ptz-close aria-label="关闭云台控制"><i class="fa-solid fa-xmark"></i></button>'
+      + '<div class="video-ptz-camera">' + esc(d.name) + " · " + statusText + "</div>"
+      + '<div class="ptz-pad" aria-label="云台方向控制">'
+      + PTZ_PAD.map(function (item) {
+        return '<button type="button"' + (item[0] === "stop" ? ' class="stop"' : "") + ' data-dm-ptz="' + item[0] + '" aria-label="' + item[2] + '"><i class="fa-solid ' + item[1] + '"></i></button>';
+      }).join("") + "</div></div>";
+  }
+
+  function videoMetaHtml(d) {
+    var meta = d.metrics.map(function (m) {
+      return "<span><em>" + esc(m.name) + "</em><b>" + dec(m.value, m.decimals) + (m.unit ? esc(m.unit) : "") + "</b></span>";
+    }).join("");
+    return '<div class="dm-video-meta"><span class="dm-video-meta-title">视频流信息</span>'
+      + "<span><em>视频通道</em><b>" + esc(d.channel || "—") + "</b></span>"
+      + "<span><em>分辨率</em><b>" + esc(d.resolution || "—") + "</b></span>"
+      + meta + "</div>";
+  }
+
+  function renderLive() {
+    var d = state.current;
+    var host = document.querySelector('[data-dm-panel="live"]');
+    if (!host) return;
+    if (isVideoDevice(d)) { host.innerHTML = videoFeedHtml(d); return; }
+    host.innerHTML = '<div class="dm-live-grid">' + d.metrics.map(function (m) {
+      return '<div class="dm-live-card">'
+        + '<span class="dm-live-name">' + esc(m.name) + "</span>"
+        + '<div class="dm-live-value">' + dec(m.value, m.decimals) + (m.unit ? '<span class="dm-live-unit">' + esc(m.unit) + "</span>" : "") + "</div>"
+        + '<span class="dm-live-time">' + esc(REPORT_TIME) + "</span>"
+        + "</div>";
+    }).join("") + "</div>";
+  }
+
+  function renderHistory() {
+    var d = state.current;
+    var cols = d.metrics;
+    document.querySelector('[data-dm-panel="history"]').innerHTML =
+      '<h3 class="dm-block-title">历史数据</h3>'
+      + '<div class="dm-filter-bar">'
+      + '<span class="dm-filter-label">数据接收时间</span>'
+      + '<input type="date" id="dmHistoryFrom" value="' + esc(state.from) + '">'
+      + '<span class="dm-filter-sep">-</span>'
+      + '<input type="date" id="dmHistoryTo" value="' + esc(state.to) + '">'
+      + '<button class="btn btn-primary" type="button" id="dmHistorySearch">搜索</button>'
+      + '<button class="btn btn-secondary" type="button" id="dmHistoryReset">重置</button>'
+      + "</div>"
+      + '<div class="dm-history-table-wrap"><table class="dm-table dm-history-table"><thead><tr><th>数据接收时间</th>'
+      + cols.map(function (m) { return "<th>" + esc(m.name) + "</th>"; }).join("")
+      + '</tr></thead><tbody id="dmHistoryBody"></tbody></table></div>'
+      + '<div class="dm-pager"><span class="dm-pager-total">共 <b id="dmHistoryTotal">0</b> 条，每页显示 ' + PAGE_SIZE + " 条</span><span id=\"dmPagerButtons\"></span></div>"
+      + '<div class="dm-chart-head"><h3 class="dm-block-title">历史曲线</h3><div class="dm-period-switch">'
+      + ["today", "month", "year"].map(function (p) {
+        return '<button type="button" data-dm-period="' + p + '"' + (state.period === p ? ' class="is-active"' : "") + ">" + ({ today: "今日", month: "本月", year: "本年" }[p]) + "</button>";
+      }).join("")
+      + "</div></div>"
+      + '<div class="dm-chart-legend" id="dmChartLegend"></div>'
+      + '<div class="dm-chart" id="dmChart"><div class="dm-chart-mask"></div><div class="dm-chart-tip"></div></div>';
+    renderHistoryRows();
+    bindHistoryFilter();
+    if (state.tab === "history") renderChart();
+  }
+
+  function renderHistoryRows() {
+    var d = state.current;
+    state.historyRows = state.history.filter(function (row) {
+      var day = row.time.slice(0, 10);
+      if (state.from && day < state.from) return false;
+      if (state.to && day > state.to) return false;
+      return true;
+    });
+    var pages = Math.max(1, Math.ceil(state.historyRows.length / PAGE_SIZE));
+    state.historyPage = Math.min(Math.max(1, state.historyPage), pages);
+    var rows = state.historyRows.slice((state.historyPage - 1) * PAGE_SIZE, state.historyPage * PAGE_SIZE);
+    var body = el("dmHistoryBody");
+    if (body) {
+      body.innerHTML = rows.length ? rows.map(function (row) {
+        return "<tr><td>" + esc(row.time) + "</td>" + row.values.map(function (v, i) { return "<td>" + dec(v, d.metrics[i].decimals) + "</td>"; }).join("") + "</tr>";
+      }).join("") : '<tr><td class="dm-empty" colspan="' + (d.metrics.length + 1) + '">当前时间范围内暂无数据</td></tr>';
+    }
+    el("dmHistoryTotal").textContent = state.historyRows.length;
+    var buttons = '<button class="dm-page-btn" type="button" data-dm-page="prev"' + (state.historyPage <= 1 ? " disabled" : "") + ">‹</button>";
+    for (var i = 1; i <= pages; i += 1) buttons += '<button class="dm-page-btn' + (i === state.historyPage ? " is-active" : "") + '" type="button" data-dm-page="' + i + '">' + i + "</button>";
+    buttons += '<button class="dm-page-btn" type="button" data-dm-page="next"' + (state.historyPage >= pages ? " disabled" : "") + ">›</button>";
+    el("dmPagerButtons").innerHTML = buttons;
+  }
+
+  function bindHistoryFilter() {
+    el("dmHistorySearch").addEventListener("click", function () {
+      state.from = el("dmHistoryFrom").value;
+      state.to = el("dmHistoryTo").value;
+      state.historyPage = 1;
+      renderHistoryRows();
+    });
+    el("dmHistoryReset").addEventListener("click", function () {
+      state.from = ""; state.to = ""; state.historyPage = 1;
+      el("dmHistoryFrom").value = ""; el("dmHistoryTo").value = "";
+      renderHistoryRows();
+    });
+    var pager = el("dmPagerButtons");
+    pager.addEventListener("click", function (event) {
+      var button = event.target.closest("[data-dm-page]");
+      if (!button || button.disabled) return;
+      var pages = Math.max(1, Math.ceil(state.historyRows.length / PAGE_SIZE));
+      var action = button.dataset.dmPage;
+      if (action === "prev") state.historyPage = Math.max(1, state.historyPage - 1);
+      else if (action === "next") state.historyPage = Math.min(pages, state.historyPage + 1);
+      else state.historyPage = Number(action);
+      renderHistoryRows();
+    });
+  }
+
+  /* ---------------- 历史曲线 ---------------- */
+  function renderChart() {
+    var d = state.current;
+    var host = el("dmChart");
+    if (!host || !d) return;
+    var legend = el("dmChartLegend");
+    legend.innerHTML = d.metrics.map(function (m, i) {
+      var on = state.chartMetrics.indexOf(i) >= 0;
+      return '<button type="button" class="' + (on ? "" : "is-off") + '" data-dm-metric="' + i + '" style="--dm-c:' + CHART_COLORS[i % CHART_COLORS.length] + '">'
+        + "<i></i>" + esc(m.name) + " <em>" + dec(m.value, m.decimals) + (m.unit ? esc(m.unit) : "") + "</em></button>";
+    }).join("");
+
+    var width = Math.max(320, host.clientWidth || 700);
+    var height = host.clientHeight || 236;
+    var pad = { left: 10, right: 10, top: 10, bottom: 22 };
+    var labels = D.labelsOf(state.period);
+    var points = labels.length;
+    var plotW = width - pad.left - pad.right;
+    var plotH = height - pad.top - pad.bottom;
+    var step = D.labelStep[state.period] || 1;
+    var series = state.chartMetrics.map(function (mi) {
+      var metric = d.metrics[mi];
+      var values = D.seriesOf(d, mi, state.period);
+      var min = Math.min.apply(null, values);
+      var max = Math.max.apply(null, values);
+      return { mi: mi, metric: metric, values: values, min: min, max: max, range: (max - min) || 1, color: CHART_COLORS[mi % CHART_COLORS.length] };
+    });
+    var xAt = function (i) { return pad.left + (points <= 1 ? plotW / 2 : plotW * i / (points - 1)); };
+    var yAt = function (s, v) { return pad.top + plotH * 0.92 - plotH * 0.84 * ((v - s.min) / s.range); };
+
+    var svg = '<svg viewBox="0 0 ' + width + " " + height + '" preserveAspectRatio="none" aria-label="历史曲线">';
+    [0, 0.33, 0.66, 1].forEach(function (ratio) {
+      var y = (pad.top + plotH * ratio).toFixed(1);
+      svg += '<line x1="' + pad.left + '" y1="' + y + '" x2="' + (width - pad.right) + '" y2="' + y + '" stroke="#eef2f8" stroke-width="1" stroke-dasharray="4 4"/>';
+    });
+    svg += '<line x1="0" y1="' + (height - pad.bottom) + '" x2="' + width + '" y2="' + (height - pad.bottom) + '" stroke="#e5eaf3"/>';
+    series.forEach(function (s) {
+      var path = s.values.map(function (v, i) { return (i ? "L" : "M") + xAt(i).toFixed(1) + " " + yAt(s, v).toFixed(1); }).join(" ");
+      svg += '<path d="' + path + '" fill="none" stroke="' + s.color + '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+    });
+    svg += '<line id="dmChartCross" x1="0" y1="' + pad.top + '" x2="0" y2="' + (height - pad.bottom) + '" stroke="#c3cddb" stroke-width="1" opacity="0"/>';
+    labels.forEach(function (label, i) {
+      if (i % step !== 0 && i !== points - 1) return;
+      var anchor = i === 0 ? "start" : i === points - 1 ? "end" : "middle";
+      svg += '<text x="' + xAt(i).toFixed(1) + '" y="' + (height - 6) + '" fill="#86909C" font-size="10" text-anchor="' + anchor + '">' + esc(label) + "</text>";
+    });
+    svg += "</svg>";
+    host.innerHTML = '<div class="dm-chart-mask"></div><div class="dm-chart-tip"></div>' + svg;
+    host.querySelector("svg").style.width = width + "px";
+    host.querySelector("svg").style.height = height + "px";
+
+    var mask = host.querySelector(".dm-chart-mask");
+    var tip = host.querySelector(".dm-chart-tip");
+    var cross = host.querySelector("#dmChartCross");
+    mask.addEventListener("mousemove", function (event) {
+      var rect = host.getBoundingClientRect();
+      var ratio = (event.clientX - rect.left - pad.left) / (plotW || 1);
+      var index = Math.round(ratio * (points - 1));
+      index = Math.min(Math.max(index, 0), points - 1);
+      var x = xAt(index);
+      cross.setAttribute("x1", x.toFixed(1));
+      cross.setAttribute("x2", x.toFixed(1));
+      cross.setAttribute("opacity", "1");
+      tip.className = "dm-chart-tip is-open";
+      tip.innerHTML = "<strong>" + esc(labels[index]) + "</strong>" + series.map(function (s) {
+        return '<span style="--dm-c:' + s.color + '"><i></i>' + esc(s.metric.name) + "<b>" + dec(s.values[index], s.metric.decimals) + (s.metric.unit ? esc(s.metric.unit) : "") + "</b></span>";
+      }).join("");
+      var left = Math.min(Math.max(x + 12, 4), Math.max(width - 150, 4));
+      tip.style.left = left + "px";
+      tip.style.top = "6px";
+    });
+    mask.addEventListener("mouseleave", function () {
+      tip.className = "dm-chart-tip";
+      cross.setAttribute("opacity", "0");
+    });
+  }
+
+  /* ---------------- 弹窗控制 ---------------- */
+  function closeVideoPtz() {
+    var panel = el("dmLivePtz");
+    if (panel) panel.hidden = true;
+    document.querySelectorAll("[data-dm-ptz-toggle]").forEach(function (button) { button.classList.remove("is-active"); });
+  }
+  function toggleFeedFullscreen(feed) {
+    if (!feed) return;
+    if (document.fullscreenElement) { if (document.exitFullscreen) document.exitFullscreen(); return; }
+    if (feed.requestFullscreen) feed.requestFullscreen();
+    else feed.classList.toggle("is-fullscreen");
+  }
+  function openDetail(id) {
+    var device = byId(id);
+    if (!device) return;
+    state.current = device;
+    state.tab = "info";
+    state.history = (D.historyOf ? D.historyOf(device) : []).map(function (row) { return { time: row.time, values: row.values.slice() }; });
+    state.historyPage = 1;
+    state.from = ""; state.to = "";
+    state.period = "today";
+    state.chartMetrics = device.metrics.map(function (m, i) { return i; }).slice(0, 2);
+    if (!state.chartMetrics.length) state.chartMetrics = [0];
+    var modal = document.querySelector(".dm-modal");
+    var historyTab = document.querySelector('[data-dm-tab="history"]');
+    var video = isVideoDevice(device);
+    if (modal) modal.classList.toggle("is-video", video);
+    if (historyTab) historyTab.hidden = video;
+    el("dmModalMask").classList.add("is-open");
+    document.body.style.overflow = "hidden";
+    renderInfo();
+    renderLive();
+    renderHistory();
+    setTab("info");
+  }
+  function closeDetail() {
+    closeVideoPtz();
+    document.querySelectorAll(".video-feed.is-fullscreen").forEach(function (feed) { feed.classList.remove("is-fullscreen"); });
+    el("dmModalMask").classList.remove("is-open");
+    var modal = document.querySelector(".dm-modal");
+    var historyTab = document.querySelector('[data-dm-tab="history"]');
+    if (modal) modal.classList.remove("is-video");
+    if (historyTab) historyTab.hidden = false;
+    document.body.style.overflow = "";
+  }
+  function setTab(tab) {
+    if (tab === "history" && isVideoDevice(state.current)) tab = "info";
+    state.tab = tab;
+    document.querySelectorAll("[data-dm-tab]").forEach(function (b) { b.classList.toggle("is-active", b.dataset.dmTab === tab); });
+    document.querySelectorAll("[data-dm-panel]").forEach(function (p) { p.hidden = p.dataset.dmPanel !== tab; });
+    if (tab === "history") renderChart();
+  }
+
+  /* ---------------- 事件绑定 ---------------- */
+  function bindEvents() {
+    el("dmModalMask").addEventListener("click", function (event) {
+      if (event.target === el("dmModalMask")) closeDetail();
+    });
+    document.querySelector("[data-dm-close]").addEventListener("click", closeDetail);
+    document.querySelectorAll("[data-dm-tab]").forEach(function (button) {
+      button.addEventListener("click", function () { setTab(button.dataset.dmTab); });
+    });
+    document.querySelector('[data-dm-panel="history"]').addEventListener("click", function (event) {
+      var metric = event.target.closest("[data-dm-metric]");
+      if (metric) {
+        var index = Number(metric.dataset.dmMetric);
+        var at = state.chartMetrics.indexOf(index);
+        if (at >= 0) { if (state.chartMetrics.length > 1) state.chartMetrics.splice(at, 1); }
+        else state.chartMetrics.push(index);
+        state.chartMetrics.sort(function (a, b) { return a - b; });
+        renderChart();
+        return;
+      }
+      var period = event.target.closest("[data-dm-period]");
+      if (period) {
+        state.period = period.dataset.dmPeriod;
+        document.querySelectorAll("[data-dm-period]").forEach(function (b) { b.classList.toggle("is-active", b === period); });
+        renderChart();
+      }
+    });
+
+    document.querySelector('[data-dm-panel="live"]').addEventListener("click", function (event) {
+      var ptzToggle = event.target.closest("[data-dm-ptz-toggle]");
+      if (ptzToggle) {
+        var ptzPanel = el("dmLivePtz");
+        if (ptzPanel) {
+          ptzPanel.hidden = !ptzPanel.hidden;
+          ptzToggle.classList.toggle("is-active", !ptzPanel.hidden);
+        }
+        return;
+      }
+      if (event.target.closest("[data-dm-ptz-close]")) { closeVideoPtz(); return; }
+      var ptzButton = event.target.closest("[data-dm-ptz]");
+      if (ptzButton) {
+        var pad = ptzButton.closest(".ptz-pad");
+        pad.querySelectorAll("[data-dm-ptz]").forEach(function (button) { button.classList.remove("is-active"); });
+        ptzButton.classList.add("is-active");
+        return;
+      }
+      var fullscreen = event.target.closest("[data-dm-fullscreen]");
+      if (fullscreen) toggleFeedFullscreen(fullscreen.closest(".video-feed"));
+    });
+
+    document.querySelectorAll("[data-dm-status]").forEach(function (chip) {
+      chip.addEventListener("click", function () {
+        state.status = chip.dataset.dmStatus;
+        state.tablePage = 1;
+        document.querySelectorAll("[data-dm-status]").forEach(function (item) { item.classList.toggle("is-active", item === chip); });
+        renderAll();
+      });
+    });
+
+    /* 左右悬浮面板展开 / 收起 */
+    document.querySelectorAll("[data-dm-collapse]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var side = button.dataset.dmCollapse;
+        var collapsed = !state.panels[side];
+        state.panels[side] = collapsed;
+        el("dmStage").classList.toggle("is-" + side + "-collapsed", collapsed);
+        button.classList.toggle("is-collapsed", collapsed);
+        button.title = collapsed ? "展开面板" : "收起面板";
+        button.setAttribute("aria-label", collapsed ? "展开" + (side === "left" ? "左侧" : "右侧") + "面板" : "收起" + (side === "left" ? "左侧" : "右侧") + "面板");
+        if (map) window.setTimeout(function () { map.invalidateSize(); }, 220);
+      });
+    });
+
+    /* 右侧明细分页 */
+    el("dmPointPager").addEventListener("click", function (event) {
+      var button = event.target.closest("[data-dm-point-page]");
+      if (!button || button.disabled) return;
+      var pages = pointPages(visibleDevices().length);
+      var action = button.dataset.dmPointPage;
+      if (action === "prev") state.tablePage = Math.max(1, state.tablePage - 1);
+      else if (action === "next") state.tablePage = Math.min(pages, state.tablePage + 1);
+      else state.tablePage = Number(action);
+      renderTable();
+      el("dmTableWrap").scrollTop = 0;
+    });
+
+    document.querySelectorAll("[data-dm-mode]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        state.mode = button.dataset.dmMode;
+        /* 系统维度与空间维度互斥，切换时清空另一维度，避免出现不可见筛选 */
+        if (state.mode === "space") state.system = "all";
+        else state.spacePath = emptySpacePath();
+        state.tablePage = 1;
+        document.querySelectorAll("[data-dm-mode]").forEach(function (item) { item.classList.toggle("is-active", item === button); });
+        renderAll();
+      });
+    });
+
+    el("dmTree").addEventListener("click", function (event) {
+      var toggle = event.target.closest("[data-dm-toggle]");
+      if (toggle && !toggle.classList.contains("is-leaf")) {
+        event.stopPropagation();
+        var key = toggle.dataset.dmToggle;
+        if (state.collapsed[key]) delete state.collapsed[key]; else state.collapsed[key] = true;
+        renderTree();
+        return;
+      }
+      var row = event.target.closest("[data-dm-kind]");
+      if (!row) return;
+      var kind = row.dataset.dmKind;
+      var value = row.dataset.dmValue;
+      if (kind === "system") {
+        state.system = value;
+      } else {
+        var nextPath = {
+          project: row.dataset.dmProject || "",
+          corridor: row.dataset.dmCorridor || "",
+          room: row.dataset.dmRoom || "",
+          section: row.dataset.dmSection || ""
+        };
+        /* 再次点击同一路径则取消筛选 */
+        state.spacePath = spacePathKey(nextPath) === spacePathKey(state.spacePath) ? emptySpacePath() : nextPath;
+      }
+      state.tablePage = 1;
+      renderAll();
+    });
+
+    el("dmLegendBody").addEventListener("click", function (event) {
+      var item = event.target.closest("[data-dm-cat]");
+      if (!item) return;
+      var name = item.dataset.dmCat;
+      if (state.hidden[name]) delete state.hidden[name]; else state.hidden[name] = true;
+      state.tablePage = 1;
+      renderAll();
+    });
+
+    el("dmTableBody").addEventListener("click", function (event) {
+      var view = event.target.closest("[data-dm-view]");
+      if (view) { openDetail(view.dataset.dmView); return; }
+      var row = event.target.closest("[data-dm-id]");
+      if (row) openDetail(row.dataset.dmId);
+    });
+
+    document.querySelector(".dm-map-tools").addEventListener("click", function (event) {
+      var button = event.target.closest("[data-dm-map]");
+      if (!button || !map) return;
+      var action = button.dataset.dmMap;
+      if (action === "zoom-in") map.zoomIn();
+      else if (action === "zoom-out") map.zoomOut();
+      else if (action === "reset") map.setView(D.mapCenter || [30.4595, 114.4296], 14);
+      else if (action === "fullscreen") {
+        var stage = document.querySelector(".dm-stage");
+        if (document.fullscreenElement) document.exitFullscreen();
+        else stage.requestFullscreen && stage.requestFullscreen();
+      }
+    });
+
+    document.addEventListener("keydown", function (event) {
+      if (event.key !== "Escape" || !el("dmModalMask").classList.contains("is-open")) return;
+      /* Escape 逐层关闭：全屏画面 → 云台控制面板 → 设备详情弹窗 */
+      if (document.fullscreenElement) { if (document.exitFullscreen) document.exitFullscreen(); return; }
+      var ptzPanel = el("dmLivePtz");
+      if (ptzPanel && !ptzPanel.hidden) { closeVideoPtz(); return; }
+      closeDetail();
+    });
+    window.addEventListener("resize", function () {
+      if (map) map.invalidateSize();
+      if (el("dmModalMask").classList.contains("is-open") && state.tab === "history") renderChart();
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    initMap();
+    bindEvents();
+    renderAll();
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+.house-page .screen-frame { max-width: 1680px; }
+.house-filters .filter-actions { align-items: end; }
+.house-filters.is-collapsed .form-field:nth-child(n+6) { display: none; }
+.house-list-card { overflow: hidden; }
+.house-toolbar { min-height: 56px; padding: 0 24px; }
+.house-toolbar .card-title { margin: 0; }
+.house-table { min-width: 2200px; }
+.house-table th, .house-table td { white-space: nowrap; }
+.house-table th:last-child, .house-table td:last-child { min-width: 190px; }
+.house-page .table-actions-sticky th:last-child, .house-page .table-actions-sticky td:last-child { position: sticky; right: 0; z-index: 2; background: #fff; box-shadow: -8px 0 16px rgba(26,28,31,.06); }
+.house-page .table-actions-sticky th:last-child { background: var(--primary-bg); }
+.house-page .table-actions-sticky tbody tr:hover td:last-child { background: #f7f9ff; }
+.house-page .icon-btn { width: 32px; height: 32px; border: 1px solid var(--border); border-radius: 50%; display: inline-grid; place-items: center; color: var(--text-primary); background: #fff; cursor: pointer; }
+.house-page .icon-btn:hover { color: var(--primary); border-color: var(--primary); background: var(--primary-bg); }
+.house-page .icon-btn { display: none; }
+.house-page .upload-box { min-height: 180px; border: 1px dashed #b8c6dc; border-radius: 4px; display: grid; place-items: center; align-content: center; gap: 6px; color: var(--text-secondary); text-align: center; }
+.house-page .upload-box i { font-size: 32px; color: var(--primary); }
+.house-page .upload-box p, .house-page .upload-box small { margin: 0; }
+.house-page .upload-box small { font-size: 12px; }
+.house-page .drawer-upload-box { min-height: 96px; }
+.house-page .drawer-upload-name { margin-top: 6px; color: var(--text-primary); font-size: 12px; word-break: break-all; }
+.house-page .detail-text { margin: 0; color: var(--text-primary); line-height: 1.7; }
+.house-page .textarea-count-wrap { position: relative; display: block; }
+.house-page .textarea-count-wrap .textarea { padding-bottom: 24px; }
+.house-page .textarea-count-wrap .field-count { position: absolute; right: 12px; bottom: 8px; margin: 0; line-height: 16px; pointer-events: none; }
+.house-panorama-entry { min-height: 40px; display: flex; align-items: center; gap: 12px; padding: 4px 0; }
+.house-panorama-status { min-width: 0; overflow: hidden; color: var(--text-secondary); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.house-panorama-field.has-file .house-panorama-status { color: var(--primary); }
+.house-panorama-help { display: block; margin-top: 4px; color: var(--text-secondary); font-size: 12px; }
+.panorama-manager-mask { position: fixed; inset: 0; z-index: 1200; display: grid; place-items: center; padding: 24px; background: rgba(26,28,31,.45); }
+.panorama-manager-modal { width: min(1180px,96vw); max-height: 92vh; display: flex; flex-direction: column; overflow: hidden; border-radius: 4px; background: #fff; box-shadow: 0 16px 48px rgba(26,28,31,.2); }
+.panorama-modal-head { min-height: 56px; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; border-bottom: 1px solid var(--divider); }
+.panorama-modal-head h2 { margin: 0; color: var(--text-title); font-size: 16px; font-weight: 600; }
+.panorama-modal-head button { width: 28px; height: 28px; border: 0; color: var(--text-secondary); background: transparent; cursor: pointer; font-size: 20px; }
+.panorama-modal-body { min-height: 0; flex: 1; overflow: auto; padding: 24px; }
+.panorama-picker { min-height: 580px; display: grid; grid-template-columns: 184px minmax(0,1fr) 224px; gap: 16px; }
+.panorama-floor-list { max-height: 580px; overflow-y: auto; padding-right: 8px; border-right: 1px solid var(--divider); }
+.panorama-building-title { margin: 0 0 8px; padding: 8px 10px; color: var(--text-title); background: var(--primary-bg); font-size: 14px; font-weight: 600; }
+.panorama-floor-button { width: 100%; height: 34px; margin-bottom: 4px; border: 0; border-radius: 2px; color: var(--text-primary); background: #fff; cursor: pointer; }
+.panorama-floor-button:hover,.panorama-floor-button.active { color: var(--primary); background: var(--primary-light); }
+.panorama-canvas { min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+.panorama-canvas h3 { margin: 0; color: var(--text-title); font-size: 14px; font-weight: 600; }
+.panorama-plan-wrap { min-height: 0; flex: 1; display: grid; place-items: center; overflow: auto; border: 1px solid #173f63; background: #082d50; }
+.panorama-plan-stage { position: relative; width: 100%; max-width: 720px; }
+.panorama-plan-stage img { display: block; width: 100%; height: auto; }
+.panorama-room { position: absolute; display: grid; place-items: center; border: 1px solid transparent; color: transparent; background: transparent; cursor: pointer; }
+.panorama-room span { padding: 2px 6px; border-radius: 2px; color: #d9ffff; background: rgba(8,45,80,.74); font-size: 12px; opacity: 0; }
+.panorama-room:hover,.panorama-room.active { border: 2px solid #49d8ff; background: rgba(19,90,250,.24); box-shadow: inset 0 0 18px rgba(73,216,255,.2); }
+.panorama-room:hover span,.panorama-room.active span { opacity: 1; }
+.panorama-side-panel { min-width: 0; padding: 16px; border: 1px solid var(--border); background: #fafcff; }
+.panorama-empty { height: 100%; min-height: 320px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; color: var(--text-secondary); text-align: center; }
+.panorama-empty i { color: #b8c6dc; font-size: 32px; }
+.panorama-empty strong { color: var(--text-title); font-size: 14px; }
+.panorama-empty span { max-width: 170px; font-size: 12px; }
+.panorama-room-panel { display: flex; flex-direction: column; gap: 16px; }
+.panorama-room-meta { display: grid; gap: 4px; padding-bottom: 12px; border-bottom: 1px solid var(--divider); }
+.panorama-room-meta span,.panorama-room-meta small { color: var(--text-secondary); font-size: 12px; }
+.panorama-room-meta strong { color: var(--text-title); font-size: 18px; }
+.panorama-upload-empty { min-height: 180px; display: grid; place-items: center; align-content: center; gap: 8px; border: 1px dashed #b8c6dc; color: var(--text-secondary); background: #fff; text-align: center; }
+.panorama-upload-empty i { color: var(--primary); font-size: 28px; }
+.panorama-upload-button { width: 100%; }
+.panorama-preview-card { overflow: hidden; border: 1px solid var(--border); background: #fff; }
+.panorama-preview-card img { display: block; width: 100%; aspect-ratio: 16/9; object-fit: cover; }
+.panorama-file-name { padding: 10px 12px 4px; overflow: hidden; color: var(--text-primary); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.panorama-file-actions { display: flex; justify-content: flex-end; gap: 4px; padding: 4px 8px 10px; }
+.panorama-modal-foot { min-height: 56px; display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding: 12px 24px; border-top: 1px solid var(--divider); }
+.panorama-image-mask { position: fixed; inset: 0; z-index: 1250; display: grid; place-items: center; padding: 32px; background: rgba(8,18,32,.82); }
+.panorama-image-dialog { width: min(1040px,92vw); max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; border-radius: 4px; background: #fff; }
+.panorama-image-dialog header { min-height: 52px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; border-bottom: 1px solid var(--divider); }
+.panorama-image-dialog header button { width: 28px; height: 28px; border: 0; color: var(--text-secondary); background: transparent; cursor: pointer; font-size: 20px; }
+.panorama-image-dialog img { display: block; max-width: 100%; max-height: calc(90vh - 52px); object-fit: contain; background: #111827; }
+@media (max-width: 900px) { .panorama-picker { grid-template-columns: 150px minmax(0,1fr); } .panorama-side-panel { grid-column: 2; } }
+@media (max-width: 720px) { .panorama-manager-mask { padding: 8px; } .panorama-modal-body { padding: 16px; } .panorama-picker { min-height: 0; grid-template-columns: 1fr; } .panorama-floor-list { max-height: 160px; border-right: 0; border-bottom: 1px solid var(--divider); } .panorama-plan-wrap { min-height: 360px; } .panorama-side-panel { grid-column: auto; } }
+@media (max-width: 720px) { .house-toolbar { align-items: flex-start; flex-direction: column; gap: 12px; padding: 16px; } .house-toolbar .btn-row { flex-wrap: wrap; } }

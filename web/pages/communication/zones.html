@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>广播分区 - 科学岛管廊监控中心</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/tob-ui.css">
+  <link rel="stylesheet" href="../../assets/css/communication.css">
+</head>
+<body class="monitoring-page communication-page" data-menu-key="communication.zones" data-page-section="通信系统" data-page-title="广播分区">
+  <div class="app-shell">
+    <aside id="app-sidebar" class="sidebar"></aside>
+    <header id="app-header" class="header"></header>
+    <main class="main">
+      <div class="screen-frame stack communication-shell">
+        <section class="page-head communication-page-head">
+          <div>
+            <h1 class="page-title">广播分区</h1>
+            <p class="page-desc">分区与终端归属台账；发起紧急广播跳转应急调度台。</p>
+          </div>
+          <button class="btn btn-primary" type="button" data-zone-broadcast><i class="fa-solid fa-bullhorn"></i> 发起紧急广播</button>
+        </section>
+        <section class="communication-stats" aria-label="分区统计">
+          <article class="communication-stat"><span class="communication-stat-icon"><i class="fa-solid fa-layer-group"></i></span><div><span class="communication-stat-label">分区数</span><strong class="communication-stat-value" id="zoneStatZones">0</strong></div></article>
+          <article class="communication-stat"><span class="communication-stat-icon"><i class="fa-solid fa-bullhorn"></i></span><div><span class="communication-stat-label">终端数</span><strong class="communication-stat-value" id="zoneStatTerminals">0</strong></div></article>
+          <article class="communication-stat"><span class="communication-stat-icon"><i class="fa-solid fa-circle-pause"></i></span><div><span class="communication-stat-label">空闲</span><strong class="communication-stat-value" id="zoneStatIdle">0</strong></div></article>
+          <article class="communication-stat"><span class="communication-stat-icon"><i class="fa-solid fa-volume-high"></i></span><div><span class="communication-stat-label">广播中</span><strong class="communication-stat-value" id="zoneStatBroadcasting">0</strong></div></article>
+        </section>
+        <section class="communication-call-grid">
+          <section class="communication-card">
+            <div class="communication-card-head"><h2>广播分区</h2></div>
+            <div class="communication-call-list" id="zoneList"></div>
+          </section>
+          <section class="communication-card">
+            <div class="communication-card-head">
+              <h2 id="zoneDetailTitle">分区终端</h2>
+              <small id="zoneDetailMeta">请选择分区</small>
+            </div>
+            <div class="communication-table-wrap">
+              <table class="table communication-table">
+                <thead><tr><th>终端编号</th><th>终端名称</th><th>状态</th></tr></thead>
+                <tbody id="zoneTerminalBody"></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+      </div>
+    </main>
+  </div>
+  <script src="../../../app/config/menu.js?v=comm-c2-1"></script>
+  <script src="../../../app/data/communication-data.js"></script>
+  <script src="../../../app/components/sidebar.js?v=nav-home-1"></script>
+  <script src="../../../app/components/header.js?v=nav-home-1"></script>
+  <script src="../../../app/components/drawer.js"></script>
+  <script src="../../../app/components/communication-zones.js"></script>
+  <script src="../../../app/components/requirement.js"></script>
+</body>
+</html>

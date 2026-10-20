@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>门禁通行权限 - 科学岛管廊监控中心</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/tob-ui.css">
+  <link rel="stylesheet" href="../../assets/css/inspection.css">
+  <link rel="stylesheet" href="../../assets/css/access-control.css">
+</head>
+<body class="access-page" data-menu-key="access-control.permissions" data-page-section="门禁系统" data-page-title="通行权限" data-access-page="permissions">
+  <div class="app-shell">
+    <aside id="app-sidebar" class="sidebar"></aside>
+    <header id="app-header" class="header"></header>
+    <main class="main">
+      <div class="screen-frame stack">
+        <section class="card access-filter">
+          <div class="access-filter-grid">
+            <label class="form-field"><span class="form-label">名称 / 人员 / 门禁点</span><input class="form-control" data-filter="keyword" placeholder="请输入关键字"></label>
+            <label class="form-field"><span class="form-label">状态</span><select class="form-control" data-filter="status"><option value="">全部状态</option><option>启用</option><option>停用</option><option>生效中</option><option>已到期</option></select></label>
+            <div></div><div></div>
+            <div class="access-filter-buttons">
+              <button class="btn btn-secondary" type="button" data-action="reset">重置</button>
+              <button class="btn btn-primary" type="button" data-action="search">搜索</button>
+            </div>
+          </div>
+        </section>
+        <section class="card">
+          <div class="access-tabs">
+            <button class="access-tab active" type="button" data-access-tab="schedules">时间计划</button>
+            <button class="access-tab" type="button" data-access-tab="groups">权限组</button>
+            <button class="access-tab" type="button" data-access-tab="grants">个人授权</button>
+          </div>
+          <div data-access-pane="schedules">
+            <header class="access-card-head access-ledger-toolbar">
+              <h2>时间计划列表</h2>
+              <button class="btn btn-primary" type="button" data-action="add-schedule"><i class="fa-solid fa-plus"></i> 新增时间计划</button>
+            </header>
+            <div class="table-wrap">
+              <table class="table access-table">
+                <thead><tr><th>计划名称</th><th>适用日期</th><th>通行时段</th><th>引用数</th><th>状态</th><th>操作</th></tr></thead>
+                <tbody id="scheduleBody"></tbody>
+              </table>
+            </div>
+            <div class="access-pagination" id="schedulePagination"></div>
+          </div>
+          <div data-access-pane="groups" hidden>
+            <header class="access-card-head access-ledger-toolbar">
+              <h2>权限组列表</h2>
+              <button class="btn btn-primary" type="button" data-action="add-group"><i class="fa-solid fa-plus"></i> 新增权限组</button>
+            </header>
+            <div class="table-wrap">
+              <table class="table access-table">
+                <thead><tr><th>权限组</th><th>成员数</th><th>门禁点范围</th><th>时间计划</th><th>状态</th><th>操作</th></tr></thead>
+                <tbody id="groupBody"></tbody>
+              </table>
+            </div>
+            <div class="access-pagination" id="groupPagination"></div>
+          </div>
+          <div data-access-pane="grants" hidden>
+            <header class="access-card-head access-ledger-toolbar">
+              <div class="access-title-inline">
+                <h2>个人授权列表</h2>
+                <p class="access-mini-note">用于检修/访客等短期通行，判定时优先于权限组；不绑定时间计划。</p>
+              </div>
+              <button class="btn btn-primary" type="button" data-action="add-grant"><i class="fa-solid fa-plus"></i> 新增个人授权</button>
+            </header>
+            <div class="table-wrap">
+              <table class="table access-table">
+                <thead><tr><th>人员</th><th>门禁点</th><th>生效时间</th><th>失效时间</th><th>授权原因</th><th>状态</th><th>操作</th></tr></thead>
+                <tbody id="grantBody"></tbody>
+              </table>
+            </div>
+            <div class="access-pagination" id="grantPagination"></div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+  <script src="../../../app/config/menu.js"></script>
+  <script src="../../../app/components/sidebar.js"></script>
+  <script src="../../../app/components/header.js"></script>
+  <script src="../../../app/components/drawer.js"></script>
+  <script src="../../../app/components/requirement.js"></script>
+  <script src="../../../app/data/access-control-data.js"></script>
+  <script src="../../../app/components/access-control.js"></script>
+</body>
+</html>

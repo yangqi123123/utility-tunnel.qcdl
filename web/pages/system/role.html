@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>角色管理 - 科学岛管廊监控中心</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/tob-ui.css">
+</head>
+<body class="role-page" data-menu-key="system.role" data-page-section="系统管理" data-page-title="角色管理">
+  <div class="app-shell"><aside id="app-sidebar" class="sidebar"></aside><header id="app-header" class="header"></header><main class="main"><div class="screen-frame stack">
+    <section class="page-head"><div><h1 class="page-title">角色管理</h1><p class="page-desc">配置角色权限范围，并管理角色与用户的授权关系。</p></div></section>
+    <section class="card filters role-filters"><div class="filter-actions role-filter-row"><label class="form-field"><span class="form-label">角色名称</span><input class="form-control" data-filter="name" placeholder="请输入"></label><label class="form-field"><span class="form-label">角色状态</span><select class="form-control" data-filter="status"><option value="">请选择</option><option>正常</option><option>停用</option></select></label><button class="btn btn-secondary" data-action="reset">重置</button><button class="btn btn-primary" data-action="search">搜索</button></div></section>
+    <section class="role-workspace">
+      <article class="card role-panel"><div class="card-title-row role-panel-head"><div><h2 class="card-title">角色列表</h2><span class="panel-helper">选择角色授权用户</span></div><div class="btn-row"><button class="btn btn-danger-outline" data-action="delete-selected">删除</button><button class="btn btn-primary" data-action="create"><i class="fa-solid fa-plus"></i> 新增</button></div></div><div class="table-wrap"><table class="table role-table"><thead><tr><th class="check-cell"><input type="checkbox"></th><th>角色名称</th><th>权限标识</th><th>数据权限</th><th>排序</th><th>状态</th><th>操作</th></tr></thead><tbody id="roleTable"></tbody></table></div><div class="pagination"><span>共 5 条记录，每页 10 条</span><span class="page-item active">1</span></div></article>
+      <article class="card role-panel"><div class="card-title-row role-panel-head"><h2 class="card-title">普通用户授权用户</h2><div class="btn-row"><button class="btn btn-secondary" data-action="cancel-auth">取消授权</button><button class="btn btn-primary" data-action="select-user">授权用户</button></div></div><div class="table-wrap"><table class="table role-user-table"><thead><tr><th class="check-cell"><input type="checkbox"></th><th>用户账号</th><th>用户信息</th></tr></thead><tbody id="roleUserTable"></tbody></table></div><div class="pagination"><span>共 4 条记录，每页 10 条</span><span class="page-item active">1</span></div></article>
+    </section>
+  </div></main></div>
+  <script src="../../../app/config/menu.js?v=nav-hide-1"></script><script src="../../../app/components/sidebar.js?v=nav-home-1"></script><script src="../../../app/components/header.js?v=nav-home-1"></script><script src="../../../app/components/drawer.js"></script><script src="../../../app/components/requirement.js"></script>
+  <script>
+    const roles = [{ id: 1, name: "超级管理员", code: "superadmin", data: "全部数据权限", sort: 1, status: "正常" }, { id: 2, name: "普通用户", code: "11", data: "全部数据权限", sort: 1, status: "正常" }, { id: 3, name: "userAdmin 用户管理员", code: "userAdmin", data: "全部数据权限", sort: 1, status: "正常" }, { id: 4, name: "本部门及以下", code: "test1", data: "本部门及以下数据权限", sort: 3, status: "正常" }, { id: 5, name: "仅本人", code: "test2", data: "仅本人数据权限", sort: 4, status: "停用" }];
+    const roleUsers = { 1: [{ account: "1000001", name: "Open AI 开放 AI" }], 2: [{ account: "1000001", name: "Open AI 开放 AI" }, { account: "1000002", name: "DeepSeek 深蓝" }, { account: "1000003", name: "Qwen 克温" }, { account: "1000004", name: "用户4" }], 3: [{ account: "1000002", name: "DeepSeek 深蓝" }], 4: [{ account: "1000004", name: "用户4" }], 5: [] };
+    let selectedRoleId = 2;
+    const allRoleUsers = Object.values(roleUsers).flat();
+    roleUsers.map = (callback) => allRoleUsers.map(callback);
+    const roleBody = document.getElementById("roleTable"), userBody = document.getElementById("roleUserTable");
+    roleBody.innerHTML = roles.map((role, index) => `<tr data-role-id="${role.id}"><td class="check-cell"><input type="checkbox"></td><td>${role.name}</td><td><span class="tag">${role.code}</span></td><td><span class="tag success">${role.data}</span></td><td>${role.sort}</td><td><button class="status-switch ${role.status === "正常" ? "on" : "off"}" data-role-status="${role.id}">${role.status}</button></td><td><button class="table-action" data-role-action="edit" data-role-id="${role.id}">编辑</button><button class="table-action" data-role-action="permission" data-role-id="${role.id}">权限</button><button class="table-action status-danger" data-role-action="delete" data-role-id="${role.id}">删除</button></td></tr>`).join("");
+    function renderRoleUsers(roleId = selectedRoleId) { const selected = roleUsers[roleId] || []; document.querySelector(".role-user-table").closest(".role-panel").querySelector(".card-title").textContent = `${roleById(roleId).name}授权用户`; userBody.innerHTML = selected.map((user) => `<tr><td class="check-cell"><input type="checkbox"></td><td>${user.account}</td><td><div class="user-cell"><span class="user-list-avatar"><i class="fa-solid fa-user"></i></span><strong>${user.name}</strong></div></td></tr>`).join("") || `<tr><td colspan="3" class="empty-cell">暂无授权用户</td></tr>`; }
+    renderRoleUsers();
+    function roleById(id) { return roles.find((role) => String(role.id) === String(id)) || roles[0]; }
+    function roleDrawer(mode, role = roles[0]) { const permission = mode === "permission"; const body = permission ? `<section class="detail-section"><h3 class="detail-title">角色信息</h3><div class="detail-grid"><div class="info-item"><span class="info-label">角色名称</span><span class="info-value">${role.name}</span></div><div class="info-item"><span class="info-label">权限标识</span><span class="info-value">${role.code}</span></div></div></section><div class="role-permission-tabs"><button class="active" data-permission-tab="menu">后台菜单权限</button><button data-permission-tab="screen">大屏菜单权限</button><button data-permission-tab="data">数据权限</button></div><div class="permission-view" data-permission-view="menu"><div class="permission-toolbar"><button class="btn btn-primary btn-sm">节点关联</button><button class="btn btn-secondary btn-sm">节点独立</button><span class="tag">已选中 12 个节点</span><button class="btn btn-secondary btn-sm">收起</button><button class="btn btn-secondary btn-sm">展开</button></div><div class="permission-tree"><label class="tree-node root"><input type="checkbox" checked><i class="fa-solid fa-folder"></i> 系统管理</label><div class="tree-children"><label class="tree-node"><input type="checkbox" checked><i class="fa-solid fa-bars"></i> 用户管理 <span class="permission-checks"><input type="checkbox" checked> 用户查询 <input type="checkbox" checked> 用户新增 <input type="checkbox" checked> 用户修改 <input type="checkbox" checked> 用户删除</span></label><label class="tree-node"><input type="checkbox" checked><i class="fa-solid fa-bars"></i> 角色管理 <span class="permission-checks"><input type="checkbox" checked> 角色查询 <input type="checkbox" checked> 角色新增 <input type="checkbox" checked> 角色修改 <input type="checkbox" checked> 角色删除</span></label><label class="tree-node"><input type="checkbox"><i class="fa-solid fa-layer-group"></i> 设备管理</label></div></div></div><div class="permission-view hidden" data-permission-view="screen"><div class="permission-tree"><label class="tree-node root"><input type="checkbox" checked><i class="fa-solid fa-display"></i> 总览</label><label class="tree-node"><input type="checkbox" checked><i class="fa-solid fa-gears"></i> 机电系统</label><label class="tree-node"><input type="checkbox" checked><i class="fa-solid fa-tower-broadcast"></i> 弱电系统</label><label class="tree-node"><input type="checkbox"><i class="fa-solid fa-bolt"></i> 能源管理</label><label class="tree-node"><input type="checkbox"><i class="fa-solid fa-chart-line"></i> 运营管理</label></div></div><div class="permission-view hidden" data-permission-view="data"><label class="form-field"><span class="form-label">权限范围 <span class="form-hint">更改后需要用户重新登录才能生效</span></span><select class="form-control"><option>全部数据权限</option><option>自定义数据权限</option><option>本部门数据权限</option><option>本部门以及以下数据权限</option><option>仅本人数据权限</option><option>部门以及以下或本人数据权限</option></select></label></div>` : `<div class="form-grid-2"><label class="form-field form-item"><span class="form-label form-required">角色名称</span><input class="form-control" value="${mode === "create" ? "" : role.name}" placeholder="请输入"></label><label class="form-field form-item"><span class="form-label form-required">权限标识</span><input class="form-control" value="${mode === "create" ? "" : role.code}" placeholder="如：test simpleUser等"><span class="form-hint">权限标识用于系统内部识别角色</span></label><label class="form-field form-item"><span class="form-label form-required">角色排序</span><input class="form-control" value="${role.sort}"></label><label class="form-field form-item"><span class="form-label form-required">角色状态</span><select class="form-control"><option>正常</option><option>停用</option></select></label></div><label class="form-field form-item"><span class="form-label">备注</span><textarea class="form-control textarea" placeholder="请输入"></textarea></label>`; window.openAppDrawer({ title: permission ? "分配权限" : mode === "create" ? "新增" : "编辑角色", subtitle: "系统管理 · 角色管理", body, footer: `<button class="btn btn-secondary" data-drawer-close>取消</button><button class="btn btn-primary" data-drawer-close>确认</button>` }); }
+    document.addEventListener("click", (event) => { const action = event.target.closest("[data-action]")?.dataset.action; if (action === "create") roleDrawer("create"); if (action === "select-user") window.openAppDrawer({ title: "选择用户", subtitle: "系统管理 · 角色管理", body: `<div class="filters drawer-filters"><div class="filter-actions"><label class="form-field"><span class="form-label">用户账号</span><input class="form-control" placeholder="请输入"></label><label class="form-field"><span class="form-label">手机号码</span><input class="form-control" placeholder="请输入"></label><button class="btn btn-secondary">重置</button><button class="btn btn-primary">搜索</button></div></div><div class="table-wrap"><table class="table"><thead><tr><th>选择</th><th>用户账号</th><th>用户信息</th></tr></thead><tbody>${roleUsers.map((user) => `<tr><td><input type="checkbox"></td><td>${user.account}</td><td>${user.name}</td></tr>`).join("")}</tbody></table></div>`, footer: `<button class="btn btn-secondary" data-drawer-close>取消</button><button class="btn btn-primary" data-drawer-close>确认</button>` }); const rowAction = event.target.closest("[data-role-action]"); if (rowAction) roleDrawer(rowAction.dataset.roleAction, roleById(rowAction.dataset.roleId)); const status = event.target.closest("[data-role-status]"); if (status) { const role = roleById(status.dataset.roleStatus); role.status = role.status === "正常" ? "停用" : "正常"; status.textContent = role.status; status.classList.toggle("on"); status.classList.toggle("off"); } });
+    function openRoleConfirm(title, message, confirmLabel, onConfirm) {
+      document.querySelectorAll(".role-confirm-mask").forEach((item) => item.remove());
+      const mask = document.createElement("div"); mask.className = "role-confirm-mask"; mask.innerHTML = `<div class="role-confirm-dialog" role="dialog" aria-modal="true"><div class="role-confirm-head"><i class="fa-solid fa-circle-exclamation"></i><strong>${title}</strong><button type="button" data-confirm-close aria-label="关闭">×</button></div><p>${message}</p><div class="role-confirm-actions"><button class="btn btn-secondary" data-confirm-close>取消</button><button class="btn ${confirmLabel === "确定" ? "btn-danger-outline" : "btn-primary"}" data-confirm-ok>${confirmLabel}</button></div></div>`;
+      document.body.append(mask);
+      const close = () => mask.remove();
+      mask.querySelectorAll("[data-confirm-close]").forEach((button) => button.addEventListener("click", close));
+      mask.querySelector("[data-confirm-ok]").addEventListener("click", () => { onConfirm(); close(); });
+    }
+    const baseRoleDrawer = roleDrawer;
+    roleDrawer = function (mode, role) {
+      if (mode === "delete") {
+        const boundUsers = roleUsers[role.id] || [];
+        if (boundUsers.length) openRoleConfirm("提示", `角色「${role.name}」已绑定授权用户，不允许删除。`, "知道了", () => {});
+        else openRoleConfirm("提示", `确认删除选中的角色「${role.name}」吗？`, "确定", () => { const index = roles.findIndex((item) => item.id === role.id); if (index >= 0) roles.splice(index, 1); roleBody.innerHTML = roles.map((item) => `<tr data-role-id="${item.id}"><td class="check-cell"><input type="checkbox"></td><td>${item.name}</td><td><span class="tag">${item.code}</span></td><td><span class="tag success">${item.data}</span></td><td>${item.sort}</td><td>${item.status}</td><td><button class="table-action" data-role-action="edit" data-role-id="${item.id}">编辑</button><button class="table-action" data-role-action="permission" data-role-id="${item.id}">权限</button><button class="table-action status-danger" data-role-action="delete" data-role-id="${item.id}">删除</button></td></tr>`).join(""); });
+        return;
+      }
+      baseRoleDrawer(mode, role);
+    };
+    const roleDeleteButton = document.querySelector('[data-action="delete-selected"]');
+    const cancelAuthButton = document.querySelector('[data-action="cancel-auth"]');
+    function updateSelectionButtons() {
+      roleDeleteButton.disabled = !document.querySelector('#roleTable input[type="checkbox"]:checked');
+      cancelAuthButton.disabled = !document.querySelector('#roleUserTable input[type="checkbox"]:checked');
+    }
+    roleDeleteButton.addEventListener("click", () => {
+      const checked = document.querySelector('#roleTable input[type="checkbox"]:checked');
+      if (checked) roleDrawer("delete", roleById(checked.closest("tr").dataset.roleId));
+    });
+    document.addEventListener("change", (event) => {
+      if (event.target.closest("#roleTable, #roleUserTable")) updateSelectionButtons();
+    });
+    document.addEventListener("click", (event) => {
+      const deleteAction = event.target.closest('[data-role-action="delete"]');
+      if (deleteAction) { event.preventDefault(); event.stopImmediatePropagation(); roleDrawer("delete", roleById(deleteAction.dataset.roleId)); }
+    }, true);
+    updateSelectionButtons();
+    document.addEventListener("click", (event) => {
+      const action = event.target.closest("[data-action]")?.dataset.action;
+      if (action === "cancel-auth") {
+        const checkedRows = [...userBody.querySelectorAll("input[type=checkbox]:checked")].map((input) => input.closest("tr"));
+        if (!checkedRows.length) return;
+        const accounts = new Set(checkedRows.map((row) => row?.children[1]?.textContent.trim()));
+        openRoleConfirm("提示", `确认取消选中的【${checkedRows.length}】条授权记录吗？`, "确定", () => { roleUsers[selectedRoleId] = (roleUsers[selectedRoleId] || []).filter((user) => !accounts.has(user.account)); renderRoleUsers(selectedRoleId); updateSelectionButtons(); });
+        return;
+      }
+      const roleRow = event.target.closest("#roleTable tr");
+      if (roleRow && !event.target.closest("button, input")) { selectedRoleId = Number(roleRow.dataset.roleId); document.querySelectorAll("#roleTable tr").forEach((row) => row.classList.remove("selected")); roleRow.classList.add("selected"); renderRoleUsers(selectedRoleId); }
+      const permissionTab = event.target.closest("[data-permission-tab]");
+      if (permissionTab) { const drawerBody = document.getElementById("drawerBody"); drawerBody.querySelectorAll("[data-permission-tab]").forEach((tab) => tab.classList.toggle("active", tab === permissionTab)); drawerBody.querySelectorAll("[data-permission-view]").forEach((view) => view.classList.toggle("hidden", view.dataset.permissionView !== permissionTab.dataset.permissionTab)); }
+    });
+  </script>
+</body></html>
+
+
+
+
+
+
