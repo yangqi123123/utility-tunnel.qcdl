@@ -6,9 +6,9 @@
     target: "选择上报目标平台，对应市级或区级管廊运维 / 生命线系统。",
     name: "本系统内展示的接口名称，便于运维识别与任务关联。",
     url: "上级平台提供的 HTTPS 上报地址，任务执行时按此地址推送数据。",
-    protocol: "与上级平台约定的通信协议。最小实现优先 RESTful，WebService 用于存量对接。",
+    protocol: "与上级平台约定的通信协议。北向最小版仅支持 HTTP（生产环境请使用 HTTPS 地址）。",
     direction: "最小版仅支持单向上报；不接收上级指令下发。",
-    auth: "调用上级接口时的身份认证方式，保障上报链路可验身份。",
+    auth: "调用上级 HTTP 接口时的身份认证方式，保障上报链路可验身份。",
     secret: "对应认证方式的密钥、Token 或证书口令，保存后不明文展示。",
     whitelist: "仅允许名单内 IP 访问本侧出口或被上级回调；多个地址用逗号分隔。",
     topics: "本接口允许上报的数据主题范围，任务勾选主题不得超过此范围。",
@@ -29,7 +29,6 @@
     "数据库管理",
     "资产管理",
     "设备监测",
-    "视频监控系统",
     "通信系统",
     "入侵报警系统",
     "智能井盖系统",
@@ -107,8 +106,8 @@
       name: "市级运行数据上报",
       target: "市级城市生命线平台",
       url: "https://api.city.example.com/v1/report",
-      protocol: "RESTful",
-      auth: "OAuth 2.0 + HTTPS",
+      protocol: "HTTP",
+      auth: "OAuth 2.0",
       secret: "******",
       whitelist: "10.20.0.0/24",
       topics: ["告警", "设备状态", "运行指标"],
@@ -122,7 +121,7 @@
       name: "区级安全事件上报",
       target: "区域管廊运维平台",
       url: "https://api.district.example.com/v1/events",
-      protocol: "RESTful",
+      protocol: "HTTP",
       auth: "AK / SK 签名",
       secret: "******",
       whitelist: "10.30.0.0/24",
@@ -164,7 +163,7 @@
       ifaceName: "市级运行数据上报",
       period: "每小时",
       topics: ["设备状态"],
-      scopes: ["资产管理", "设备监测", "视频监控系统"],
+      scopes: ["资产管理", "设备监测", "通信系统"],
       enabled: false,
       lastRunText: "2026-10-15 16:35:12 · 重试",
     },
@@ -181,8 +180,8 @@
       { startAt: "2026-10-14 00:00:00", endAt: "2026-10-14 00:00:30", result: "失败", summary: "上级接口超时", duration: "--", scopes: ["环境与设备监控", "电力监测系统", "设备监测"] },
     ],
     "N-00003": [
-      { startAt: "2026-10-15 16:35:08", endAt: "2026-10-15 16:35:12", result: "重试", summary: "在线设备 49 台", duration: "3,842 ms", scopes: ["资产管理", "设备监测", "视频监控系统"] },
-      { startAt: "2026-10-15 15:35:10", endAt: "2026-10-15 15:35:12", result: "成功", summary: "在线设备 51 台", duration: "620 ms", scopes: ["资产管理", "设备监测", "视频监控系统"] },
+      { startAt: "2026-10-15 16:35:08", endAt: "2026-10-15 16:35:12", result: "重试", summary: "在线设备 49 台", duration: "3,842 ms", scopes: ["资产管理", "设备监测", "通信系统"] },
+      { startAt: "2026-10-15 15:35:10", endAt: "2026-10-15 15:35:12", result: "成功", summary: "在线设备 51 台", duration: "620 ms", scopes: ["资产管理", "设备监测", "通信系统"] },
     ],
   };
 
@@ -279,7 +278,7 @@
       <label class="form-field"><span class="form-label form-required">接口名称 ${tipIcon(IFACE_TIPS.name)}</span><input class="form-control" data-field="name" value="${attr(item.name || "")}" placeholder="如：市级运行数据上报"></label>
       <label class="form-field"><span class="form-label form-required">接口地址 ${tipIcon(IFACE_TIPS.url)}</span><input class="form-control" data-field="url" value="${attr(item.url || "")}" placeholder="https://api.city.example.com/v1/report"></label>
       <label class="form-field"><span class="form-label form-required">协议类型 ${tipIcon(IFACE_TIPS.protocol)}</span>
-        <select class="form-control" data-field="protocol"><option>RESTful</option><option ${item.protocol === "WebService" ? "selected" : ""}>WebService</option></select>
+        <select class="form-control" data-field="protocol"><option selected>HTTP</option></select>
       </label>
       <label class="form-field"><span class="form-label form-required">方向 ${tipIcon(IFACE_TIPS.direction)}</span>
         <select class="form-control" data-field="direction"><option>仅上报</option></select>
@@ -287,7 +286,7 @@
       <div class="interface-form-section">安全与权限（归属本接口）</div>
       <label class="form-field"><span class="form-label form-required">认证方式 ${tipIcon(IFACE_TIPS.auth)}</span>
         <select class="form-control" data-field="auth">
-          <option ${!item.auth || item.auth.includes("OAuth") ? "selected" : ""}>OAuth 2.0 + HTTPS</option>
+          <option ${!item.auth || item.auth.includes("OAuth") ? "selected" : ""}>OAuth 2.0</option>
           <option ${item.auth && item.auth.includes("AK") ? "selected" : ""}>AK / SK 签名</option>
           <option ${item.auth && item.auth.includes("TLS") ? "selected" : ""}>双向 TLS 证书</option>
         </select>
@@ -364,7 +363,7 @@
       name,
       target: root.querySelector('[data-field="target"]')?.value,
       url,
-      protocol: root.querySelector('[data-field="protocol"]')?.value,
+      protocol: root.querySelector('[data-field="protocol"]')?.value || "HTTP",
       direction: root.querySelector('[data-field="direction"]')?.value,
       auth: root.querySelector('[data-field="auth"]')?.value,
       secret,

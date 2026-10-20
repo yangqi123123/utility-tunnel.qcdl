@@ -25,7 +25,8 @@
     map: null,
   };
 
-  let commandPanelApi = null;
+  // 原内嵌指挥调度面板 API（恢复内嵌功能时取消注释）
+  // let commandPanelApi = null;
 
   const cameras = [
     { cameraId: "CAM-001", name: "综合舱 F0102", latitude: 30.4672, longitude: 114.4232, status: "在线", distance: "180m" },
@@ -304,7 +305,7 @@
       video: renderRightVideo,
       resources: renderRightResources,
       personnel: renderRightPersonnel,
-      command: renderRightCommand,
+      // command: renderRightCommand, // 原内嵌指挥调度；现改为 SSO 跳转第三方语音调度平台
       plan: renderRightPlan,
     };
     (map[state.rightMode] || renderRightDetail)(target, event);
@@ -407,6 +408,7 @@
     </div>`;
   }
 
+  /* 原内嵌「指挥调度」右侧面板（恢复时取消注释，并恢复 mode map / commandPanelApi / 面板脚本引用）
   function renderRightCommand(target) {
     target.innerHTML = `<div id="dispatchCommandHost"></div>`;
     const host = target.querySelector("#dispatchCommandHost");
@@ -430,6 +432,7 @@
       onConferenceChange: () => updateMapLayers(),
     });
   }
+  */
 
   function renderRightPlan(target, event) {
     const plan = eventPlan(event);
@@ -688,6 +691,11 @@
     if (action === "zoom-reset") { state.map?.resetView(); return; }
     if (action === "toggle-fullscreen") { document.querySelector(".ds-root")?.classList.toggle("is-fullscreen"); setTimeout(() => state.map?.map?.invalidateSize?.(), 200); return; }
     if (action === "open-video") { window.open("../monitoring/video-monitor.html?eventId=" + encodeURIComponent(state.eventId || ""), "_blank"); return; }
+    if (action === "open-voice-dispatch") {
+      const url = "voice-dispatch.html" + (state.eventId ? `?eventId=${encodeURIComponent(state.eventId)}` : "");
+      window.open(url, "_blank");
+      return;
+    }
   });
 
   document.addEventListener("change", (event) => {

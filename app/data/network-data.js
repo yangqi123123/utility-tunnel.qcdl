@@ -48,11 +48,11 @@
   };
 
   const defaultRules = [
-    { id: "R-CPU", name: "主机 CPU 过载", metric: "cpu", operator: "大于等于", threshold: "85%", level: "预警", filter: "periodic", period: 60, method: "站内信", departments: ["equipment"], people: ["zhao", "chen"], notify: ["站内信"], enabled: true, description: "主机 CPU 使用率超过 85% 触发预警。" },
-    { id: "R-MEM", name: "主机内存过高", metric: "memory", operator: "大于等于", threshold: "80%", level: "预警", filter: "periodic", period: 60, method: "站内信", departments: ["equipment"], people: ["zhao"], notify: ["站内信"], enabled: true, description: "主机内存使用率超过 80% 触发预警。" },
-    { id: "R-DISK", name: "磁盘将满", metric: "disk", operator: "大于等于", threshold: "90%", level: "告警", filter: "periodic", period: 30, method: "站内信", departments: ["equipment", "safety"], people: ["zhao", "liu"], notify: ["站内信"], enabled: true, description: "任一磁盘使用率超过 90% 触发告警。" },
-    { id: "R-LAT", name: "链路延迟过高", metric: "latency", operator: "大于等于", threshold: "50ms", level: "提醒", filter: "periodic", period: 60, method: "站内信", departments: ["project"], people: ["li"], notify: ["站内信"], enabled: true, description: "链路平均延迟超过 50ms 触发提醒。" },
-    { id: "R-OFF", name: "设备离线", metric: "offline", operator: "等于", threshold: "离线", level: "告警", filter: "periodic", period: 15, method: "站内信", departments: ["equipment", "safety"], people: ["chen", "sun"], notify: ["站内信"], enabled: true, description: "设备心跳超时 5 分钟判定离线。" },
+    { id: "R-CPU", name: "主机 CPU 过载", metric: "cpu", operator: "大于等于", threshold: "85%", level: "预警", filter: "periodic", period: 60, methods: ["站内信"], emailTo: "", departments: ["equipment"], people: ["zhao", "chen"], notify: ["站内信"], enabled: true, description: "主机 CPU 使用率超过 85% 触发预警。" },
+    { id: "R-MEM", name: "主机内存过高", metric: "memory", operator: "大于等于", threshold: "80%", level: "预警", filter: "periodic", period: 60, methods: ["站内信", "邮件"], emailTo: "zhao@example.com", departments: ["equipment"], people: ["zhao"], notify: ["站内信", "邮件"], enabled: true, description: "主机内存使用率超过 80% 触发预警。" },
+    { id: "R-DISK", name: "磁盘将满", metric: "disk", operator: "大于等于", threshold: "90%", level: "告警", filter: "periodic", period: 30, methods: ["邮件"], emailTo: "zhao@example.com; liu@example.com", departments: ["equipment", "safety"], people: ["zhao", "liu"], notify: ["邮件"], enabled: true, description: "任一磁盘使用率超过 90% 触发告警。" },
+    { id: "R-LAT", name: "链路延迟过高", metric: "latency", operator: "大于等于", threshold: "50ms", level: "提醒", filter: "periodic", period: 60, methods: ["站内信"], emailTo: "", departments: ["project"], people: ["li"], notify: ["站内信"], enabled: true, description: "链路平均延迟超过 50ms 触发提醒。" },
+    { id: "R-OFF", name: "设备离线", metric: "offline", operator: "等于", threshold: "离线", level: "告警", filter: "periodic", period: 15, methods: ["站内信", "邮件"], emailTo: "chen@example.com; sun@example.com", departments: ["equipment", "safety"], people: ["chen", "sun"], notify: ["站内信", "邮件"], enabled: true, description: "设备心跳超时 5 分钟判定离线。" },
   ];
 
   // 含原故障诊断事件，统一进入告警事件列表（状态仅：未处理 / 已处理）
@@ -138,20 +138,33 @@
     { id: "SYNC-20261008-01", type: "自动同步", scope: "全部设备", result: "部分失败", success: 10, failed: 1, startAt: "2026-10-08 18:00", endAt: "2026-10-08 18:10", operator: "系统" },
   ];
 
+  function normalizeMethods(r) {
+    const allowed = ["站内信", "邮件"];
+    let methods = [];
+    if (Array.isArray(r.methods) && r.methods.length) methods = r.methods;
+    else if (Array.isArray(r.notify) && r.notify.length) methods = r.notify;
+    else if (r.method) methods = String(r.method).split(/[、,/]/).map((s) => s.trim()).filter(Boolean);
+    methods = methods.filter((m) => allowed.includes(m));
+    if (!methods.length) methods = ["站内信"];
+    return [...new Set(methods)];
+  }
+
   function normalizeRule(r) {
     const levelMap = { 紧急: "告警", 重要: "预警", 一般: "提醒" };
-    const method = r.method || ((r.notify || []).includes("站内信") ? "站内信" : "站内信");
     const ops = ["等于", "大于", "大于等于", "小于", "小于等于"];
+    const methods = normalizeMethods(r);
     return {
       ...r,
       level: levelMap[r.level] || r.level || "预警",
       operator: ops.includes(r.operator) ? r.operator : "大于等于",
       filter: r.filter || "periodic",
       period: Number(r.period) > 0 ? Number(r.period) : 60,
-      method,
+      methods,
+      method: methods.join("、"),
+      emailTo: methods.includes("邮件") ? (r.emailTo || "") : "",
       departments: Array.isArray(r.departments) ? [...r.departments] : [],
       people: Array.isArray(r.people) ? [...r.people] : [],
-      notify: [method],
+      notify: [...methods],
       description: r.description || "",
       enabled: r.enabled !== false,
     };
@@ -187,7 +200,8 @@
     listAlarmRules() {
       return rules.map((r) => ({
         ...r,
-        notify: [...(r.notify || [])],
+        methods: [...(r.methods || [])],
+        notify: [...(r.notify || r.methods || [])],
         departments: [...(r.departments || [])],
         people: [...(r.people || [])],
       }));
@@ -199,7 +213,7 @@
       return API.listAlarmRules();
     },
     saveAlarmRule(payload) {
-      const method = payload.method || "站内信";
+      const methods = normalizeMethods(payload);
       const next = {
         name: payload.name,
         metric: payload.metric,
@@ -208,10 +222,12 @@
         level: payload.level,
         filter: payload.filter || "periodic",
         period: Number(payload.period) > 0 ? Number(payload.period) : 60,
-        method,
+        methods,
+        method: methods.join("、"),
+        emailTo: methods.includes("邮件") ? (payload.emailTo || "") : "",
         departments: Array.isArray(payload.departments) ? [...payload.departments] : [],
         people: Array.isArray(payload.people) ? [...payload.people] : [],
-        notify: [method],
+        notify: [...methods],
         enabled: payload.enabled !== false,
         description: payload.description || "",
       };

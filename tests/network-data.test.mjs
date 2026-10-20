@@ -61,7 +61,8 @@ test("alarm rule CRUD", () => {
     level: "提醒",
     filter: "periodic",
     period: 60,
-    method: "站内信",
+    methods: ["站内信", "邮件"],
+    emailTo: "zhao@example.com; ops@example.com",
     departments: ["equipment"],
     people: ["zhao"],
     enabled: true,
@@ -69,7 +70,8 @@ test("alarm rule CRUD", () => {
   assert.equal(API.listAlarmRules().length, before + 1);
   const created = API.listAlarmRules().find((r) => r.name === "测试规则");
   assert.ok(created);
-  assert.equal(created.method, "站内信");
+  assert.equal(created.methods.join("、"), "站内信、邮件");
+  assert.equal(created.emailTo, "zhao@example.com; ops@example.com");
   assert.equal(created.operator, "大于等于");
   assert.equal(created.period, 60);
   API.deleteAlarmRule(created.id);

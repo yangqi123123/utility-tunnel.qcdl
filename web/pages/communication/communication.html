@@ -18,37 +18,29 @@
     <header id="app-header" class="header"></header>
     <main class="main">
       <div class="screen-frame stack communication-shell communication-desk-shell">
-        <section class="dm-metrics communication-desk-metrics" aria-label="通信统计">
-          <article class="dm-metric">
-            <span class="dm-metric-icon"><i class="fa-solid fa-phone"></i></span>
-            <div class="dm-metric-label">今日通话 <i class="fa-regular fa-circle-question" title="今日通话记录条数"></i></div>
-            <strong class="dm-metric-value" id="statTodayCalls">—</strong>
-            <p class="dm-metric-sub">通话记录汇总</p>
-          </article>
-          <article class="dm-metric dm-metric--online">
-            <span class="dm-metric-icon"><i class="fa-solid fa-phone-volume"></i></span>
-            <div class="dm-metric-label">已接通 <i class="fa-regular fa-circle-question" title="今日结果为已接通的通话"></i></div>
-            <strong class="dm-metric-value" id="statConnected">—</strong>
-            <p class="dm-metric-sub"><b id="statConnectRate">—</b> 接通率</p>
-          </article>
-          <article class="dm-metric dm-metric--online">
-            <span class="dm-metric-icon"><i class="fa-solid fa-signal"></i></span>
-            <div class="dm-metric-label">设备在线 <i class="fa-regular fa-circle-question" title="通信设备在线数量"></i></div>
-            <strong class="dm-metric-value" id="statOnline">—</strong>
-            <p class="dm-metric-sub"><b id="statOnlineRate">—</b> 在线率</p>
-          </article>
-          <article class="dm-metric dm-metric--fault">
-            <span class="dm-metric-icon"><i class="fa-solid fa-plug-circle-xmark"></i></span>
-            <div class="dm-metric-label">离线 / 故障 <i class="fa-regular fa-circle-question" title="离线与故障设备合计"></i></div>
-            <strong class="dm-metric-value" id="statFault">—</strong>
-            <p class="dm-metric-sub">需处理</p>
-          </article>
-        </section>
-
         <section class="communication-desk-main">
-          <section class="communication-card communication-desk-command" aria-labelledby="commandTitle">
-            <h2 id="commandTitle" class="sr-only">指挥调度</h2>
+          <section class="communication-card communication-desk-command" aria-label="应急事件与指挥调度">
+            <div class="communication-desk-events">
+              <div class="ds-left-head communication-desk-events-head">
+                <h2>应急事件</h2>
+                <label class="dispatch-search">
+                  <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                  <input class="form-control" id="deskEventKeyword" type="search" placeholder="搜索事件">
+                </label>
+                <div class="ds-status-chips" id="deskStatusFilter" aria-label="事件状态筛选"></div>
+              </div>
+              <div class="dispatch-event-list" id="deskEventList"></div>
+              <nav class="dispatch-mode-bar" id="deskModeBar" aria-label="事件操作">
+                <button type="button" class="dispatch-mode-btn" data-desk-mode="video" disabled><i class="fa-solid fa-video"></i><span>视频监控</span></button>
+                <button type="button" class="dispatch-mode-btn" data-desk-mode="resources" disabled><i class="fa-solid fa-box-open"></i><span>应急物资</span></button>
+                <button type="button" class="dispatch-mode-btn" data-desk-mode="personnel" disabled><i class="fa-solid fa-user-group"></i><span>应急人员</span></button>
+                <button type="button" class="dispatch-mode-btn" data-desk-mode="plan" disabled><i class="fa-solid fa-file-shield"></i><span>应急预案</span></button>
+                <button type="button" class="dispatch-mode-btn" data-desk-action="open-voice-dispatch" title="跳转第三方语音调度平台"><i class="fa-solid fa-headset"></i><span>指挥调度</span></button>
+              </nav>
+            </div>
+            <!-- 原语音对讲 / 内嵌指挥调度面板挂载点（恢复时取消注释，并恢复 command-dispatch-panel.js）
             <div id="deskCommandHost"></div>
+            -->
           </section>
           <section class="communication-card communication-desk-map" id="deskMapStage" aria-labelledby="mapTitle">
             <div class="communication-card-head">
@@ -57,6 +49,7 @@
                 <label><input type="checkbox" id="layerDevices" checked> 通信设备</label>
                 <label><input type="checkbox" id="layerPersonnel" checked> 人员</label>
                 <label><input type="checkbox" id="layerResources" checked> 物资</label>
+                <label><input type="checkbox" id="layerVideo" checked> 视频</label>
                 <label><input type="checkbox" id="layerEvents" checked> 事件</label>
               </div>
             </div>
@@ -109,8 +102,11 @@
   <script src="../../../app/components/emergency-common.js"></script>
   <script src="../../../app/components/emergency-map.js"></script>
   <script src="../../../app/components/emergency-events.js"></script>
+  <script src="../../../app/components/safety-plans.js"></script>
+  <!-- 原语音对讲指挥调度面板（恢复内嵌功能时取消注释）
   <script src="../../../app/components/command-dispatch-panel.js"></script>
-  <script src="../../../app/components/communication-desk.js"></script>
+  -->
+  <script src="../../../app/components/communication-desk.js?v=desk-events-3"></script>
   <script src="../../../app/components/requirement.js"></script>
 </body>
 </html>

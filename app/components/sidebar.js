@@ -30,6 +30,8 @@
     "smart-manhole": '<circle cx="12" cy="12" r="8"></circle><path d="M8 9h8M7 13h10M8 17h8"></path>',
     "electronic-patrol": '<circle cx="5" cy="19" r="2"></circle><circle cx="19" cy="5" r="2"></circle><path d="M7 18c3-1 2-5 5-6s2-5 5-6"></path><path d="M12 12h.01"></path>',
     "subsystems": '<rect x="3" y="3" width="7.5" height="7.5" rx="1"></rect><rect x="13.5" y="3" width="7.5" height="7.5" rx="1"></rect><rect x="3" y="13.5" width="7.5" height="7.5" rx="1"></rect><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1"></rect>',
+    "comprehensive-platform": '<rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M3 9h18M9 9v11M15 9v11"></path>',
+    "software-monitor-platform": '<rect x="3" y="4" width="18" height="12" rx="2"></rect><path d="M8 20h8M12 16v4"></path>',
   };
 
   function renderNavIcon(item) {

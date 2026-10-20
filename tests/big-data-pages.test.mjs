@@ -17,9 +17,11 @@ test("menu places big data analysis right after the alarm center", async () => {
   assert.ok(alarmIndex >= 0 && bigDataIndex >= 0 && configurationIndex >= 0);
   assert.ok(alarmIndex < bigDataIndex && bigDataIndex < configurationIndex);
   assert.match(source, /label: "大数据分析"/);
-  assert.match(source, /big-data\.diagnosis[\s\S]*?label: "设备诊断"/);
-  assert.match(source, /big-data\.warning[\s\S]*?label: "异常预警"/);
+  assert.match(source, /big-data\.diagnosis[\s\S]*?label: "设备诊断分析"/);
+  assert.match(source, /big-data\.warning[\s\S]*?label: "异常预警分析"/);
   assert.match(source, /big-data\.energy[\s\S]*?label: "能耗分析"/);
+  assert.match(source, /key: "comprehensive-platform"[\s\S]*?key: "big-data"/);
+  assert.match(source, /key: "software-monitor-platform"[\s\S]*?key: "configuration"/);
 });
 
 test("menu children point at existing placeholder pages", async () => {

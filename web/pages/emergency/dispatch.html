@@ -37,8 +37,11 @@
               <button type="button" class="dispatch-mode-btn" data-right-mode="video" disabled><i class="fa-solid fa-video"></i><span>视频监控</span></button>
               <button type="button" class="dispatch-mode-btn" data-right-mode="resources" disabled><i class="fa-solid fa-box-open"></i><span>应急物资</span></button>
               <button type="button" class="dispatch-mode-btn" data-right-mode="personnel" disabled><i class="fa-solid fa-user-group"></i><span>应急人员</span></button>
-              <button type="button" class="dispatch-mode-btn" data-right-mode="command" disabled><i class="fa-solid fa-headset"></i><span>指挥调度</span></button>
               <button type="button" class="dispatch-mode-btn" data-right-mode="plan" disabled><i class="fa-solid fa-file-shield"></i><span>应急预案</span></button>
+              <!-- 原内嵌右侧「指挥调度」面板入口（恢复时取消注释，并注释下方 SSO 跳转按钮）
+              <button type="button" class="dispatch-mode-btn" data-right-mode="command" disabled><i class="fa-solid fa-headset"></i><span>指挥调度</span></button>
+              -->
+              <button type="button" class="dispatch-mode-btn" data-dispatch-action="open-voice-dispatch" title="跳转第三方语音调度平台"><i class="fa-solid fa-headset"></i><span>指挥调度</span></button>
             </nav>
           </aside>
 
@@ -68,7 +71,9 @@
   <script src="../../../app/components/emergency-map.js"></script>
   <script src="../../../app/components/emergency-events.js"></script>
   <script src="../../../app/components/safety-plans.js"></script>
+  <!-- 原内嵌指挥调度面板脚本（恢复内嵌功能时取消注释）
   <script src="../../../app/components/command-dispatch-panel.js"></script>
-  <script src="../../../app/components/emergency-dispatch.js?v=console-7"></script>
+  -->
+  <script src="../../../app/components/emergency-dispatch.js?v=console-8"></script>
 </body>
 </html>

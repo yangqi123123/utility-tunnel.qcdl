@@ -118,12 +118,14 @@
       maintenance: "../maintenance/tasks.html",
       "work-order-abnormal": "../work-order/device-abnormal.html",
       "work-order-repair": "../work-order/report-repair.html",
+      network: "../network/alarms.html",
     };
     const MESSAGE_TABS = [
       { key: "alarm", label: "告警" },
       { key: "inspection", label: "巡检" },
       { key: "maintenance", label: "保养" },
       { key: "work-order", label: "工单" },
+      { key: "network", label: "网络告警" },
     ];
     const alarmMessages = [
       { id: "alarm-1", tab: "alarm", title: "配电室网关-01 · 设备离线", message: "设备离线持续超过 60 秒", time: "2026-09-07 09:42:16", href: MESSAGE_HREF.alarm },
@@ -173,7 +175,13 @@
         href: MESSAGE_HREF["work-order-repair"],
       })),
     ];
-    const allMessages = [...alarmMessages, ...inspectionMessages, ...maintenanceMessages, ...workOrderMessages];
+    /* 网络告警：取告警事件列表中未处理记录作为未读示例 */
+    const networkMessages = [
+      { id: "network-1", tab: "network", title: "应用服务器 APP-03 · 性能阈值", message: "链路延迟 24 ms，超过阈值 ≥20 ms", time: "2026-10-12 10:21:08", href: MESSAGE_HREF.network },
+      { id: "network-2", tab: "network", title: "服务主机 E:\\ · 性能阈值", message: "磁盘使用率 94%，超过阈值 ≥90%", time: "2026-10-12 09:58:41", href: MESSAGE_HREF.network },
+      { id: "network-3", tab: "network", title: "无线接入点 AP-07 · 故障检测", message: "汇聚 SW-12 Gi1/0/24 down → AP 链路中断", time: "2026-10-12 09:12:00", href: MESSAGE_HREF.network },
+    ];
+    const allMessages = [...alarmMessages, ...inspectionMessages, ...maintenanceMessages, ...workOrderMessages, ...networkMessages];
     const readKey = "app-message-center-read-state";
     let activeMessageTab = "alarm";
     function readState() { try { return JSON.parse(localStorage.getItem(readKey) || "{}"); } catch { return {}; } }

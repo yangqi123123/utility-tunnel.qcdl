@@ -65,8 +65,11 @@ test("dispatch console uses three-column layout with right modes", async () => {
   assert.match(page, /data-right-mode="video"/);
   assert.match(page, /data-right-mode="resources"/);
   assert.match(page, /data-right-mode="personnel"/);
-  assert.match(page, /data-right-mode="command"/);
   assert.match(page, /data-right-mode="plan"/);
+  assert.match(page, /data-dispatch-action="open-voice-dispatch"/);
+  assert.match(page, /data-right-mode="command"/); // 注释保留，便于恢复内嵌指挥调度
   assert.doesNotMatch(page, /dispatch-bottom-panel/);
-  assert.match(script, /renderRightVideo|renderRightResources|renderRightPersonnel|renderRightCommand|renderRightPlan/);
+  assert.match(script, /renderRightVideo|renderRightResources|renderRightPersonnel|renderRightPlan/);
+  assert.match(script, /open-voice-dispatch|voice-dispatch\.html/);
+  assert.match(script, /function renderRightCommand/); // 注释保留原内嵌实现
 });

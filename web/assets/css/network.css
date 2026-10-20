@@ -87,6 +87,10 @@
 .network-rule-wizard .alarm-wizard-steps {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
+.network-rule-wizard .alarm-send-grid .network-email-field {
+  grid-column: 1 / -1;
+}
+.network-rule-wizard .network-email-field.hidden { display: none !important; }
 
 /* 告警事件筛选：重置与搜索同尺寸 */
 .network-event-filter-row {

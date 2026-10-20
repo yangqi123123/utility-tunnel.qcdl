@@ -1,14 +1,21 @@
 (function () {
-  const systemTypes = window.APP_SYSTEM_TYPES || [];
+  const systemTypes = (window.APP_SYSTEM_TYPES || []).filter((item) => item?.name !== "视频监控系统");
   const deviceCategories = window.APP_DEVICE_CATEGORIES || [];
   const projects = ["科学岛财富中心", "厦门科学岛"];
   const corridors = ["1号综合管廊", "滨海管廊"];
   const rooms = ["电力舱", "综合舱", "通信舱"];
   const TOPIC_TIP = "指定要从墨斗采集的数据类型：实时测点=传感数值；告警=告警事件；在线状态=设备在线/离线。";
   const ACCESS_TIPS = {
+    protocol: "选择与墨斗平台通信的接入协议。HTTP 为请求应答；MQTT 为长连接订阅推送。",
     https: "是否强制走 HTTPS。强制则明文 HTTP 直接拒绝，保证密钥与报文加密传输。",
     timeout: "单次请求最长等待时间；超过即判失败（如墨斗无响应）。",
     retry: "超时或临时失败后自动再试几次；仍失败才记异常，避免偶发抖动误报。",
+    mqttTls: "是否启用 MQTTS（TLS）。生产环境建议开启，防止明文传输。",
+    keepAlive: "客户端与 Broker 的心跳间隔；超时未心跳将触发重连。",
+    cleanSession: "为「是」时断开不保留会话；为「否」时可在重连后恢复未完成消息。",
+    qos: "消息投递等级：0 最多一次；1 至少一次；2 恰好一次。",
+    reconnect: "连接断开后自动重连的等待间隔。",
+    port: "Broker 端口。地址未带端口时使用；明文常用 1883，TLS 常用 8883。",
   };
 
   const esc = (text) => String(text ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
@@ -89,6 +96,7 @@
       id: "ACC-MD-01",
       name: "墨斗物联网平台-生产",
       url: "https://iot.modou.example.com",
+      protocol: "HTTP",
       auth: "AK / SK",
       appKey: "md_ak_prod_8f2a",
       appSecret: "******",
@@ -99,6 +107,26 @@
       linkStatus: "正常",
       enabled: true,
       heartbeat: "2026-10-15 16:40:12",
+    },
+    {
+      id: "ACC-MD-02",
+      name: "墨斗物联网平台-MQTT",
+      url: "mqtt.modou.example.com",
+      protocol: "MQTT",
+      auth: "用户名密码",
+      port: "8883",
+      clientId: "corridor-south-01",
+      mqttUser: "modou_user",
+      mqttPassword: "******",
+      tenant: "科学岛管廊项目",
+      mqttTls: "MQTTS（TLS）",
+      keepAlive: "60 秒",
+      cleanSession: "是",
+      qos: "1",
+      reconnect: "10 秒",
+      linkStatus: "正常",
+      enabled: true,
+      heartbeat: "2026-10-15 16:41:08",
     },
   ];
 
@@ -195,14 +223,22 @@
     return sourceDevices.find((item) => item.id === id);
   }
 
+  function accessSecurityText(item) {
+    if (item.protocol === "MQTT") {
+      return `${esc(item.mqttTls || "MQTT")} · KeepAlive ${esc(item.keepAlive || "--")} · QoS ${esc(item.qos || "--")}`;
+    }
+    return `${esc(item.https || "--")} · 超时 ${esc(item.timeout || "--")} · 重试 ${esc(item.retry || "--")}`;
+  }
+
   function renderAccess() {
     const body = document.getElementById("accessTableBody");
     body.innerHTML = accessList.map((item) => `
       <tr>
         <td><span class="device-name-cell">${esc(item.name)}</span></td>
         <td>${esc(item.url)}</td>
+        <td>${esc(item.protocol || "HTTP")}</td>
         <td>${esc(item.auth)}</td>
-        <td>${esc(item.https)} · 超时 ${esc(item.timeout)} · 重试 ${esc(item.retry)}</td>
+        <td>${accessSecurityText(item)}</td>
         <td><span class="device-status ${item.linkStatus === "正常" ? "good" : "warn"}">${esc(item.linkStatus)}</span></td>
         <td><span class="device-status ${item.enabled ? "good" : "off"}">${item.enabled ? "启用" : "停用"}</span></td>
         <td>${esc(item.heartbeat)}</td>
@@ -398,19 +434,61 @@
 
   function accessForm(item = {}) {
     const tenants = ["科学岛管廊项目", "科学岛财富中心", "默认租户"];
+    const protocol = item.protocol === "MQTT" ? "MQTT" : "HTTP";
     return `
-      <label class="form-field"><span class="form-label form-required">接入名称</span><input class="form-control" data-field="name" value="${attr(item.name || "")}" placeholder="如：墨斗物联网平台-生产"></label>
-      <label class="form-field"><span class="form-label form-required">平台地址</span><input class="form-control" data-field="url" value="${attr(item.url || "")}" placeholder="https://iot.modou.example.com"></label>
-      <label class="form-field"><span class="form-label form-required">认证方式</span><select class="form-control" data-field="auth"><option ${item.auth === "AK / SK" || !item.auth ? "selected" : ""}>AK / SK</option><option ${item.auth === "Token" ? "selected" : ""}>Token</option><option ${item.auth === "账号密码" ? "selected" : ""}>账号密码</option></select></label>
-      <label class="form-field"><span class="form-label form-required">AppKey / ClientId</span><input class="form-control" data-field="appKey" value="${attr(item.appKey || "")}" placeholder="请输入 AppKey"></label>
-      <label class="form-field"><span class="form-label form-required">AppSecret / Token</span><input class="form-control" type="password" data-field="appSecret" value="${attr(item.appSecret || "")}" placeholder="请输入密钥"></label>
-      <label class="form-field"><span class="form-label">默认租户 / 项目</span><select class="form-control" data-field="tenant"><option value="">请选择</option>${tenants.map((tenant) => `<option value="${attr(tenant)}" ${item.tenant === tenant ? "selected" : ""}>${esc(tenant)}</option>`).join("")}</select></label>
-      <label class="form-field"><span class="form-label form-required">状态</span><select class="form-control" data-field="enabled"><option value="true" ${item.enabled !== false ? "selected" : ""}>启用</option><option value="false" ${item.enabled === false ? "selected" : ""}>停用</option></select></label>
-      <div class="interface-form-section">安全策略（归属本接入）</div>
-      <label class="form-field"><span class="form-label">传输安全 ${tipIcon(ACCESS_TIPS.https)}</span><select class="form-control" data-field="https"><option ${!item.https || item.https === "强制 HTTPS" ? "selected" : ""}>强制 HTTPS</option><option ${item.https === "HTTPS（可降级，不推荐）" ? "selected" : ""}>HTTPS（可降级，不推荐）</option></select></label>
-      <label class="form-field"><span class="form-label">超时时间 ${tipIcon(ACCESS_TIPS.timeout)}</span><select class="form-control" data-field="timeout"><option ${!item.timeout || item.timeout === "10 秒" ? "selected" : ""}>10 秒</option><option ${item.timeout === "30 秒" ? "selected" : ""}>30 秒</option><option ${item.timeout === "60 秒" ? "selected" : ""}>60 秒</option></select></label>
-      <label class="form-field"><span class="form-label">失败重试 ${tipIcon(ACCESS_TIPS.retry)}</span><select class="form-control" data-field="retry"><option ${!item.retry || item.retry === "3 次" ? "selected" : ""}>3 次</option><option ${item.retry === "1 次" ? "selected" : ""}>1 次</option><option ${item.retry === "不重试" ? "selected" : ""}>不重试</option></select></label>
+      <div data-access-form data-protocol="${attr(protocol)}">
+        <label class="form-field"><span class="form-label form-required">接入名称</span><input class="form-control" data-field="name" value="${attr(item.name || "")}" placeholder="如：墨斗物联网平台-生产"></label>
+        <label class="form-field"><span class="form-label form-required">平台地址</span><input class="form-control" data-field="url" value="${attr(item.url || "")}" placeholder="${protocol === "MQTT" ? "mqtt.modou.example.com" : "https://iot.modou.example.com"}" data-url-placeholder></label>
+        <label class="form-field"><span class="form-label form-required">接入协议 ${tipIcon(ACCESS_TIPS.protocol)}</span>
+          <select class="form-control" data-field="protocol">
+            <option value="HTTP" ${protocol === "HTTP" ? "selected" : ""}>HTTP</option>
+            <option value="MQTT" ${protocol === "MQTT" ? "selected" : ""}>MQTT</option>
+          </select>
+        </label>
+        <label class="form-field"><span class="form-label">默认租户 / 项目</span><select class="form-control" data-field="tenant"><option value="">请选择</option>${tenants.map((tenant) => `<option value="${attr(tenant)}" ${item.tenant === tenant ? "selected" : ""}>${esc(tenant)}</option>`).join("")}</select></label>
+        <label class="form-field"><span class="form-label form-required">状态</span><select class="form-control" data-field="enabled"><option value="true" ${item.enabled !== false ? "selected" : ""}>启用</option><option value="false" ${item.enabled === false ? "selected" : ""}>停用</option></select></label>
+
+        <div data-protocol-panel="HTTP" class="${protocol === "HTTP" ? "" : "hidden"}">
+          <div class="interface-form-section">HTTP 认证与连接</div>
+          <label class="form-field"><span class="form-label form-required">认证方式</span><select class="form-control" data-field="auth"><option ${item.auth === "AK / SK" || !item.auth || item.protocol === "MQTT" ? "selected" : ""}>AK / SK</option><option ${item.auth === "Token" ? "selected" : ""}>Token</option><option ${item.auth === "账号密码" ? "selected" : ""}>账号密码</option></select></label>
+          <label class="form-field"><span class="form-label form-required">AppKey / ClientId</span><input class="form-control" data-field="appKey" value="${attr(item.protocol === "MQTT" ? "" : (item.appKey || ""))}" placeholder="请输入 AppKey"></label>
+          <label class="form-field"><span class="form-label form-required">AppSecret / Token</span><input class="form-control" type="password" data-field="appSecret" value="${attr(item.protocol === "MQTT" ? "" : (item.appSecret || ""))}" placeholder="请输入密钥"></label>
+          <div class="interface-form-section">安全策略（HTTP）</div>
+          <label class="form-field"><span class="form-label">传输安全 ${tipIcon(ACCESS_TIPS.https)}</span><select class="form-control" data-field="https"><option ${!item.https || item.https === "强制 HTTPS" ? "selected" : ""}>强制 HTTPS</option><option ${item.https === "HTTPS（可降级，不推荐）" ? "selected" : ""}>HTTPS（可降级，不推荐）</option></select></label>
+          <label class="form-field"><span class="form-label">超时时间 ${tipIcon(ACCESS_TIPS.timeout)}</span><select class="form-control" data-field="timeout"><option ${!item.timeout || item.timeout === "10 秒" ? "selected" : ""}>10 秒</option><option ${item.timeout === "30 秒" ? "selected" : ""}>30 秒</option><option ${item.timeout === "60 秒" ? "selected" : ""}>60 秒</option></select></label>
+          <label class="form-field"><span class="form-label">失败重试 ${tipIcon(ACCESS_TIPS.retry)}</span><select class="form-control" data-field="retry"><option ${!item.retry || item.retry === "3 次" ? "selected" : ""}>3 次</option><option ${item.retry === "1 次" ? "selected" : ""}>1 次</option><option ${item.retry === "不重试" ? "selected" : ""}>不重试</option></select></label>
+        </div>
+
+        <div data-protocol-panel="MQTT" class="${protocol === "MQTT" ? "" : "hidden"}">
+          <div class="interface-form-section">MQTT 认证与连接</div>
+          <label class="form-field"><span class="form-label form-required">端口 ${tipIcon(ACCESS_TIPS.port)}</span><input class="form-control" data-field="port" value="${attr(item.port || "8883")}" placeholder="1883 或 8883"></label>
+          <label class="form-field"><span class="form-label form-required">ClientId</span><input class="form-control" data-field="clientId" value="${attr(item.clientId || "")}" placeholder="如：corridor-south-01"></label>
+          <label class="form-field"><span class="form-label form-required">用户名</span><input class="form-control" data-field="mqttUser" value="${attr(item.mqttUser || "")}" placeholder="请输入 MQTT 用户名"></label>
+          <label class="form-field"><span class="form-label form-required">密码</span><input class="form-control" type="password" data-field="mqttPassword" value="${attr(item.mqttPassword || "")}" placeholder="请输入 MQTT 密码"></label>
+          <div class="interface-form-section">安全策略（MQTT）</div>
+          <label class="form-field"><span class="form-label">传输安全 ${tipIcon(ACCESS_TIPS.mqttTls)}</span><select class="form-control" data-field="mqttTls"><option ${!item.mqttTls || item.mqttTls === "MQTTS（TLS）" ? "selected" : ""}>MQTTS（TLS）</option><option ${item.mqttTls === "MQTT（明文）" ? "selected" : ""}>MQTT（明文）</option></select></label>
+          <label class="form-field"><span class="form-label">Keep Alive ${tipIcon(ACCESS_TIPS.keepAlive)}</span><select class="form-control" data-field="keepAlive"><option ${!item.keepAlive || item.keepAlive === "60 秒" ? "selected" : ""}>60 秒</option><option ${item.keepAlive === "30 秒" ? "selected" : ""}>30 秒</option><option ${item.keepAlive === "120 秒" ? "selected" : ""}>120 秒</option></select></label>
+          <label class="form-field"><span class="form-label">Clean Session ${tipIcon(ACCESS_TIPS.cleanSession)}</span><select class="form-control" data-field="cleanSession"><option ${!item.cleanSession || item.cleanSession === "是" ? "selected" : ""}>是</option><option ${item.cleanSession === "否" ? "selected" : ""}>否</option></select></label>
+          <label class="form-field"><span class="form-label">QoS ${tipIcon(ACCESS_TIPS.qos)}</span><select class="form-control" data-field="qos"><option ${item.qos === "0" ? "selected" : ""}>0</option><option ${!item.qos || item.qos === "1" ? "selected" : ""}>1</option><option ${item.qos === "2" ? "selected" : ""}>2</option></select></label>
+          <label class="form-field"><span class="form-label">重连间隔 ${tipIcon(ACCESS_TIPS.reconnect)}</span><select class="form-control" data-field="reconnect"><option ${!item.reconnect || item.reconnect === "10 秒" ? "selected" : ""}>10 秒</option><option ${item.reconnect === "5 秒" ? "selected" : ""}>5 秒</option><option ${item.reconnect === "30 秒" ? "selected" : ""}>30 秒</option></select></label>
+        </div>
+      </div>
     `;
+  }
+
+  function syncAccessProtocolPanel() {
+    const form = document.querySelector("[data-access-form]");
+    const select = form?.querySelector('[data-field="protocol"]');
+    if (!form || !select) return;
+    const protocol = select.value === "MQTT" ? "MQTT" : "HTTP";
+    form.dataset.protocol = protocol;
+    form.querySelectorAll("[data-protocol-panel]").forEach((panel) => {
+      panel.classList.toggle("hidden", panel.dataset.protocolPanel !== protocol);
+    });
+    const urlInput = form.querySelector("[data-url-placeholder]");
+    if (urlInput) {
+      urlInput.placeholder = protocol === "MQTT" ? "mqtt.modou.example.com" : "https://iot.modou.example.com";
+    }
   }
 
   function taskForm(task = {}) {
@@ -446,6 +524,7 @@
       footer: `<button class="btn btn-secondary" type="button" data-drawer-close>取消</button><button class="btn btn-primary" type="button" data-south-save>保存</button>`,
     });
     document.querySelector("[data-south-save]")?.addEventListener("click", onSave);
+    syncAccessProtocolPanel();
   }
 
   function refreshSelectedDevices() {
@@ -516,24 +595,67 @@
 
   function readAccessForm() {
     const root = document.querySelector(".drawer-body") || document;
-    return {
+    const protocol = root.querySelector('[data-field="protocol"]')?.value === "MQTT" ? "MQTT" : "HTTP";
+    const base = {
       name: root.querySelector('[data-field="name"]')?.value?.trim() || "",
       url: root.querySelector('[data-field="url"]')?.value?.trim() || "",
+      protocol,
+      tenant: root.querySelector('[data-field="tenant"]')?.value || "",
+      enabled: root.querySelector('[data-field="enabled"]')?.value !== "false",
+    };
+    if (protocol === "MQTT") {
+      return {
+        ...base,
+        auth: "用户名密码",
+        port: root.querySelector('[data-field="port"]')?.value?.trim() || "8883",
+        clientId: root.querySelector('[data-field="clientId"]')?.value?.trim() || "",
+        mqttUser: root.querySelector('[data-field="mqttUser"]')?.value?.trim() || "",
+        mqttPassword: root.querySelector('[data-field="mqttPassword"]')?.value?.trim() || "",
+        mqttTls: root.querySelector('[data-field="mqttTls"]')?.value || "MQTTS（TLS）",
+        keepAlive: root.querySelector('[data-field="keepAlive"]')?.value || "60 秒",
+        cleanSession: root.querySelector('[data-field="cleanSession"]')?.value || "是",
+        qos: root.querySelector('[data-field="qos"]')?.value || "1",
+        reconnect: root.querySelector('[data-field="reconnect"]')?.value || "10 秒",
+        appKey: "",
+        appSecret: "",
+        https: "",
+        timeout: "",
+        retry: "",
+      };
+    }
+    return {
+      ...base,
       auth: root.querySelector('[data-field="auth"]')?.value || "AK / SK",
       appKey: root.querySelector('[data-field="appKey"]')?.value?.trim() || "",
       appSecret: root.querySelector('[data-field="appSecret"]')?.value?.trim() || "",
-      tenant: root.querySelector('[data-field="tenant"]')?.value || "",
       https: root.querySelector('[data-field="https"]')?.value || "强制 HTTPS",
       timeout: root.querySelector('[data-field="timeout"]')?.value || "10 秒",
       retry: root.querySelector('[data-field="retry"]')?.value || "3 次",
-      enabled: root.querySelector('[data-field="enabled"]')?.value !== "false",
+      port: "",
+      clientId: "",
+      mqttUser: "",
+      mqttPassword: "",
+      mqttTls: "",
+      keepAlive: "",
+      cleanSession: "",
+      qos: "",
+      reconnect: "",
     };
   }
 
   function saveAccess(editId) {
     const data = readAccessForm();
-    if (!data.name || !data.url || !data.appKey || !data.appSecret) {
+    if (!data.name || !data.url) {
       toast("请完善接入必填项");
+      return;
+    }
+    if (data.protocol === "MQTT") {
+      if (!data.port || !data.clientId || !data.mqttUser || !data.mqttPassword) {
+        toast("请完善 MQTT 必填项：端口、ClientId、用户名、密码");
+        return;
+      }
+    } else if (!data.appKey || !data.appSecret) {
+      toast("请完善 HTTP 必填项：AppKey、AppSecret");
       return;
     }
     if (editId) {
@@ -611,6 +733,31 @@
   }
 
   function showAccessDetail(item) {
+    const isMqtt = item.protocol === "MQTT";
+    const authBlock = isMqtt
+      ? `
+            <div class="info-item"><span class="info-label">端口</span><span class="info-value">${esc(item.port || "--")}</span></div>
+            <div class="info-item"><span class="info-label">ClientId</span><span class="info-value">${esc(item.clientId || "--")}</span></div>
+            <div class="info-item"><span class="info-label">用户名</span><span class="info-value">${esc(item.mqttUser || "--")}</span></div>
+            <div class="info-item"><span class="info-label">密码</span><span class="info-value">${esc(item.mqttPassword || "--")}</span></div>
+          `
+      : `
+            <div class="info-item"><span class="info-label">AppKey / ClientId</span><span class="info-value">${esc(item.appKey || "--")}</span></div>
+            <div class="info-item"><span class="info-label">AppSecret / Token</span><span class="info-value">${esc(item.appSecret || "--")}</span></div>
+          `;
+    const securityBlock = isMqtt
+      ? `
+            <div class="info-item"><span class="info-label">传输安全</span><span class="info-value">${esc(item.mqttTls || "--")}</span></div>
+            <div class="info-item"><span class="info-label">Keep Alive</span><span class="info-value">${esc(item.keepAlive || "--")}</span></div>
+            <div class="info-item"><span class="info-label">Clean Session</span><span class="info-value">${esc(item.cleanSession || "--")}</span></div>
+            <div class="info-item"><span class="info-label">QoS</span><span class="info-value">${esc(item.qos || "--")}</span></div>
+            <div class="info-item"><span class="info-label">重连间隔</span><span class="info-value">${esc(item.reconnect || "--")}</span></div>
+          `
+      : `
+            <div class="info-item"><span class="info-label">传输安全</span><span class="info-value">${esc(item.https || "--")}</span></div>
+            <div class="info-item"><span class="info-label">超时时间</span><span class="info-value">${esc(item.timeout || "--")}</span></div>
+            <div class="info-item"><span class="info-label">失败重试</span><span class="info-value">${esc(item.retry || "--")}</span></div>
+          `;
     window.openAppDrawer?.({
       title: `${item.name} · 接入详情`,
       body: `
@@ -619,9 +766,9 @@
           <div class="detail-grid">
             <div class="info-item"><span class="info-label">接入名称</span><span class="info-value">${esc(item.name)}</span></div>
             <div class="info-item"><span class="info-label">平台地址</span><span class="info-value">${esc(item.url)}</span></div>
+            <div class="info-item"><span class="info-label">接入协议</span><span class="info-value">${esc(item.protocol || "HTTP")}</span></div>
             <div class="info-item"><span class="info-label">认证方式</span><span class="info-value">${esc(item.auth)}</span></div>
-            <div class="info-item"><span class="info-label">AppKey / ClientId</span><span class="info-value">${esc(item.appKey || "--")}</span></div>
-            <div class="info-item"><span class="info-label">AppSecret / Token</span><span class="info-value">${esc(item.appSecret || "--")}</span></div>
+            ${authBlock}
             <div class="info-item"><span class="info-label">默认租户 / 项目</span><span class="info-value">${esc(item.tenant || "--")}</span></div>
             <div class="info-item"><span class="info-label">状态</span><span class="info-value">${item.enabled ? "启用" : "停用"}</span></div>
             <div class="info-item"><span class="info-label">连通状态</span><span class="info-value">${esc(item.linkStatus)}</span></div>
@@ -630,11 +777,7 @@
         </section>
         <section class="detail-section">
           <h3 class="detail-title">安全策略</h3>
-          <div class="detail-grid">
-            <div class="info-item"><span class="info-label">传输安全</span><span class="info-value">${esc(item.https)}</span></div>
-            <div class="info-item"><span class="info-label">超时时间</span><span class="info-value">${esc(item.timeout)}</span></div>
-            <div class="info-item"><span class="info-label">失败重试</span><span class="info-value">${esc(item.retry)}</span></div>
-          </div>
+          <div class="detail-grid">${securityBlock}</div>
         </section>
       `,
       footer: `<button class="btn btn-secondary" type="button" data-drawer-close>关闭</button>`,
@@ -644,20 +787,37 @@
   function showTestResult(access) {
     const ok = Math.random() > 0.25;
     const now = formatDateTime();
-    const logs = ok
-      ? [
-          `[${now}] 开始连接 ${access.url}`,
-          `[${now}] TLS 握手成功（${access.https}）`,
-          `[${now}] 认证方式 ${access.auth} 校验通过`,
-          `[${now}] 心跳延迟 86 ms`,
-          `[${now}] 连接测试成功`,
-        ]
-      : [
-          `[${now}] 开始连接 ${access.url}`,
-          `[${now}] 等待响应超时（${access.timeout}）`,
-          `[${now}] 按策略重试 ${access.retry}`,
-          `[${now}] 连接测试失败：无法建立安全通道`,
-        ];
+    const isMqtt = access.protocol === "MQTT";
+    const endpoint = isMqtt ? `${access.url}:${access.port || "1883"}` : access.url;
+    const logs = isMqtt
+      ? (ok
+        ? [
+            `[${now}] 开始连接 MQTT Broker ${endpoint}`,
+            `[${now}] ${access.mqttTls || "MQTT"} 握手成功`,
+            `[${now}] ClientId=${access.clientId || "--"} 用户名密码校验通过`,
+            `[${now}] Keep Alive ${access.keepAlive || "60 秒"} · QoS ${access.qos || "1"}`,
+            `[${now}] 订阅通道就绪，连接测试成功`,
+          ]
+        : [
+            `[${now}] 开始连接 MQTT Broker ${endpoint}`,
+            `[${now}] 等待 CONNACK 超时（Keep Alive ${access.keepAlive || "60 秒"}）`,
+            `[${now}] 将在 ${access.reconnect || "10 秒"} 后尝试重连`,
+            `[${now}] 连接测试失败：Broker 不可达或鉴权失败`,
+          ])
+      : (ok
+        ? [
+            `[${now}] 开始连接 ${endpoint}`,
+            `[${now}] TLS 握手成功（${access.https}）`,
+            `[${now}] 认证方式 ${access.auth} 校验通过`,
+            `[${now}] 心跳延迟 86 ms`,
+            `[${now}] 连接测试成功`,
+          ]
+        : [
+            `[${now}] 开始连接 ${endpoint}`,
+            `[${now}] 等待响应超时（${access.timeout}）`,
+            `[${now}] 按策略重试 ${access.retry}`,
+            `[${now}] 连接测试失败：无法建立安全通道`,
+          ]);
     access.linkStatus = ok ? "正常" : "异常";
     access.heartbeat = now;
     renderAccess();
@@ -955,6 +1115,10 @@
   });
 
   document.addEventListener("change", (event) => {
+    if (event.target.matches('[data-field="protocol"]')) {
+      syncAccessProtocolPanel();
+      return;
+    }
     if (event.target.matches('input[name="scope"]')) {
       const panel = document.querySelector("[data-scope-panel]");
       if (!panel) return;

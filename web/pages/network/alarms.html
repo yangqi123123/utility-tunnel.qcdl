@@ -159,18 +159,35 @@
       if (!value) return "";
       return value.includes("T") ? value.replace("T", " ").slice(0, 19) : value;
     }
+    const METHOD_OPTIONS = [
+      { id: "站内信", name: "站内信" },
+      { id: "邮件", name: "邮件" },
+    ];
     const notificationDirectory = [
-      { id: "project", name: "项目管理部", people: [{ id: "li", name: "李工" }, { id: "wang", name: "王工" }] },
-      { id: "equipment", name: "设备管理部", people: [{ id: "zhao", name: "赵工" }, { id: "chen", name: "陈工" }] },
-      { id: "safety", name: "安全质量部", people: [{ id: "liu", name: "刘主任" }, { id: "sun", name: "孙工" }] },
+      { id: "project", name: "项目管理部", people: [
+        { id: "li", name: "李工", email: "li@example.com" },
+        { id: "wang", name: "王工", email: "wang@example.com" },
+      ] },
+      { id: "equipment", name: "设备管理部", people: [
+        { id: "zhao", name: "赵工", email: "zhao@example.com" },
+        { id: "chen", name: "陈工", email: "chen@example.com" },
+      ] },
+      { id: "safety", name: "安全质量部", people: [
+        { id: "liu", name: "刘主任", email: "liu@example.com" },
+        { id: "sun", name: "孙工", email: "sun@example.com" },
+      ] },
     ];
     let wizardState = {
       step: 1, mode: "create", ruleId: "", rule: null,
-      period: "60", departments: [], people: [], method: "站内信", openMulti: null,
+      period: "60", departments: [], people: [], methods: ["站内信"], emailTo: "", emailToDirty: false, openMulti: null,
     };
 
     function notifyText(rule) {
-      return rule.method || (rule.notify || []).join(" / ") || "站内信";
+      const methods = rule.methods || rule.notify || (rule.method ? String(rule.method).split(/[、,/]/) : []);
+      return methods.filter(Boolean).join("、") || "站内信";
+    }
+    function hasEmailMethod(methods) {
+      return (methods || []).includes("邮件");
     }
     function deptNames(ids) {
       return (ids || []).map((id) => notificationDirectory.find((d) => d.id === id)?.name).filter(Boolean).join("、") || "—";
@@ -178,6 +195,14 @@
     function peopleNames(ids) {
       const all = notificationDirectory.flatMap((d) => d.people);
       return (ids || []).map((id) => all.find((p) => p.id === id)?.name).filter(Boolean).join("、") || "—";
+    }
+    function peopleEmails(ids) {
+      const all = notificationDirectory.flatMap((d) => d.people);
+      return (ids || []).map((id) => all.find((p) => p.id === id)?.email).filter(Boolean);
+    }
+    function fillEmailFromPeople() {
+      if (!hasEmailMethod(wizardState.methods) || wizardState.emailToDirty) return;
+      wizardState.emailTo = peopleEmails(wizardState.people).join("; ");
     }
 
     function readEventFilters() {
@@ -496,8 +521,17 @@
                     <div class="alarm-tag-dropdown" data-multi-options="people"></div>
                   </div>
                 </div>
-                <label class="form-field form-item"><span class="form-label form-required">通知方式</span>
-                  <select class="form-control" data-wizard-field="method"><option value="站内信" selected>站内信</option></select>
+                <div class="form-field form-item"><span class="form-label form-required">通知方式</span>
+                  <div class="alarm-tag-select" data-multi-select="methods">
+                    <button class="alarm-tag-control" type="button" data-multi-trigger="methods" aria-expanded="false">
+                      <span data-multi-value="methods"></span><i class="fa-solid fa-chevron-down"></i>
+                    </button>
+                    <div class="alarm-tag-dropdown" data-multi-options="methods"></div>
+                  </div>
+                </div>
+                <label class="form-field form-item form-span-2 network-email-field ${hasEmailMethod(wizardState.methods) ? "" : "hidden"}" data-email-field>
+                  <span class="form-label form-required">收件邮箱</span>
+                  <input class="form-control" data-wizard-field="emailTo" value="${esc(wizardState.emailTo || "")}" placeholder="多个邮箱用分号或逗号分隔，如 ops@example.com; noc@example.com">
                 </label>
               </div>
             </div>
@@ -517,7 +551,7 @@
               <h3 class="alarm-summary-title">发送方式</h3>
               <table class="alarm-summary-table"><tbody>
                 <tr><th class="summary-label">部门</th><td data-summary="departments">-</td><th class="summary-label">通知人员</th><td data-summary="people">-</td></tr>
-                <tr><th class="summary-label">通知方式</th><td colspan="3" data-summary="method">站内信</td></tr>
+                <tr><th class="summary-label">通知方式</th><td data-summary="method">-</td><th class="summary-label">收件邮箱</th><td data-summary="emailTo">-</td></tr>
               </tbody></table>
             </div>
           </section>
@@ -530,7 +564,8 @@
       if (!body) return;
       const get = (key) => body.querySelector(`[data-wizard-field="${key}"]`)?.value || "";
       wizardState.period = get("period") || wizardState.period;
-      wizardState.method = get("method") || "站内信";
+      const emailField = body.querySelector('[data-wizard-field="emailTo"]');
+      if (emailField) wizardState.emailTo = emailField.value.trim();
       if (!wizardState.rule) wizardState.rule = {};
       wizardState.rule = {
         ...wizardState.rule,
@@ -541,6 +576,16 @@
         level: get("level"),
         description: get("description"),
       };
+    }
+
+    function syncEmailField() {
+      const body = document.getElementById("drawerBody");
+      if (!body) return;
+      const wrap = body.querySelector("[data-email-field]");
+      const input = body.querySelector('[data-wizard-field="emailTo"]');
+      const show = hasEmailMethod(wizardState.methods);
+      if (wrap) wrap.classList.toggle("hidden", !show);
+      if (input && show) input.value = wizardState.emailTo || "";
     }
 
     function renderMultiSelects() {
@@ -570,13 +615,16 @@
       };
       render("departments", notificationDirectory, "请选择部门");
       render("people", allowedPeople, wizardState.departments.length ? "请选择通知人员" : "请先选择部门");
+      render("methods", METHOD_OPTIONS, "请选择通知方式");
       wizardState.people = wizardState.people.filter((id) => allPeople.some((item) => item.id === id) && allowedPeople.some((item) => item.id === id));
+      syncEmailField();
     }
 
     function updateNotificationPeople() {
       const allowed = notificationDirectory.filter((item) => wizardState.departments.includes(item.id)).flatMap((item) => item.people);
       wizardState.people = wizardState.people.filter((id) => allowed.some((item) => item.id === id));
       if (!wizardState.departments.length && wizardState.openMulti === "people") wizardState.openMulti = null;
+      fillEmailFromPeople();
       renderMultiSelects();
     }
 
@@ -598,7 +646,8 @@
       set("description", wizardState.rule?.description || "-");
       set("departments", deptNames(wizardState.departments));
       set("people", peopleNames(wizardState.people));
-      set("method", wizardState.method || "站内信");
+      set("method", (wizardState.methods || []).join("、") || "站内信");
+      set("emailTo", hasEmailMethod(wizardState.methods) ? (wizardState.emailTo || "-") : "-");
     }
 
     function clearValidation(panel) {
@@ -643,10 +692,18 @@
       if (step === 2) {
         const departmentControl = panel.querySelector('[data-multi-select="departments"] .alarm-tag-control');
         const peopleControl = panel.querySelector('[data-multi-select="people"] .alarm-tag-control');
-        const method = panel.querySelector('[data-wizard-field="method"]');
+        const methodControl = panel.querySelector('[data-multi-select="methods"] .alarm-tag-control');
         if (!wizardState.departments.length) { markValidation(departmentControl, "请选择通知部门"); valid = false; }
         if (!wizardState.people.length) { markValidation(peopleControl, "请选择通知人员"); valid = false; }
-        required(method, "请选择通知方式");
+        if (!wizardState.methods.length) { markValidation(methodControl, "请选择通知方式"); valid = false; }
+        if (hasEmailMethod(wizardState.methods)) {
+          const emailField = panel.querySelector('[data-wizard-field="emailTo"]');
+          const emailVal = (emailField?.value || wizardState.emailTo || "").trim();
+          if (!emailVal) {
+            markValidation(emailField, "请输入收件邮箱");
+            valid = false;
+          }
+        }
       }
       return valid;
     }
@@ -676,17 +733,24 @@
     function openRuleWizard(mode, id) {
       const rule = id ? NETWORK_STORE.getAlarmRule(id) : null;
       if (id && !rule) return;
+      const methods = rule?.methods?.length ? [...rule.methods] : (rule?.notify?.length ? [...rule.notify] : ["站内信"]);
       wizardState = {
         step: 1,
         mode,
         ruleId: id || "",
-        rule: rule ? { ...rule } : { level: "预警", metric: "cpu" },
+        rule: rule ? { ...rule } : { level: "预警", metric: "cpu", operator: "大于等于" },
         period: String(rule?.period || 60),
         departments: [...(rule?.departments || [])],
         people: [...(rule?.people || [])],
-        method: rule?.method || "站内信",
+        methods,
+        emailTo: rule?.emailTo || "",
+        emailToDirty: !!rule?.emailTo,
         openMulti: null,
       };
+      if (hasEmailMethod(methods) && !wizardState.emailTo) {
+        wizardState.emailToDirty = false;
+        fillEmailFromPeople();
+      }
       openAppDrawer({
         title: mode === "edit" ? "编辑阈值规则" : "新增阈值规则",
         subtitle: "网络管理 · 网络告警",
@@ -699,6 +763,8 @@
     function openRuleDetail(id) {
       const rule = NETWORK_STORE.getAlarmRule(id);
       if (!rule || !window.openAppDrawer) return;
+      const methods = notifyText(rule);
+      const showEmail = hasEmailMethod(rule.methods || rule.notify);
       openAppDrawer({
         title: "规则详情",
         subtitle: "网络管理 · 网络告警",
@@ -718,7 +784,8 @@
           <div class="detail-grid alarm-detail-grid network-detail-grid">
             <div class="info-item"><span class="info-label">部门</span><span class="info-value">${esc(deptNames(rule.departments))}</span></div>
             <div class="info-item"><span class="info-label">通知人员</span><span class="info-value">${esc(peopleNames(rule.people))}</span></div>
-            <div class="info-item"><span class="info-label">通知方式</span><span class="info-value">${esc(notifyText(rule))}</span></div>
+            <div class="info-item"><span class="info-label">通知方式</span><span class="info-value">${esc(methods)}</span></div>
+            ${showEmail ? `<div class="info-item"><span class="info-label">收件邮箱</span><span class="info-value">${esc(rule.emailTo || "—")}</span></div>` : ""}
           </div></section>`,
         footer: '<button class="btn btn-secondary" type="button" data-drawer-close>关闭</button>',
       });
@@ -741,7 +808,8 @@
         description: wizardState.rule.description || "",
         filter: "periodic",
         period: wizardState.period,
-        method: wizardState.method || "站内信",
+        methods: wizardState.methods,
+        emailTo: hasEmailMethod(wizardState.methods) ? wizardState.emailTo : "",
         departments: wizardState.departments,
         people: wizardState.people,
         enabled: true,
@@ -872,19 +940,42 @@
           const key = tagRemove.dataset.tagRemove;
           wizardState[key] = wizardState[key].filter((id) => id !== tagRemove.dataset.tagId);
           if (key === "departments") updateNotificationPeople();
-          else renderMultiSelects();
+          else if (key === "people") {
+            fillEmailFromPeople();
+            renderMultiSelects();
+          } else if (key === "methods") {
+            if (!hasEmailMethod(wizardState.methods)) {
+              wizardState.emailTo = "";
+              wizardState.emailToDirty = false;
+            } else fillEmailFromPeople();
+            renderMultiSelects();
+          } else renderMultiSelects();
           return;
         }
         const multiOption = ev.target.closest("[data-multi-option]");
         if (multiOption) {
           const key = multiOption.dataset.multiOption;
           const id = multiOption.dataset.optionId;
-          wizardState[key] = wizardState[key].includes(id)
-            ? wizardState[key].filter((item) => item !== id)
-            : wizardState[key].concat(id);
+          const adding = !wizardState[key].includes(id);
+          wizardState[key] = adding
+            ? wizardState[key].concat(id)
+            : wizardState[key].filter((item) => item !== id);
           wizardState.openMulti = key;
           if (key === "departments") updateNotificationPeople();
-          else renderMultiSelects();
+          else if (key === "people") {
+            fillEmailFromPeople();
+            renderMultiSelects();
+          } else if (key === "methods") {
+            if (adding && id === "邮件") {
+              wizardState.emailToDirty = false;
+              fillEmailFromPeople();
+            }
+            if (!hasEmailMethod(wizardState.methods)) {
+              wizardState.emailTo = "";
+              wizardState.emailToDirty = false;
+            }
+            renderMultiSelects();
+          } else renderMultiSelects();
           return;
         }
         const multiTrigger = ev.target.closest("[data-multi-trigger]");
@@ -899,6 +990,13 @@
         if (!ev.target.closest("[data-multi-select]") && wizardState.openMulti) {
           wizardState.openMulti = null;
           renderMultiSelects();
+        }
+      });
+
+      document.addEventListener("input", (ev) => {
+        if (ev.target.matches?.('[data-wizard-field="emailTo"]')) {
+          wizardState.emailTo = ev.target.value;
+          wizardState.emailToDirty = true;
         }
       });
     });
