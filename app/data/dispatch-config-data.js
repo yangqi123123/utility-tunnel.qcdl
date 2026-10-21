@@ -105,14 +105,15 @@
   function loadAll() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return { repair: defaultConfig(), device: defaultConfig() };
+      if (!raw) return { repair: defaultConfig(), device: defaultConfig(), emergency: defaultConfig() };
       const parsed = JSON.parse(raw);
       return {
         repair: Object.assign(defaultConfig(), parsed.repair || {}),
         device: Object.assign(defaultConfig(), parsed.device || {}),
+        emergency: Object.assign(defaultConfig(), parsed.emergency || {}),
       };
     } catch (e) {
-      return { repair: defaultConfig(), device: defaultConfig() };
+      return { repair: defaultConfig(), device: defaultConfig(), emergency: defaultConfig() };
     }
   }
 
@@ -124,6 +125,8 @@
 
   function normalizeConfig(config) {
     const next = Object.assign(defaultConfig(), config || {});
+    // 页面已隐藏「调度配置」总开关，配置始终按启用处理
+    next.dispatchEnabled = true;
     if (next.dispatcherType === "user") {
       const valid = (next.dispatcherIds || []).filter((id) => PERSONNEL.some((person) => person.id === id));
       next.dispatcherIds = valid.length ? valid : defaultConfig().dispatcherIds;

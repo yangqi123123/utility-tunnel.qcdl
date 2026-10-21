@@ -112,6 +112,14 @@ test("报警记录页具备处置能力且 system 为入侵报警", async () => 
   assert.match(page, /误报/);
   assert.match(page, /转工单/);
   assert.match(page, /入侵报警/);
+  assert.match(page, /<th>图片<\/th>/);
+  assert.match(page, /listImageMarkup|detailImagesMarkup|alarmImages/);
+  assert.match(page, /data-alarm-image-preview/);
+});
+
+test("入侵报警数据含图片字段", async () => {
+  const data = await read("app/data/intrusion-alarm-data.js");
+  assert.match(data, /images:\s*\[/);
 });
 
 test("旧入口重定向到监测页", async () => {

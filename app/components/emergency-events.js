@@ -58,6 +58,7 @@
     filtered: [],
     createStep: 1,
     draft: emptyDraft(),
+    createOptions: null,
     picker: { open: false, target: null, deptId: "", keyword: "", deptKeyword: "", deptCollapsed: new Set(), selectedId: "" },
     stepModalEventId: "",
     stepModalStepId: "",
@@ -542,16 +543,16 @@
         </div>
         <label class="form-field"><span class="form-label form-required">事件类型</span><select class="form-control" data-event-field="eventType"><option value="">请选择</option>${EVENT_TYPES.map((type) => `<option value="${esc(type)}" ${type === d.eventType ? "selected" : ""}>${esc(type)}</option>`).join("")}</select></label>
         <label class="form-field"><span class="form-label form-required">事件等级</span><select class="form-control" data-event-field="level">${["P1", "P2", "P3", "P4"].map((level) => `<option value="${level}" ${level === d.level ? "selected" : ""}>${level}</option>`).join("")}</select></label>
-        <label class="form-field"><span class="form-label form-required">联系人</span><input class="form-control" data-event-field="contact" maxlength="20" placeholder="请输入" value="${esc(d.contact)}"></label>
-        <label class="form-field"><span class="form-label form-required">联系电话</span><input class="form-control" data-event-field="contactPhone" maxlength="20" placeholder="请输入手机号" value="${esc(d.contactPhone)}"></label>
+        <label class="form-field"><span class="form-label">联系人</span><input class="form-control" data-event-field="contact" maxlength="20" placeholder="请输入" value="${esc(d.contact)}"></label>
+        <label class="form-field"><span class="form-label">联系电话</span><input class="form-control" data-event-field="contactPhone" maxlength="20" placeholder="请输入手机号" value="${esc(d.contactPhone)}"></label>
         <label class="form-field full"><span class="form-label form-required">事件描述</span><textarea class="form-control textarea" data-event-field="description" maxlength="500" rows="4" placeholder="请输入事件描述">${esc(d.description)}</textarea></label>
         <div class="form-field full"><span class="form-label">上传照片</span><input class="form-control" type="file" accept=".jpg,.jpeg,.png,.gif,.webp,image/*" multiple data-event-photos><div class="form-hint">请上传不超过 5MB 的 jpg、jpeg、png、gif、webp，最多 6 张</div></div>
         <div class="form-field full"><span class="form-label">上传附件</span><input class="form-control" type="file" multiple data-event-attachments><div class="form-hint">单文件不超过 10MB，最多 5 个</div></div>
         <div class="emergency-form-section">点位信息</div>
         <div class="emergency-point-row form-field full">
-          <label class="form-field"><span class="form-label">经度</span><input class="form-control" data-event-field="longitude" data-point-lng readonly placeholder="点位选择后回显" value="${d.longitude === "" || d.longitude == null ? "" : esc(Number(d.longitude).toFixed(6))}"></label>
-          <label class="form-field"><span class="form-label">纬度</span><input class="form-control" data-event-field="latitude" data-point-lat readonly placeholder="点位选择后回显" value="${d.latitude === "" || d.latitude == null ? "" : esc(Number(d.latitude).toFixed(6))}"></label>
-          <button class="btn btn-secondary" type="button" data-event-point-select>点位选择</button>
+          <label class="form-field"><span class="form-label">经度</span><input class="form-control" data-event-field="longitude" data-point-lng readonly placeholder="${state.createOptions?.hidePointPicker ? "设备经度" : "点位选择后回显"}" value="${d.longitude === "" || d.longitude == null ? "" : esc(Number(d.longitude).toFixed(6))}"></label>
+          <label class="form-field"><span class="form-label">纬度</span><input class="form-control" data-event-field="latitude" data-point-lat readonly placeholder="${state.createOptions?.hidePointPicker ? "设备纬度" : "点位选择后回显"}" value="${d.latitude === "" || d.latitude == null ? "" : esc(Number(d.latitude).toFixed(6))}"></label>
+          ${state.createOptions?.hidePointPicker ? "<!-- <button class=\"btn btn-secondary\" type=\"button\" data-event-point-select>点位选择</button> -->" : `<button class="btn btn-secondary" type="button" data-event-point-select>点位选择</button>`}
         </div>
       </form>
     </section>`;
@@ -611,10 +612,75 @@
       ${step < 3 ? `<button class="btn btn-primary" type="button" data-create-next>下一步</button>` : `<button class="btn btn-primary" type="button" data-event-drawer-save>保存</button>`}`;
   }
 
-  function openCreate() {
+  function defaultLocationPrefill() {
+    const project = locationTree[0] || null;
+    const corridor = project?.corridors?.[0] || null;
+    const room = corridor?.rooms?.[0] || null;
+    const section = room?.sections?.[0] || null;
+    return {
+      project: project?.name || "",
+      corridor: corridor?.name || "",
+      room: room?.name || "",
+      section: section?.name || "",
+      pipeline: section?.pipelines?.[0] || "",
+    };
+  }
+
+  function mapAlarmEventType(alarm = {}) {
+    const text = `${alarm.device || ""} ${alarm.message || ""} ${alarm.type || ""} ${alarm.category || ""}`;
+    if (/燃气|甲烷|硫化氢|可燃/.test(text)) return "燃气泄漏";
+    if (/火|烟感|消防/.test(text)) return "火灾";
+    if (/积水|水位|排水/.test(text)) return "积水";
+    if (/入侵|安防/.test(text)) return "入侵告警";
+    if (alarm.type === "设备离线" || alarm.type === "设备属性") return "设备故障";
+    return "其他";
+  }
+
+  function draftFromAlarm(alarm = {}) {
+    const levelMap = { "告警": "P1", "预警": "P2", "提醒": "P3" };
+    const defaults = defaultLocationPrefill();
+    const title = `${alarm.device || ""}${alarm.message || ""}`.slice(0, 50);
+    const longitude = Number(alarm.longitude ?? alarm.lng);
+    const latitude = Number(alarm.latitude ?? alarm.lat);
+    return {
+      title,
+      project: alarm.project || defaults.project,
+      corridor: alarm.corridor || defaults.corridor,
+      room: alarm.room || defaults.room,
+      section: alarm.section || defaults.section,
+      pipeline: alarm.pipeline || defaults.pipeline,
+      eventType: alarm.eventType || mapAlarmEventType(alarm),
+      level: levelMap[alarm.level] || "P2",
+      contact: "",
+      contactPhone: "",
+      description: alarm.message || "",
+      longitude: Number.isFinite(longitude) ? longitude : "",
+      latitude: Number.isFinite(latitude) ? latitude : "",
+      photos: [],
+      attachments: [],
+      relatedPersonIds: [],
+      relatedResources: [],
+      planId: "",
+    };
+  }
+
+  function openCreate(options = {}) {
     state.createStep = 1;
-    state.draft = emptyDraft();
-    window.openAppDrawer({ title: "新建应急事件", body: createWizardHtml(), footer: createFooter() });
+    state.createOptions = options && typeof options === "object" ? options : {};
+    const prefill = state.createOptions.prefill && typeof state.createOptions.prefill === "object"
+      ? state.createOptions.prefill
+      : {};
+    state.draft = {
+      ...emptyDraft(),
+      ...prefill,
+      photos: [],
+      attachments: [],
+    };
+    window.openAppDrawer({
+      title: state.createOptions.drawerTitle || "新建应急事件",
+      body: createWizardHtml(),
+      footer: createFooter(),
+    });
     const drawer = document.getElementById("drawer");
     if (drawer) drawer.classList.add("emergency-wizard-drawer");
     bindLocationCascade(document.querySelector("[data-event-location-form]"));
@@ -665,11 +731,12 @@
     };
     form.querySelectorAll(".form-control.error").forEach((field) => field.classList.remove("error"));
     let ok = true;
-    ["title", "project", "eventType", "contact", "contactPhone", "description"].forEach((key) => {
+    ["title", "project", "eventType", "description"].forEach((key) => {
       if (!next[key]) { form.querySelector(`[data-event-field="${key}"]`)?.classList.add("error"); ok = false; }
     });
     if (!ok) { toast("请填写必填项", "error"); return false; }
-    if (!/^1\d{10}$/.test(next.contactPhone.replace(/\s/g, ""))) {
+    const phone = next.contactPhone.replace(/\s/g, "");
+    if (phone && !/^1\d{10}$/.test(phone)) {
       form.querySelector('[data-event-field="contactPhone"]')?.classList.add("error");
       toast("请输入正确的手机号", "error");
       return false;
@@ -752,35 +819,94 @@
     return true;
   }
 
+  function buildCreatedEvent(draft, overrides = {}, stamp = Date.now()) {
+    const occurrenceTime = nowText();
+    const project = overrides.project ?? draft.project;
+    const corridor = overrides.corridor ?? draft.corridor;
+    const room = overrides.room ?? draft.room;
+    const section = overrides.section ?? draft.section;
+    const pipeline = overrides.pipeline ?? draft.pipeline;
+    const location = [project, corridor, room, section, pipeline].filter(Boolean).join(" / ") || "待定位";
+    return {
+      eventId: `EVT-${stamp}`,
+      title: overrides.title ?? draft.title,
+      eventType: draft.eventType,
+      level: draft.level,
+      project, corridor, room, section, pipeline,
+      location,
+      contact: draft.contact,
+      contactPhone: draft.contactPhone,
+      description: overrides.description ?? draft.description,
+      longitude: (() => {
+        const value = overrides.longitude ?? draft.longitude;
+        return value === "" || value == null ? "" : Number(value);
+      })(),
+      latitude: (() => {
+        const value = overrides.latitude ?? draft.latitude;
+        return value === "" || value == null ? "" : Number(value);
+      })(),
+      photos: draft.photos,
+      attachments: draft.attachments,
+      planId: draft.planId,
+      relatedPersonIds: [...draft.relatedPersonIds],
+      relatedResources: draft.relatedResources.map((entry) => ({ resourceId: entry.resourceId, quantity: Number(entry.quantity) || 1 })),
+      relatedResourceIds: draft.relatedResources.map((entry) => entry.resourceId),
+      source: overrides.source || "人工上报",
+      status: "待指派",
+      handler: "",
+      stepRecords: [],
+      sourceAlarmId: overrides.sourceAlarmId || "",
+      occurrenceTime,
+      discoveredAt: occurrenceTime,
+      startedAt: "",
+      finishedAt: "",
+      timeline: [{ timelineId: `TL-${stamp}`, at: occurrenceTime, title: "创建", operator: draft.contact || "当前用户", message: overrides.timelineMessage || "新建应急事件" }],
+      updatedAt: occurrenceTime,
+    };
+  }
+
   async function saveCreate() {
     if (!(await collectBasicDraft())) { state.createStep = 1; refreshCreateDrawer(); return; }
     if (!collectResourceDraft()) { state.createStep = 2; refreshCreateDrawer(); return; }
     const d = state.draft;
-    const stamp = Date.now();
-    const occurrenceTime = nowText();
-    const event = {
-      eventId: `EVT-${stamp}`,
-      title: d.title, eventType: d.eventType, level: d.level,
-      project: d.project, corridor: d.corridor, room: d.room, section: d.section, pipeline: d.pipeline,
-      location: draftLocationText(), contact: d.contact, contactPhone: d.contactPhone, description: d.description,
-      longitude: d.longitude === "" ? "" : Number(d.longitude),
-      latitude: d.latitude === "" ? "" : Number(d.latitude),
-      photos: d.photos, attachments: d.attachments, planId: d.planId,
-      relatedPersonIds: [...d.relatedPersonIds],
-      relatedResources: d.relatedResources.map((entry) => ({ resourceId: entry.resourceId, quantity: Number(entry.quantity) || 1 })),
-      relatedResourceIds: d.relatedResources.map((entry) => entry.resourceId),
-      source: "人工上报", status: "待指派", handler: "", stepRecords: [],
-      occurrenceTime, discoveredAt: occurrenceTime, startedAt: "", finishedAt: "",
-      timeline: [{ timelineId: `TL-${stamp}`, at: occurrenceTime, title: "创建", operator: d.contact || "当前用户", message: "新建应急事件" }],
-      updatedAt: occurrenceTime,
-    };
+    const opts = state.createOptions || {};
+    const source = opts.source || "人工上报";
+    const alarms = Array.isArray(opts.fromAlarms) && opts.fromAlarms.length ? opts.fromAlarms : [null];
+    const saved = [];
     try {
-      store.saveEvent(event);
+      alarms.forEach((alarm, index) => {
+        const stamp = Date.now() + index;
+        const overrides = { source };
+        if (alarm) {
+          overrides.sourceAlarmId = String(alarm.id ?? "");
+          overrides.timelineMessage = `由报警中心转入应急事件${alarm.deviceCode ? `（${alarm.deviceCode}）` : ""}`;
+          const lng = Number(alarm.longitude ?? alarm.lng);
+          const lat = Number(alarm.latitude ?? alarm.lat);
+          if (Number.isFinite(lng)) overrides.longitude = lng;
+          if (Number.isFinite(lat)) overrides.latitude = lat;
+          if (alarms.length > 1) {
+            overrides.title = `${d.title}（${alarm.device || "报警"}）`.slice(0, 50);
+            overrides.description = alarm.message || d.description;
+            overrides.project = alarm.project || d.project;
+            overrides.corridor = alarm.corridor || d.corridor;
+            overrides.room = alarm.room || d.room;
+            overrides.section = alarm.section || d.section;
+            overrides.pipeline = alarm.pipeline || d.pipeline;
+          }
+        }
+        const event = buildCreatedEvent(d, overrides, stamp);
+        store.saveEvent(event);
+        saved.push(event);
+      });
       window.closeAppDrawer();
-      state.page = 1;
-      toast("事件已创建");
-      renderTypeOptions();
-      render();
+      state.createOptions = null;
+      toast(saved.length > 1 ? `已创建 ${saved.length} 条应急事件` : "事件已创建");
+      if (document.getElementById("eventBody")) {
+        state.page = 1;
+        renderTypeOptions();
+        render();
+      }
+      if (typeof opts.onSaved === "function") opts.onSaved(saved);
     } catch (error) {
       toast(error.message || "创建失败", "error");
     }
@@ -1123,7 +1249,13 @@
     openSubmit(item);
   }
 
+  function closeStepCompleteModal() {
+    document.querySelector(".emergency-center-mask[data-step-complete-modal]")?.remove();
+  }
+
   function openStepCompleteModal(eventId, stepId) {
+    // 叠在「提交处理结果」之上，不关闭下层弹窗
+    closeStepCompleteModal();
     state.stepModalEventId = eventId;
     state.stepModalStepId = stepId;
     const item = eventById(eventId);
@@ -1131,8 +1263,9 @@
     const step = (plan?.steps || []).find((entry) => entry.stepId === stepId);
     const mask = document.createElement("div");
     mask.className = "emergency-center-mask";
-    mask.innerHTML = `<div class="emergency-center-modal emergency-step-modal" role="dialog">
-      <div class="emergency-center-head"><h3>完成步骤：${esc(step?.name || "")}</h3><button type="button" data-center-close>×</button></div>
+    mask.dataset.stepCompleteModal = "1";
+    mask.innerHTML = `<div class="emergency-center-modal emergency-step-modal" role="dialog" aria-modal="true">
+      <div class="emergency-center-head"><h3>完成步骤：${esc(step?.name || "")}</h3><button type="button" data-step-complete-close aria-label="关闭">×</button></div>
       <div class="emergency-center-body">
         <form class="emergency-form-grid" data-step-complete-form>
           <label class="form-field full"><span class="form-label form-required">处理过程</span><textarea class="form-control textarea" data-step-field="process" rows="3" maxlength="500" placeholder="请输入处理过程"></textarea></label>
@@ -1144,7 +1277,7 @@
         </form>
       </div>
       <div class="emergency-center-foot">
-        <button class="btn btn-secondary" type="button" data-center-close>取消</button>
+        <button class="btn btn-secondary" type="button" data-step-complete-close>取消</button>
         <button class="btn btn-primary" type="button" data-step-complete-save>确定</button>
       </div>
     </div>`;
@@ -1172,7 +1305,7 @@
       operator: item.handler || "当前用户",
       photos,
     });
-    document.querySelector(".emergency-center-mask:not([data-event-ops-modal])")?.remove();
+    closeStepCompleteModal();
     toast("步骤已完成");
     refreshSubmitDrawer(item.eventId);
     notifyChanged();
@@ -1270,7 +1403,16 @@
       closeCenterOpsModal();
       return;
     }
+    if (event.target.closest("[data-step-complete-close]")) {
+      closeStepCompleteModal();
+      return;
+    }
     if (event.target.closest("[data-center-close]")) {
+      // 若完成步骤弹窗在上层，优先只关它，保留「提交处理结果」
+      if (document.querySelector(".emergency-center-mask[data-step-complete-modal]")) {
+        closeStepCompleteModal();
+        return;
+      }
       const opsModal = event.target.closest(".emergency-center-mask[data-event-ops-modal]");
       if (opsModal) { opsModal.remove(); return; }
       document.querySelector(".emergency-center-mask:not([data-event-ops-modal])")?.remove();
@@ -1475,7 +1617,7 @@
     const type = action.dataset.eventAction;
     const item = eventById(action.dataset.eventId);
     closeMoreMenu();
-    if (type === "create") openCreate();
+    if (type === "create") openCreate({});
     if (type === "search") { state.page = 1; render(); }
     if (type === "reset") {
       document.querySelectorAll("[data-event-filter]").forEach((field) => { field.value = ""; });
@@ -1500,6 +1642,8 @@
     detailBody,
     getEvent: eventById,
     list,
+    openCreate,
+    draftFromAlarm,
     onChanged: null,
   };
 

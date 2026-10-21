@@ -185,6 +185,47 @@
     return tabs + basic + stepsPanel;
   }
 
+  /** 按事件类型匹配已发布且启用的预案（与应急预案库「预案类型」一致） */
+  function matchByEventType(event) {
+    if (!event?.eventType) return [];
+    const linkedId = event.planId || "";
+    return listAll()
+      .filter((plan) => plan.status === "已发布" && plan.enabled !== "停用" && plan.eventType === event.eventType)
+      .sort((a, b) => {
+        if (linkedId && a.planId === linkedId) return -1;
+        if (linkedId && b.planId === linkedId) return 1;
+        return String(a.code || a.planId || "").localeCompare(String(b.code || b.planId || ""), "zh");
+      });
+  }
+
+  /**
+   * 多预案展开收起列表。收起时仅显示名称、编号、类型；默认展开 expandedId（未传则第一条）。
+   * options.tabOf(planId) 返回该预案当前页签 basic|steps
+   */
+  function accordionListBody(plans, options = {}) {
+    const list = Array.isArray(plans) ? plans : [];
+    if (!list.length) {
+      return `<div class="dispatch-right-empty">${esc(options.emptyText || "暂无与当前事件类型匹配的应急预案")}</div>`;
+    }
+    const expandedId = options.expandedId != null && options.expandedId !== ""
+      ? String(options.expandedId)
+      : String(list[0].planId || "");
+    const tabOf = typeof options.tabOf === "function" ? options.tabOf : (() => "basic");
+    return `<div class="plan-accordion">${list.map((plan) => {
+      const id = String(plan.planId || "");
+      const open = id === expandedId;
+      const tab = tabOf(id) === "steps" ? "steps" : "basic";
+      return `<article class="plan-accordion-item ${open ? "is-open" : ""}" data-plan-accordion-id="${esc(id)}">
+        <button type="button" class="plan-accordion-head" data-plan-accordion-toggle="${esc(id)}" aria-expanded="${open ? "true" : "false"}">
+          <i class="fa-solid ${open ? "fa-chevron-down" : "fa-chevron-right"}" aria-hidden="true"></i>
+          <span class="plan-accordion-title"><strong>${esc(plan.name || "-")}</strong><small>${esc(plan.code || plan.planId || "-")}</small></span>
+          <span class="tag primary">${esc(plan.eventType || "-")}</span>
+        </button>
+        ${open ? `<div class="plan-accordion-body">${detailBody(plan, tab)}</div>` : ""}
+      </article>`;
+    }).join("")}</div>`;
+  }
+
   function openDetail(item, tab = "basic") {
     if (!item) return;
     clearWizardClass();
@@ -549,7 +590,13 @@
     if (type === "delete" && item) deletePlan(item);
   });
 
-  window.EMERGENCY_PLAN_OPS = { detailBody, getPlan: byId, list: listAll };
+  window.EMERGENCY_PLAN_OPS = {
+    detailBody,
+    getPlan: byId,
+    list: listAll,
+    matchByEventType,
+    accordionListBody,
+  };
 
   if (document.getElementById("planBody")) {
     renderTypeOptions();

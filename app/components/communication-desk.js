@@ -33,6 +33,8 @@
     statusFilter: "全部",
     activeMode: "",
     planTab: "basic",
+    planExpandedId: "",
+    planTabs: {},
     resourceCategory: "all",
     personnelType: "all",
   };
@@ -115,6 +117,22 @@
   function eventPlan(event) {
     if (!event) return null;
     return emergency()?.getPlan?.(event.planId) || emergency()?.matchPlans?.(event)?.[0] || null;
+  }
+
+  function matchedPlans(event) {
+    if (!event) return [];
+    if (typeof planOps()?.matchByEventType === "function") return planOps().matchByEventType(event);
+    return (emergency()?.matchPlans?.(event) || []).filter((plan) => plan.eventType === event.eventType);
+  }
+
+  function ensurePlanExpanded(plans) {
+    if (!plans.length) {
+      state.planExpandedId = "";
+      return;
+    }
+    if (!plans.some((plan) => String(plan.planId) === String(state.planExpandedId))) {
+      state.planExpandedId = plans[0].planId;
+    }
   }
 
   function sortedEvents() {
@@ -511,6 +529,9 @@
     state.activeMode = "";
     state.resourceCategory = "all";
     state.personnelType = "all";
+    state.planExpandedId = "";
+    state.planTabs = {};
+    state.planTab = "basic";
     renderEventList();
     renderModeBar();
     rebuildLayers();
@@ -615,11 +636,16 @@
   }
 
   function modePlanBody(event) {
-    const plan = eventPlan(event);
-    if (plan && typeof planOps()?.detailBody === "function") {
-      return `<div class="dispatch-plan-detail">${planOps().detailBody(plan, state.planTab)}</div>`;
+    const plans = matchedPlans(event);
+    ensurePlanExpanded(plans);
+    if (typeof planOps()?.accordionListBody === "function") {
+      return `<div class="dispatch-plan-detail">${planOps().accordionListBody(plans, {
+        expandedId: state.planExpandedId,
+        tabOf: (planId) => state.planTabs[planId] || state.planTab || "basic",
+        emptyText: "暂无与当前事件类型匹配的应急预案",
+      })}</div>`;
     }
-    return `<div class="dispatch-right-empty">当前事件未关联应急预案</div>`;
+    return `<div class="dispatch-right-empty">预案组件未就绪</div>`;
   }
 
   function openModePanel(mode) {
@@ -628,6 +654,9 @@
     state.activeMode = mode;
     if (mode === "resources") state.resourceCategory = state.resourceCategory || "all";
     if (mode === "personnel") state.personnelType = state.personnelType || "all";
+    if (mode === "plan") {
+      // 保留已展开项；首次进入时由 ensurePlanExpanded 默认展开第一条
+    }
     renderModeBar();
     const titles = { video: "视频监控", resources: "应急物资", personnel: "应急人员", plan: "应急预案" };
     const bodies = {
@@ -640,7 +669,7 @@
   }
 
   function refreshModePanel() {
-    if (state.activeMode === "resources" || state.activeMode === "personnel") {
+    if (state.activeMode === "resources" || state.activeMode === "personnel" || state.activeMode === "plan") {
       openModePanel(state.activeMode);
     }
   }
@@ -751,9 +780,22 @@
         return;
       }
 
+      const planToggle = event.target.closest(".dispatch-plan-detail [data-plan-accordion-toggle]");
+      if (planToggle) {
+        const id = planToggle.dataset.planAccordionToggle || "";
+        // 手风琴：一次仅展开一条；点当前展开项则收起
+        state.planExpandedId = String(state.planExpandedId) === String(id) ? "" : id;
+        if (state.planExpandedId && !state.planTabs[state.planExpandedId]) state.planTabs[state.planExpandedId] = "basic";
+        refreshModePanel();
+        return;
+      }
+
       const planTab = event.target.closest(".dispatch-plan-detail [data-plan-detail-tab]");
       if (planTab) {
-        state.planTab = planTab.dataset.planDetailTab || "basic";
+        const planId = planTab.dataset.planId || state.planExpandedId;
+        const tab = planTab.dataset.planDetailTab || "basic";
+        state.planTab = tab;
+        if (planId) state.planTabs[planId] = tab;
         openModePanel("plan");
         return;
       }

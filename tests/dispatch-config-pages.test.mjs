@@ -19,6 +19,8 @@ test("dispatch-config data exposes store helpers", async () => {
   assert.match(source, /saveTab/);
   assert.match(source, /peopleOfDepartments/);
   assert.match(source, /work-order\.dispatch-config\.v1/);
+  assert.match(source, /emergency:\s*Object\.assign\(defaultConfig\(\),\s*parsed\.emergency/);
+  assert.match(source, /next\.dispatchEnabled\s*=\s*true/);
 });
 
 test("dispatch-config page wires menu key and assets", async () => {
@@ -29,6 +31,9 @@ test("dispatch-config page wires menu key and assets", async () => {
   assert.match(source, /dispatch-config\.js/);
   assert.match(source, /data-dispatch-tab="repair"/);
   assert.match(source, /data-dispatch-tab="device"/);
+  assert.match(source, /data-dispatch-tab="emergency"/);
+  assert.match(source, /应急事件/);
+  assert.doesNotMatch(source, /data-field="dispatchEnabled"/);
   assert.doesNotMatch(source, /投诉建议|公区报修|室内报修|当日值班人员/);
 });
 

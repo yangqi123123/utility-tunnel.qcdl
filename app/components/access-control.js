@@ -69,9 +69,10 @@
     if (!data.personnel[index]) return;
     const menu = document.createElement("div");
     menu.className = "access-more-menu";
+    /* 编辑/删除暂隐藏，便于后续恢复显示 */
     menu.innerHTML = [
-      `<button type="button" data-person-edit="${index}">编辑</button>`,
-      `<button type="button" class="is-danger" data-person-delete="${index}">删除</button>`,
+      // `<button type="button" data-person-edit="${index}">编辑</button>`,
+      // `<button type="button" class="is-danger" data-person-delete="${index}">删除</button>`,
     ].join("");
     document.body.appendChild(menu);
     const rect = button.getBoundingClientRect();
@@ -106,7 +107,8 @@
     body.innerHTML = list.map((item, index) => {
       const realIndex = data.personnel.indexOf(item);
       const idx = realIndex >= 0 ? realIndex : index;
-      return `<tr><td><span class="access-primary">${esc(item.name)}</span></td><td>${tag(item.type)}</td><td>${esc(item.department)}</td><td>${esc(item.phone)}</td><td>${esc(credentialTypeText(item))}</td><td class="wrap" title="${esc(credentialValueText(item))}">${esc(credentialValueText(item))}</td><td>${tag(item.status)}</td><td class="access-ledger-actions"><button class="table-action" type="button" data-person-detail="${idx}">查看</button><button class="table-action" type="button" data-person-more="${idx}">更多</button></td></tr>`;
+      /* 编辑/删除入口暂隐藏，便于后续恢复：<button class="table-action" type="button" data-person-more="${idx}">更多</button> */
+      return `<tr><td><span class="access-primary">${esc(item.name)}</span></td><td>${tag(item.type)}</td><td>${esc(item.department)}</td><td>${esc(item.phone)}</td><td>${esc(credentialTypeText(item))}</td><td class="wrap" title="${esc(credentialValueText(item))}">${esc(credentialValueText(item))}</td><td>${tag(item.status)}</td><td class="access-ledger-actions"><button class="table-action" type="button" data-person-detail="${idx}">查看</button></td></tr>`;
     }).join("") || emptyRow(8);
     document.getElementById("personnelCount").textContent = list.length;
     renderPagination("personnelPagination", list.length);
@@ -539,7 +541,8 @@
       scheduleBody.innerHTML = schedules.map((item, index) => {
         const realIndex = data.schedules.indexOf(item);
         const idx = realIndex >= 0 ? realIndex : index;
-        return `<tr><td><span class="access-primary">${esc(item.name)}</span></td><td>${esc(item.repeat)}</td><td class="wrap" title="${esc(schedulePeriodText(item))}">${esc(schedulePeriodText(item))}</td><td>${scheduleUsedCount(item.id)}</td><td>${tag(item.status)}</td><td class="access-ledger-actions"><button class="table-action" type="button" data-schedule-detail="${idx}">查看</button><button class="table-action" type="button" data-schedule-more="${idx}">更多</button></td></tr>`;
+        /* 编辑/删除入口暂隐藏，便于后续恢复：<button class="table-action" type="button" data-schedule-more="${idx}">更多</button> */
+        return `<tr><td><span class="access-primary">${esc(item.name)}</span></td><td>${esc(item.repeat)}</td><td class="wrap" title="${esc(schedulePeriodText(item))}">${esc(schedulePeriodText(item))}</td><td>${scheduleUsedCount(item.id)}</td><td>${tag(item.status)}</td><td class="access-ledger-actions"><button class="table-action" type="button" data-schedule-detail="${idx}">查看</button></td></tr>`;
       }).join("") || emptyRow(6);
       renderPagination("schedulePagination", schedules.length);
     }
@@ -754,8 +757,26 @@
         upload.innerHTML = `<span class="access-upload-plus">✓</span><span>已上传${type === "人脸" ? "人脸照片" : "二维码"}</span>`;
         return;
       }
+      /* 新增人员入口暂隐藏，便于后续恢复
       if (event.target.closest('[data-action="add-person"]')) {
         personForm("新增人员");
+        return;
+      }
+      */
+      if (event.target.closest('[data-action="sync-person"]')) {
+        openDrawer(
+          "同步人员",
+          "门禁系统",
+          `<label class="form-field form-item"><span class="form-label form-required">同步模式</span><select class="form-control" data-person-sync-mode><option value="FULL">首次全量同步</option><option value="INCREMENTAL">后续增量同步</option></select></label><label class="form-field form-item"><span class="form-label form-required">同步系统</span><select class="form-control" data-person-sync-system disabled><option value="门禁系统" selected>门禁系统</option></select></label><p class="access-mini-note">本平台从第三方门禁系统单向拉取人员档案，不同步回写第三方。</p>`,
+          '<button class="btn btn-secondary" data-drawer-close>取消</button><button class="btn btn-primary" data-action="start-person-sync">开始同步</button>'
+        );
+        return;
+      }
+      if (event.target.closest('[data-action="start-person-sync"]')) {
+        const mode = document.querySelector("[data-person-sync-mode]")?.value || "FULL";
+        const modeLabel = mode === "FULL" ? "首次全量同步" : "后续增量同步";
+        if (typeof window.closeAppDrawer === "function") window.closeAppDrawer();
+        openDrawer("人员同步任务已提交", "门禁系统", `<p>同步模式：${modeLabel}；同步系统：门禁系统。已从第三方门禁系统单向拉取人员数据，任务在后台执行，稍后可刷新列表查看结果。</p>`);
         return;
       }
       if (!event.target.closest(".access-more-menu") && !event.target.closest("[data-person-more],[data-schedule-more],[data-group-more],[data-grant-more]")) closePersonMoreMenu();
@@ -766,7 +787,25 @@
       const saveAlarm = event.target.closest("[data-save-alarm]"); if (saveAlarm) { data.alarms[+saveAlarm.dataset.saveAlarm].status="\u5df2\u5904\u7406"; window.closeAppDrawer(); renderAlarms(); }
       const blackDetail = event.target.closest("[data-black-detail]"); if (blackDetail) { const x=data.blacklist[+blackDetail.dataset.blackDetail]; openDrawer("\u9ed1\u540d\u5355\u8be6\u60c5",x.name,details([["\u4eba\u5458\u7c7b\u578b",x.type],["\u8054\u7cfb\u65b9\u5f0f",x.phone],["\u5355\u4f4d / \u90e8\u95e8",`${x.company} / ${x.department}`],["\u52a0\u5165\u539f\u56e0",x.reason],["\u751f\u6548\u65f6\u95f4",x.start],["\u5931\u6548\u65f6\u95f4",x.end],["\u5f53\u524d\u72b6\u6001",x.status],["\u521b\u5efa\u4eba",x.creator]])); }
       if (event.target.closest('[data-action="export"]')) openDrawer("导出数据", "门禁系统", "<p>已按当前筛选条件生成导出文件（Mock）。</p>", '<button class="btn btn-secondary" data-drawer-close>取消</button><button class="btn btn-primary" data-drawer-close>确认导出</button>');
+      /* 新增时间计划入口暂隐藏，便于后续恢复
       if (event.target.closest('[data-action="add-schedule"]')) { openScheduleForm("新增时间计划"); return; }
+      */
+      if (event.target.closest('[data-action="sync-schedule"]')) {
+        openDrawer(
+          "同步时间计划",
+          "门禁系统",
+          `<label class="form-field form-item"><span class="form-label form-required">同步模式</span><select class="form-control" data-schedule-sync-mode><option value="FULL">首次全量同步</option><option value="INCREMENTAL">后续增量同步</option></select></label><label class="form-field form-item"><span class="form-label form-required">同步系统</span><select class="form-control" data-schedule-sync-system disabled><option value="门禁系统" selected>门禁系统</option></select></label><p class="access-mini-note">本平台从第三方门禁系统单向拉取时间计划，不同步回写第三方。</p>`,
+          '<button class="btn btn-secondary" data-drawer-close>取消</button><button class="btn btn-primary" data-action="start-schedule-sync">开始同步</button>'
+        );
+        return;
+      }
+      if (event.target.closest('[data-action="start-schedule-sync"]')) {
+        const mode = document.querySelector("[data-schedule-sync-mode]")?.value || "FULL";
+        const modeLabel = mode === "FULL" ? "首次全量同步" : "后续增量同步";
+        if (typeof window.closeAppDrawer === "function") window.closeAppDrawer();
+        openDrawer("时间计划同步任务已提交", "门禁系统", `<p>同步模式：${modeLabel}；同步系统：门禁系统。已从第三方门禁系统单向拉取时间计划，任务在后台执行，稍后可刷新列表查看结果。</p>`);
+        return;
+      }
       if (event.target.closest('[data-action="add-group"]')) { openGroupForm("新增权限组"); return; }
       if (event.target.closest('[data-action="add-grant"]')) { openGrantForm("新增个人授权"); return; }
       if (event.target.closest('[data-action="sync-black"]')) {

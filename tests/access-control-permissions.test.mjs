@@ -12,6 +12,9 @@ test("permissions tabs ordered schedule → group → grant", async () => {
   assert.ok(schedules > -1 && groups > -1 && grants > -1);
   assert.ok(schedules < groups && groups < grants);
   assert.match(page, /个人授权列表[\s\S]*用于检修\/访客/);
+  assert.match(page, /data-action="sync-schedule"/);
+  assert.match(page, /同步时间计划/);
+  assert.match(page, /<!--[\s\S]*data-action="add-schedule"[\s\S]*-->/);
   assert.doesNotMatch(page, /权限判定顺序/);
   assert.doesNotMatch(page, /有效期/);
   assert.doesNotMatch(page, /节假日/);
@@ -39,7 +42,10 @@ test("permission pickers and more menus are wired", async () => {
   assert.match(script, /data-group-member-select/);
   assert.match(script, /data-grant-door-select/);
   assert.match(script, /data-grant-person-search/);
-  assert.match(script, /data-schedule-more/);
+  assert.match(script, /data-action="sync-schedule"/);
+  assert.match(script, /start-schedule-sync/);
+  assert.match(script, /data-schedule-detail/);
+  assert.match(script, /编辑\/删除入口暂隐藏[\s\S]*data-schedule-more/);
   assert.match(script, /data-group-more/);
   assert.match(script, /data-grant-more/);
   assert.match(script, /deleteSchedule/);
@@ -47,6 +53,14 @@ test("permission pickers and more menus are wired", async () => {
   assert.match(script, /scheduleEchoMarkup/);
   assert.doesNotMatch(script, /periodStart|periodEnd/);
   assert.doesNotMatch(script, /个人授权用于检修\/访客等短期通行，不绑定时间计划；判定时优先于权限组/);
+});
+
+test("permissions requirement describes schedule one-way sync", async () => {
+  const req = await read("app/components/requirement.js");
+  assert.match(req, /docs\["access-control\.permissions"\]/);
+  assert.match(req, /同步时间计划/);
+  assert.match(req, /单向拉取时间计划/);
+  assert.match(req, /不支持手工新增、编辑或删除时间计划/);
 });
 
 test("permission data closes group-schedule-grant loop", async () => {

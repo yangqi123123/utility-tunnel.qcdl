@@ -396,6 +396,7 @@
       status: "未处理",
       location: "综合舱出入口",
       property: "高新大道综合管廊 / 综合舱 / 出入口",
+      images: ["../../assets/images/corridor-monitor.jpg"],
       history: [{ time: "2026-10-14 10:28:00", operator: "系统", action: "创建报警" }],
     },
     {
@@ -411,6 +412,7 @@
       status: "处理中",
       location: "综合舱出入口",
       property: "高新大道综合管廊 / 综合舱 / 出入口",
+      images: ["../../assets/images/corridor-monitor.jpg", "../../assets/images/science-island-brand.png"],
       process: {
         workOrderNo: "WO20261014001",
         workOrderName: "出入口周界入侵核查",
@@ -437,6 +439,7 @@
       status: "已处理",
       location: "综合舱防火分区",
       property: "科学岛大道综合管廊 / 综合舱 / 防火分区",
+      images: ["../../assets/images/corridor-monitor.jpg"],
       closeReason: "告警已解决",
       closeRemark: "更换光纤接头后回路恢复正常。",
       closedAt: "2026-10-14 10:15:00",
@@ -468,6 +471,7 @@
       status: "未处理",
       location: "燃气舱通风口",
       property: "科学岛东区综合管廊 / 燃气舱 / 通风口",
+      images: [],
       history: [{ time: "2026-10-14 08:12:00", operator: "系统", action: "创建报警" }],
     },
     {
@@ -483,6 +487,7 @@
       status: "已处理",
       location: "燃气舱吊装口",
       property: "科学岛东区综合管廊 / 燃气舱 / 吊装口",
+      images: ["../../assets/images/science-island-icon.png"],
       closeReason: "误报无问题",
       closeRemark: "现场确认为施工车辆震动干扰。",
       closedAt: "2026-10-14 10:25:30",

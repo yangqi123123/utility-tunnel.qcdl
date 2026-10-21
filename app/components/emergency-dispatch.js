@@ -17,6 +17,8 @@
     rightMode: "detail",
     detailTab: "info",
     planTab: "basic",
+    planExpandedId: "",
+    planTabs: {},
     resourceCategory: "all",
     personnelType: "all",
     resourceMapOn: true,
@@ -119,6 +121,22 @@
   function eventPlan(event) {
     if (!event) return null;
     return store.getPlan?.(event.planId) || store.matchPlans?.(event)?.[0] || null;
+  }
+
+  function matchedPlans(event) {
+    if (!event) return [];
+    if (typeof planOps?.matchByEventType === "function") return planOps.matchByEventType(event);
+    return (store.matchPlans?.(event) || []).filter((plan) => plan.eventType === event.eventType);
+  }
+
+  function ensurePlanExpanded(plans) {
+    if (!plans.length) {
+      state.planExpandedId = "";
+      return;
+    }
+    if (!plans.some((plan) => String(plan.planId) === String(state.planExpandedId))) {
+      state.planExpandedId = plans[0].planId;
+    }
   }
 
   function formatTime(value) {
@@ -435,14 +453,18 @@
   */
 
   function renderRightPlan(target, event) {
-    const plan = eventPlan(event);
+    const plans = matchedPlans(event);
+    ensurePlanExpanded(plans);
+    const body = typeof planOps?.accordionListBody === "function"
+      ? planOps.accordionListBody(plans, {
+        expandedId: state.planExpandedId,
+        tabOf: (planId) => state.planTabs[planId] || state.planTab || "basic",
+        emptyText: "暂无与当前事件类型匹配的应急预案",
+      })
+      : `<div class="dispatch-right-empty">预案组件未就绪</div>`;
     target.innerHTML = `<div class="ds-right-inner">
       <div class="ds-right-head"><h3>应急预案详情</h3></div>
-      <div class="ds-right-scroll dispatch-plan-detail">
-        ${plan && typeof planOps?.detailBody === "function"
-          ? planOps.detailBody(plan, state.planTab)
-          : `<div class="dispatch-right-empty">当前事件未关联应急预案</div>`}
-      </div>
+      <div class="ds-right-scroll dispatch-plan-detail">${body}</div>
     </div>`;
   }
 
@@ -590,9 +612,22 @@
       return;
     }
 
+    const planToggle = event.target.closest(".dispatch-plan-detail [data-plan-accordion-toggle]");
+    if (planToggle) {
+      const id = planToggle.dataset.planAccordionToggle || "";
+      // 手风琴：一次仅展开一条；点当前展开项则收起
+      state.planExpandedId = String(state.planExpandedId) === String(id) ? "" : id;
+      if (state.planExpandedId && !state.planTabs[state.planExpandedId]) state.planTabs[state.planExpandedId] = "basic";
+      renderRightPanel();
+      return;
+    }
+
     const planTab = event.target.closest(".dispatch-plan-detail [data-plan-detail-tab]");
     if (planTab) {
-      state.planTab = planTab.dataset.planDetailTab || "basic";
+      const planId = planTab.dataset.planId || state.planExpandedId;
+      const tab = planTab.dataset.planDetailTab || "basic";
+      state.planTab = tab;
+      if (planId) state.planTabs[planId] = tab;
       renderRightPanel();
       return;
     }
@@ -603,7 +638,11 @@
       state.rightMode = modeBtn.dataset.rightMode;
       if (state.rightMode === "resources") { state.resourceCategory = "all"; state.resourceMapOn = true; }
       if (state.rightMode === "personnel") { state.personnelType = "all"; state.personnelMapOn = true; }
-      if (state.rightMode === "plan") state.planTab = "basic";
+      if (state.rightMode === "plan") {
+        state.planTab = "basic";
+        state.planExpandedId = "";
+        state.planTabs = {};
+      }
       renderModeBar();
       renderRightPanel();
       updateMapLayers();
@@ -616,6 +655,8 @@
       state.rightMode = "detail";
       state.detailTab = "info";
       state.planTab = "basic";
+      state.planExpandedId = "";
+      state.planTabs = {};
       state.resourceCategory = "all";
       state.personnelType = "all";
       state.resourceMapOn = true;

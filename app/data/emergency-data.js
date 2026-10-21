@@ -6,7 +6,7 @@
   const keys = {
     personnel: "emergency.personnel.v2",
     resources: "emergency.resources.v2",
-    plans: "emergency.plans",
+    plans: "emergency.plans.v2",
     events: "emergency.events.v4",
     calls: "emergency.calls",
     dispatch: "emergency.dispatch",
@@ -108,6 +108,28 @@
           { stepId: "S5", order: 5, name: "门禁分区管控", type: "区域隔离", content: "对事故分区实施门禁管控，限制无关人员进入", linkage: "门禁", required: false },
           { stepId: "S6", order: 6, name: "现场反馈", type: "现场反馈", content: "现场处置人员反馈浓度变化与处置进展", linkage: "", required: true },
           { stepId: "S7", order: 7, name: "事件关闭", type: "事件关闭", content: "确认风险解除后准备关闭事件", linkage: "", required: true },
+        ],
+      },
+      {
+        planId: "PLAN-GAS-P2", name: "燃气泄漏二级响应预案", code: "EM-GAS-P2", eventType: "燃气泄漏", level: "P2", area: "全域", triggerCondition: "可燃气体浓度接近阈值或疑似泄漏待复核", version: 1, status: "已发布", enabled: "启用", review: "已通过", author: "应急管理部", reviewer: "值班领导", publishedAt: "2026-09-05T09:00:00.000Z", updatedAt: "2026-09-05T09:00:00.000Z",
+        content: "适用于中低浓度疑似泄漏场景，强调复核确认与局部排风。",
+        steps: [
+          { stepId: "G2-1", order: 1, name: "复核报警点位", type: "信息确认", content: "调取传感器与视频复核是否存在泄漏", linkage: "", required: true },
+          { stepId: "G2-2", order: 2, name: "通知值班人员", type: "人员通知", content: "通知管线单位与值班班组到场复核", linkage: "", required: true },
+          { stepId: "G2-3", order: 3, name: "局部排风", type: "区域隔离", content: "对疑似舱室启动局部排风稀释", linkage: "通风", required: true },
+          { stepId: "G2-4", order: 4, name: "现场反馈", type: "现场反馈", content: "反馈浓度变化与是否升级响应", linkage: "", required: true },
+          { stepId: "G2-5", order: 5, name: "事件关闭", type: "事件关闭", content: "确认风险解除后关闭事件", linkage: "", required: true },
+        ],
+      },
+      {
+        planId: "PLAN-GAS-P3", name: "燃气泄漏疏散保障预案", code: "EM-GAS-P3", eventType: "燃气泄漏", level: "P3", area: "东段", triggerCondition: "需组织人员疏散或交通管控时启用", version: 1, status: "已发布", enabled: "启用", review: "已通过", author: "应急管理部", reviewer: "值班领导", publishedAt: "2026-09-12T09:00:00.000Z", updatedAt: "2026-09-12T09:00:00.000Z",
+        content: "侧重疏散引导、广播通知与出入口管控，可与一级/二级响应预案并行参考。",
+        steps: [
+          { stepId: "G3-1", order: 1, name: "确认疏散范围", type: "信息确认", content: "确定需疏散的舱室、区段与出入口", linkage: "", required: true },
+          { stepId: "G3-2", order: 2, name: "紧急广播", type: "广播通知", content: "发布疏散广播与注意事项", linkage: "广播", required: true },
+          { stepId: "G3-3", order: 3, name: "出入口管控", type: "区域隔离", content: "管控相关门禁与出入口，引导疏散路径", linkage: "门禁", required: true },
+          { stepId: "G3-4", order: 4, name: "人员清点反馈", type: "现场反馈", content: "反馈疏散完成情况与滞留人员", linkage: "", required: true },
+          { stepId: "G3-5", order: 5, name: "解除管控", type: "事件关闭", content: "确认安全后解除管控并关闭本预案流程", linkage: "", required: true },
         ],
       },
       {

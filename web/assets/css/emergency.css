@@ -484,6 +484,33 @@ body.emergency-dispatch-page .main { padding: 0; overflow: hidden; min-height: 0
 /* ?????????????????????? */
 body.emergency-dispatch-page .inspection-person-mask { z-index: 1600; }
 body.emergency-dispatch-page .emergency-center-mask[data-event-ops-modal] { z-index: 1450; }
+/* 完成步骤叠在「提交处理结果」之上，且不顶替关闭下层弹窗 */
+.emergency-center-mask[data-step-complete-modal] { z-index: 1500; }
+body.emergency-dispatch-page .emergency-center-mask[data-step-complete-modal] { z-index: 1500; }
+
+/* 应急预案多条展开收起 */
+.plan-accordion { display: grid; gap: 10px; }
+.plan-accordion-item { border: 1px solid var(--divider); border-radius: var(--radius-sm); background: #fff; overflow: hidden; }
+.plan-accordion-head {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 0;
+  background: #f5f7fb;
+  text-align: left;
+  cursor: pointer;
+  color: var(--text-primary);
+}
+.plan-accordion-item.is-open .plan-accordion-head { border-bottom: 1px solid var(--divider); }
+.plan-accordion-head i { color: var(--text-secondary); font-size: 12px; }
+.plan-accordion-title { display: grid; gap: 4px; min-width: 0; }
+.plan-accordion-title strong { font-size: 14px; font-weight: 600; color: var(--text-title); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.plan-accordion-title small { color: var(--text-secondary); font-size: 12px; }
+.plan-accordion-head .tag { flex: 0 0 auto; }
+.plan-accordion-body { padding: 12px 14px 16px; }
 
 .ds-ops-wrap { overflow: auto; }
 .ds-ops-table { min-width: 560px; }

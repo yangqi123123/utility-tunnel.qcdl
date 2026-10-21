@@ -5,15 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>报警信息 - 科学岛管廊监控中心</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/vendor/leaflet/leaflet.css">
   <link rel="stylesheet" href="../../assets/css/tob-ui.css">
   <link rel="stylesheet" href="../../assets/css/alarm-center.css">
+  <link rel="stylesheet" href="../../assets/css/emergency.css">
   <style>
     .alarm-detail-grid .info-item { border-bottom: 0; }
   </style>
 </head>
 <body class="alarm-page alarm-info-page" data-menu-key="alarm-center.info" data-page-section="报警中心" data-page-title="报警信息">
   <div class="app-shell">
-    <aside id="ap系统p-sidebar" class="sidebar"></aside>
+    <aside id="app-sidebar" class="sidebar"></aside>
     <header id="app-header" class="header"></header>
     <main class="main">
       <div class="screen-frame stack">
@@ -29,43 +31,91 @@
           </div>
         </section>
         <section class="card alarm-list-card">
-          <div class="card-title-row alarm-toolbar"><h1 class="card-title">报警信息列表</h1><div class="btn-row"><button class="btn btn-secondary" type="button" data-action="export"><i class="fa-solid fa-download"></i>导出</button><div class="alarm-batch-menu"><button class="btn btn-primary" type="button">批量处理<i class="fa-solid fa-chevron-down alarm-batch-chevron"></i></button><div class="alarm-batch-panel" data-batch-panel><span class="alarm-batch-count">已选择 <strong data-batch-count>0</strong> 条未处理报警</span><div class="alarm-batch-actions"><button class="btn btn-secondary" type="button" data-batch-action="false">误报</button><button class="btn btn-secondary" type="button" data-batch-action="process">处理</button><button class="btn btn-primary" type="button" data-batch-action="transfer">转工单</button></div></div></div></div></div>
+          <div class="card-title-row alarm-toolbar"><h1 class="card-title">报警信息列表</h1><div class="btn-row"><button class="btn btn-secondary" type="button" data-action="export"><i class="fa-solid fa-download"></i>导出</button><div class="alarm-batch-menu"><button class="btn btn-primary" type="button">批量处理<i class="fa-solid fa-chevron-down alarm-batch-chevron"></i></button><div class="alarm-batch-panel" data-batch-panel><span class="alarm-batch-count">已选择 <strong data-batch-count>0</strong> 条未处理报警</span><div class="alarm-batch-actions"><button class="btn btn-secondary" type="button" data-batch-action="false">误报</button><button class="btn btn-secondary" type="button" data-batch-action="process">处理</button><button class="btn btn-primary" type="button" data-batch-action="transfer">转工单</button><button class="btn btn-primary" type="button" data-batch-action="to-emergency">转应急事件</button></div></div></div></div></div>
           <div class="table-wrap"><table class="table alarm-table alarm-info-table"><thead><tr><th class="alarm-select-col">选择</th><th>序号</th><th>报警设备</th><th>设备编码</th><th>报警类型</th><th>报警描述</th><th>报警等级</th><th>报警时间</th><th>报警状态</th><th>转单状态</th><th>工单编号</th><th>操作</th></tr></thead><tbody id="alarmInfoBody"></tbody></table></div>
           <div class="pagination"><span>共 <strong id="alarmInfoCount">0</strong> 条，每页 10 条</span><span class="page-item active">1</span></div>
         </section>
       </div>
     </main>
   </div>
+  <script src="../../assets/vendor/leaflet/leaflet.js"></script>
   <script src="../../../app/config/menu.js?v=nav-hide-1"></script>
+  <script src="../../../app/data/emergency-data.js"></script>
+  <script src="../../../app/data/work-order-data.js"></script>
   <script src="../../../app/components/sidebar.js?v=nav-home-1"></script>
   <script src="../../../app/components/header.js?v=nav-home-1"></script>
   <script src="../../../app/components/drawer.js"></script>
   <script src="../../../app/components/requirement.js"></script>
-  <script src="../../../app/data/emergency-data.js"></script>
+  <script src="../../../app/components/emergency-common.js"></script>
+  <script src="../../../app/components/emergency-point-picker.js"></script>
+  <script src="../../../app/components/emergency-events.js"></script>
   <script>
+    const ALARM_LOC = {
+      power: { project: "光谷科学岛综合管廊一期", corridor: "高新大道综合管廊", room: "电力舱", section: "通风口", pipeline: "科学岛电力管线", longitude: 114.4212, latitude: 30.4702 },
+      fire: { project: "光谷科学岛综合管廊一期", corridor: "高新大道综合管廊", room: "综合舱", section: "防火分区", pipeline: "科学岛给水管线", longitude: 114.4255, latitude: 30.4675 },
+      gas: { project: "光谷科学岛综合管廊一期", corridor: "高新大道综合管廊", room: "燃气舱", section: "防火分区", pipeline: "科学岛燃气管线", longitude: 114.4240, latitude: 30.4680 },
+      envWest: { project: "光谷科学岛综合管廊一期", corridor: "高新大道综合管廊", room: "综合舱", section: "防火分区", pipeline: "科学岛通信光缆", longitude: 114.4268, latitude: 30.4656 },
+      envEast: { project: "光谷科学岛综合管廊一期", corridor: "高新大道综合管廊", room: "综合舱", section: "出入口", pipeline: "科学岛给水管线", longitude: 114.4275, latitude: 30.4668 },
+      island: { project: "科学岛综合管廊", corridor: "环岛路管廊", room: "综合舱", section: "吊装口", pipeline: "科学岛通信光缆", longitude: 114.4296, latitude: 30.4630 },
+    };
     const alarmInfo = [
-      { id: 1, device: "配电室网关-01", deviceCode: "PWR-GW-01", system: "电力监测平台", category: "供配电", type: "设备离线", message: "设备离线持续超过 60 秒", level: "告警", time: "2026-09-07 09:42:16", status: "未处理", history: [{ time: "2026-09-07 09:42:16", operator: "系统", action: "创建报警" }] },
-      { id: 2, device: "冷水机组-01", deviceCode: "MEC-CH-01", system: "电力监测平台", category: "供配电", type: "设备属性", message: "冷冻水供水温度高于 12℃", level: "预警", time: "2026-09-07 09:18:42", status: "处理中", process: { workOrderNo: "WO20260907002", workOrderName: "冷水机组高温检查", description: "检查冷冻水供水温度异常原因", type: "设备属性", image: "现场图片（Mock）", remark: "已通知维保人员到场排查。" }, history: [{ time: "2026-09-07 09:18:42", operator: "系统", action: "创建报警" }, { time: "2026-09-07 09:30:12", operator: "张三", action: "开始处理，已通知维保人员" }] },
-      { id: 3, device: "地下车库水泵-02", deviceCode: "PMP-UG-02", system: "环境监测", category: "排水泵", type: "设备属性", message: "水泵运行电流异常", level: "提醒", time: "2026-09-07 08:56:30", status: "已处理", closeReason: "告警已解决", closeRemark: "复位水泵后运行正常。", closedAt: "2026-09-07 09:20:18", closedBy: "李四", process: { workOrderNo: "WO20260907003", workOrderName: "地下车库水泵巡检", description: "处理水泵运行电流异常", type: "设备属性", image: "现场图片（Mock）", remark: "完成复位并确认设备运行正常。" }, history: [{ time: "2026-09-07 08:56:30", operator: "系统", action: "创建报警" }, { time: "2026-09-07 09:15:40", operator: "李四", action: "完成水泵复位，设备恢复正常" }, { time: "2026-09-07 09:20:18", operator: "李四", action: "告警已解决，完成处理" }] },
-      { id: 4, device: "消防水箱液位计", deviceCode: "FIRE-LVL-01", system: "消防监控系统", category: "消防设备", type: "设备属性", message: "消防水箱液位低于下限", level: "告警", time: "2026-09-06 22:11:08", status: "未处理", history: [{ time: "2026-09-06 22:11:08", operator: "系统", action: "创建报警" }] },
-      { id: 5, device: "楼宇自控网关-03", deviceCode: "BAS-GW-03", system: "通信系统", category: "网关", type: "设备离线", message: "设备通信中断，请及时检查", level: "预警", time: "2026-09-06 18:35:27", status: "已处理", closeReason: "误报无问题", closeRemark: "现场确认设备正常。", closedAt: "2026-09-06 18:50:06", closedBy: "王五", history: [{ time: "2026-09-06 18:35:27", operator: "系统", action: "创建报警" }, { time: "2026-09-06 18:50:06", operator: "王五", action: "误报无问题，完成处理" }] },
-      { id: 6, device: "地下车库排风机-01", deviceCode: "FAN-UG-01", system: "环境监测", category: "通风设备", type: "设备属性", message: "排风机运行频率低于设定值", level: "预警", time: "2026-09-08 10:16:24", status: "未处理", history: [{ time: "2026-09-08 10:16:24", operator: "系统", action: "创建报警" }] },
-      { id: 7, device: "屋顶消防泵-02", deviceCode: "FIRE-PMP-02", system: "消防监控系统", category: "消防设备", type: "设备离线", message: "设备通信中断，请及时检查", level: "告警", time: "2026-09-08 09:48:11", status: "未处理", history: [{ time: "2026-09-08 09:48:11", operator: "系统", action: "创建报警" }] },
-      { id: 8, device: "办公区照明控制器-05", deviceCode: "LGT-OF-05", system: "电力监测平台", category: "照明设备", type: "设备属性", message: "照明回路状态异常", level: "提醒", time: "2026-09-08 09:22:37", status: "未处理", history: [{ time: "2026-09-08 09:22:37", operator: "系统", action: "创建报警" }] },
-      { id: 9, device: "综合舱甲烷探测器 03", deviceCode: "001_ENVINDOOR_0003", system: "环境监测", category: "室内环境传感器", type: "设备属性", message: "甲烷浓度 42 %LEL，超过阈值 ≤ 25 %LEL", level: "告警", time: "2026-10-12 10:18:05", status: "未处理", location: "一号舱 · 西段", history: [{ time: "2026-10-12 10:18:05", operator: "系统", action: "创建报警" }] },
-      { id: 10, device: "综合舱硫化氢传感器 04", deviceCode: "001_ENVINDOOR_0004", system: "环境监测", category: "室内环境传感器", type: "设备属性", message: "硫化氢 8 ppm，接近阈值上限", level: "预警", time: "2026-10-12 10:05:40", status: "未处理", location: "二号舱 · 西段", history: [{ time: "2026-10-12 10:05:40", operator: "系统", action: "创建报警" }] },
-      { id: 11, device: "集水井水位传感器 05", deviceCode: "001_ENVINDOOR_0005", system: "环境监测", category: "室内环境传感器", type: "设备属性", message: "集水井水位 0.60 m，达到预警线", level: "预警", time: "2026-10-12 09:54:58", status: "已处理", location: "一号舱 · 东段", closeReason: "告警已解决", closeRemark: "水位回落。", closedAt: "2026-10-12 10:02:11", closedBy: "系统", history: [{ time: "2026-10-12 09:54:58", operator: "系统", action: "创建报警" }, { time: "2026-10-12 10:02:11", operator: "系统", action: "水位回落，告警已恢复" }] },
-      { id: 12, device: "2# 集水井排水泵", deviceCode: "C01_ENVPUMP_0002", system: "环境监测", category: "排水泵", type: "设备属性", message: "排水泵过载保护故障", level: "告警", time: "2026-10-12 09:12:00", status: "未处理", location: "二号舱 · 东段", history: [{ time: "2026-10-12 09:12:00", operator: "系统", action: "创建报警" }] },
-      { id: 13, device: "配电柜通信网关", deviceCode: "ENV-GW-01", system: "环境监测", category: "网关", type: "设备离线", message: "设备通信中断，链路离线", level: "预警", time: "2026-10-12 08:20:00", status: "未处理", location: "二号舱 · 西段", history: [{ time: "2026-10-12 08:20:00", operator: "系统", action: "创建报警" }] }
+      { id: 1, device: "配电室网关-01", deviceCode: "PWR-GW-01", system: "电力监测平台", category: "供配电", type: "设备离线", message: "设备离线持续超过 60 秒", level: "告警", time: "2026-09-07 09:42:16", status: "未处理", ...ALARM_LOC.power, history: [{ time: "2026-09-07 09:42:16", operator: "系统", action: "创建报警" }] },
+      { id: 2, device: "冷水机组-01", deviceCode: "MEC-CH-01", system: "电力监测平台", category: "供配电", type: "设备属性", message: "冷冻水供水温度高于 12℃", level: "预警", time: "2026-09-07 09:18:42", status: "处理中", transferStatus: "已转单", workOrderNo: "WO20260907002", ...ALARM_LOC.power, process: { workOrderNo: "WO20260907002", workOrderName: "冷水机组高温检查", description: "检查冷冻水供水温度异常原因", type: "设备属性", image: "现场图片（Mock）", remark: "已通知维保人员到场排查。" }, history: [{ time: "2026-09-07 09:18:42", operator: "系统", action: "创建报警" }, { time: "2026-09-07 09:30:12", operator: "张三", action: "开始处理，已通知维保人员" }] },
+      { id: 3, device: "地下车库水泵-02", deviceCode: "PMP-UG-02", system: "环境监测", category: "排水泵", type: "设备属性", message: "水泵运行电流异常", level: "提醒", time: "2026-09-07 08:56:30", status: "已处理", transferStatus: "已转单", workOrderNo: "WO20260907003", ...ALARM_LOC.envEast, closeReason: "告警已解决", closeRemark: "复位水泵后运行正常。", closedAt: "2026-09-07 09:20:18", closedBy: "李四", process: { workOrderNo: "WO20260907003", workOrderName: "地下车库水泵巡检", description: "处理水泵运行电流异常", type: "设备属性", image: "现场图片（Mock）", remark: "完成复位并确认设备运行正常。" }, history: [{ time: "2026-09-07 08:56:30", operator: "系统", action: "创建报警" }, { time: "2026-09-07 09:15:40", operator: "李四", action: "完成水泵复位，设备恢复正常" }, { time: "2026-09-07 09:20:18", operator: "李四", action: "告警已解决，完成处理" }] },
+      { id: 4, device: "消防水箱液位计", deviceCode: "FIRE-LVL-01", system: "消防监控系统", category: "消防设备", type: "设备属性", message: "消防水箱液位低于下限", level: "告警", time: "2026-09-06 22:11:08", status: "未处理", ...ALARM_LOC.fire, history: [{ time: "2026-09-06 22:11:08", operator: "系统", action: "创建报警" }] },
+      { id: 5, device: "楼宇自控网关-03", deviceCode: "BAS-GW-03", system: "通信系统", category: "网关", type: "设备离线", message: "设备通信中断，请及时检查", level: "预警", time: "2026-09-06 18:35:27", status: "已处理", ...ALARM_LOC.island, closeReason: "误报无问题", closeRemark: "现场确认设备正常。", closedAt: "2026-09-06 18:50:06", closedBy: "王五", history: [{ time: "2026-09-06 18:35:27", operator: "系统", action: "创建报警" }, { time: "2026-09-06 18:50:06", operator: "王五", action: "误报无问题，完成处理" }] },
+      { id: 6, device: "地下车库排风机-01", deviceCode: "FAN-UG-01", system: "环境监测", category: "通风设备", type: "设备属性", message: "排风机运行频率低于设定值", level: "预警", time: "2026-09-08 10:16:24", status: "未处理", ...ALARM_LOC.envWest, history: [{ time: "2026-09-08 10:16:24", operator: "系统", action: "创建报警" }] },
+      { id: 7, device: "屋顶消防泵-02", deviceCode: "FIRE-PMP-02", system: "消防监控系统", category: "消防设备", type: "设备离线", message: "设备通信中断，请及时检查", level: "告警", time: "2026-09-08 09:48:11", status: "未处理", ...ALARM_LOC.fire, history: [{ time: "2026-09-08 09:48:11", operator: "系统", action: "创建报警" }] },
+      { id: 8, device: "办公区照明控制器-05", deviceCode: "LGT-OF-05", system: "电力监测平台", category: "照明设备", type: "设备属性", message: "照明回路状态异常", level: "提醒", time: "2026-09-08 09:22:37", status: "未处理", ...ALARM_LOC.power, history: [{ time: "2026-09-08 09:22:37", operator: "系统", action: "创建报警" }] },
+      { id: 9, device: "综合舱甲烷探测器 03", deviceCode: "001_ENVINDOOR_0003", system: "环境监测", category: "室内环境传感器", type: "设备属性", message: "甲烷浓度 42 %LEL，超过阈值 ≤ 25 %LEL", level: "告警", time: "2026-10-12 10:18:05", status: "未处理", location: "一号舱 · 西段", ...ALARM_LOC.gas, history: [{ time: "2026-10-12 10:18:05", operator: "系统", action: "创建报警" }] },
+      { id: 10, device: "综合舱硫化氢传感器 04", deviceCode: "001_ENVINDOOR_0004", system: "环境监测", category: "室内环境传感器", type: "设备属性", message: "硫化氢 8 ppm，接近阈值上限", level: "预警", time: "2026-10-12 10:05:40", status: "未处理", location: "二号舱 · 西段", ...ALARM_LOC.gas, history: [{ time: "2026-10-12 10:05:40", operator: "系统", action: "创建报警" }] },
+      { id: 11, device: "集水井水位传感器 05", deviceCode: "001_ENVINDOOR_0005", system: "环境监测", category: "室内环境传感器", type: "设备属性", message: "集水井水位 0.60 m，达到预警线", level: "预警", time: "2026-10-12 09:54:58", status: "已处理", location: "一号舱 · 东段", ...ALARM_LOC.envEast, closeReason: "告警已解决", closeRemark: "水位回落。", closedAt: "2026-10-12 10:02:11", closedBy: "系统", history: [{ time: "2026-10-12 09:54:58", operator: "系统", action: "创建报警" }, { time: "2026-10-12 10:02:11", operator: "系统", action: "水位回落，告警已恢复" }] },
+      { id: 12, device: "2# 集水井排水泵", deviceCode: "C01_ENVPUMP_0002", system: "环境监测", category: "排水泵", type: "设备属性", message: "排水泵过载保护故障", level: "告警", time: "2026-10-12 09:12:00", status: "未处理", location: "二号舱 · 东段", ...ALARM_LOC.envEast, history: [{ time: "2026-10-12 09:12:00", operator: "系统", action: "创建报警" }] },
+      { id: 13, device: "配电柜通信网关", deviceCode: "ENV-GW-01", system: "环境监测", category: "网关", type: "设备离线", message: "设备通信中断，链路离线", level: "预警", time: "2026-10-12 08:20:00", status: "未处理", location: "二号舱 · 西段", ...ALARM_LOC.envWest, history: [{ time: "2026-10-12 08:20:00", operator: "系统", action: "创建报警" }] }
     ];
     const alarmInfoBody = document.getElementById("alarmInfoBody");
     function levelClass(level) { return level === "告警" ? "high" : level === "预警" ? "medium" : "low"; }
     function statusClass(status) { return status === "未处理" ? "active" : status === "处理中" ? "processing" : "processed"; }
     function deviceCode(item) { return item.deviceCode || `DEV-${String(item.id).padStart(4, "0")}`; }
-    function transferStatus(item) { return item.transferStatus || (item.workOrderNo || item.transfer?.workOrderNo ? "已转单" : "未转单"); }
-    function workOrderNoOf(item) { return item.workOrderNo || item.transfer?.workOrderNo || "-"; }
+    function transferStatus(item) {
+      if (item.transferStatus) return item.transferStatus;
+      if (item.workOrderNo || item.transfer?.workOrderNo || item.emergencyEventId || item.process?.workOrderNo) return "已转单";
+      return "未转单";
+    }
+    function workOrderNoOf(item) {
+      return item.workOrderNo || item.transfer?.workOrderNo || item.emergencyEventId || item.process?.workOrderNo || "-";
+    }
     function transferTime(item) { return item.transferTime || item.transfer?.transferTime || "-"; }
-    function actionMarkup(item) { return item.status === "未处理" ? `<button class="table-action" type="button" data-alarm-action="detail" data-alarm-id="${item.id}">详情</button><button class="table-action" type="button" data-alarm-action="false" data-alarm-id="${item.id}">误报</button><button class="table-action" type="button" data-alarm-action="process" data-alarm-id="${item.id}">处理</button><button class="table-action" type="button" data-alarm-action="transfer" data-alarm-id="${item.id}">转工单</button>` : `<button class="table-action" type="button" data-alarm-action="detail" data-alarm-id="${item.id}">详情</button>`; }
+    function actionMarkup(item) { return item.status === "未处理" ? `<button class="table-action" type="button" data-alarm-action="detail" data-alarm-id="${item.id}">详情</button><button class="table-action" type="button" data-alarm-action="false" data-alarm-id="${item.id}">误报</button><button class="table-action" type="button" data-alarm-action="process" data-alarm-id="${item.id}">处理</button><button class="table-action" type="button" data-alarm-action="transfer" data-alarm-id="${item.id}">转工单</button><button class="table-action" type="button" data-alarm-action="to-emergency" data-alarm-id="${item.id}">转应急事件</button>` : `<button class="table-action" type="button" data-alarm-action="detail" data-alarm-id="${item.id}">详情</button>`; }
+    function openEmergencyFromAlarms(alarms) {
+      const list = (Array.isArray(alarms) ? alarms : [alarms]).filter(Boolean);
+      if (!list.length) return;
+      const ops = window.EMERGENCY_EVENT_OPS;
+      if (!ops?.openCreate || !ops?.draftFromAlarm) {
+        window.alert("应急事件组件未加载");
+        return;
+      }
+      ops.openCreate({
+        prefill: ops.draftFromAlarm(list[0]),
+        source: "报警中心",
+        hidePointPicker: true,
+        fromAlarms: list,
+        onSaved: (events) => {
+          const stamp = new Date().toISOString().slice(0, 19).replace("T", " ");
+          list.forEach((alarm, index) => {
+            const event = events[index] || events[0];
+            if (!event) return;
+            alarm.status = "处理中";
+            alarm.transferStatus = "已转单";
+            alarm.emergencyEventId = event.eventId;
+            alarm.workOrderNo = event.eventId;
+            alarm.transferTime = stamp;
+            alarm.history = [...(alarm.history || []), { time: stamp, operator: "当前用户", action: `已转应急事件，事件编号 ${event.eventId}` }];
+          });
+          renderAlarmInfo();
+        },
+      });
+    }
     function renderAlarmInfo(list = alarmInfo) {
       alarmInfoBody.innerHTML = list.map((item, index) => `<tr data-alarm-id="${item.id}"><td class="alarm-select-col"><input class="alarm-row-check" type="checkbox" data-alarm-select="${item.id}" ${item.status === "未处理" ? "" : "disabled"} aria-label="选择${item.device}"></td><td>${index + 1}</td><td>${item.device}</td><td>${deviceCode(item)}</td><td>${item.type}</td><td class="alarm-message" title="${item.message}">${item.message}</td><td><span class="alarm-level ${levelClass(item.level)}">${item.level}</span></td><td>${item.time}</td><td><span class="alarm-state ${statusClass(item.status)}">${item.status}</span></td><td><span class="alarm-transfer-state ${transferStatus(item) === "已转单" ? "is-transferred" : "is-pending"}">${transferStatus(item)}</span></td><td>${workOrderNoOf(item)}</td><td>${actionMarkup(item)}</td></tr>`).join("");
       document.getElementById("alarmInfoCount").textContent = list.length;
@@ -129,12 +179,14 @@
       if (alarmAction?.dataset.alarmAction === "false") openFalseAlarmPanel([alarmAction.dataset.alarmId]);
       if (alarmAction?.dataset.alarmAction === "process") openProcessPanel([alarmAction.dataset.alarmId]);
       if (alarmAction?.dataset.alarmAction === "transfer") openTransferPanel(alarmInfoById(alarmAction.dataset.alarmId));
+      if (alarmAction?.dataset.alarmAction === "to-emergency") openEmergencyFromAlarms([alarmInfoById(alarmAction.dataset.alarmId)]);
       const batchAction = event.target.closest("[data-batch-action]");
       if (batchAction) {
         const ids = selectedAlarmIds();
         if (ids.length && batchAction.dataset.batchAction === "false") openFalseAlarmPanel(ids);
         if (ids.length && batchAction.dataset.batchAction === "process") openProcessPanel(ids);
         if (ids.length && batchAction.dataset.batchAction === "transfer") openTransferPanel(alarmInfoById(ids[0]), ids);
+        if (ids.length && batchAction.dataset.batchAction === "to-emergency") openEmergencyFromAlarms(ids.map((id) => alarmInfoById(id)));
       }
       const detailTab = event.target.closest("[data-detail-tab]"); if (detailTab) { const body = document.getElementById("drawerBody"); const tabKey = detailTab.dataset.detailTab; body?.querySelectorAll("[data-detail-tab]").forEach((tab) => { const active = tab === detailTab; tab.classList.toggle("active", active); tab.setAttribute("aria-selected", String(active)); }); body?.querySelectorAll("[data-detail-pane]").forEach((pane) => pane.classList.toggle("hidden", pane.dataset.detailPane !== tabKey)); }
       const upload = event.target.closest("[data-transfer-upload]"); if (upload) { upload.classList.add("is-uploaded"); upload.innerHTML = '<span class="alarm-upload-plus">✓</span><span>现场照片（Mock）</span>'; }
