@@ -263,7 +263,6 @@
   function judgeClass(judge) {
     if (judge === "正点") return "inspection-status-normal";
     if (judge === "误点") return "inspection-status-warning";
-    if (judge === "漏检") return "inspection-status-danger";
     return "inspection-status-muted";
   }
 

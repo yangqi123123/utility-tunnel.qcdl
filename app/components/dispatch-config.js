@@ -135,15 +135,22 @@
     tree.innerHTML = all + (data.ORG_DEPARTMENTS.map((node) => nodeHtml(node, 0)).join("") || `<div class="person-dept-empty">暂无匹配部门</div>`);
   }
 
+  function isPersonSelected(id) {
+    if (!state.picker) return false;
+    if (state.picker.multi) return (state.picker.selectedIds || []).includes(id);
+    return state.picker.selectedId === id;
+  }
+
   function renderPersonList() {
     const body = $("#personListBody");
     if (!body || !state.picker) return;
     const list = personListFiltered();
+    const inputType = state.picker.multi ? "checkbox" : "radio";
     body.innerHTML = list.length
       ? list
           .map(
             (person) =>
-              `<tr class="${state.picker.selectedId === person.id ? "active" : ""}"><td class="person-pick-cell"><input type="radio" name="dispatch-person-pick" data-person-pick="${esc(person.id)}" ${state.picker.selectedId === person.id ? "checked" : ""} aria-label="选择${esc(person.name)}"></td><td><div class="person-cell"><span class="person-avatar" style="background:${avatarColor(person.name)}">${esc(avatarText(person.name))}</span><div class="person-cell-info"><span class="person-cell-name">${esc(person.name)}</span><span class="person-cell-phone">${esc(person.phone)}</span></div></div></td></tr>`
+              `<tr class="${isPersonSelected(person.id) ? "active" : ""}"><td class="person-pick-cell"><input type="${inputType}" name="dispatch-person-pick" data-person-pick="${esc(person.id)}" ${isPersonSelected(person.id) ? "checked" : ""} aria-label="选择${esc(person.name)}"></td><td><div class="person-cell"><span class="person-avatar" style="background:${avatarColor(person.name)}">${esc(avatarText(person.name))}</span><div class="person-cell-info"><span class="person-cell-name">${esc(person.name)}</span><span class="person-cell-phone">${esc(person.phone)}</span></div></div></td></tr>`
           )
           .join("")
       : `<tr><td colspan="2"><div class="inspection-empty">暂无匹配人员</div></td></tr>`;
@@ -152,21 +159,35 @@
   function renderPersonSelected() {
     const body = $("#personSelectedBody");
     if (!body || !state.picker) return;
-    const person = data.PERSONNEL.find((entry) => entry.id === state.picker.selectedId);
-    body.innerHTML = person
-      ? `<tr><td><div class="person-cell"><span class="person-avatar" style="background:${avatarColor(person.name)}">${esc(avatarText(person.name))}</span><span class="person-cell-name">${esc(person.name)}</span></div></td><td class="person-remove-cell"><button type="button" class="person-remove" data-person-remove="${esc(person.id)}">移除</button></td></tr>`
+    const ids = state.picker.multi
+      ? state.picker.selectedIds || []
+      : state.picker.selectedId
+        ? [state.picker.selectedId]
+        : [];
+    const people = ids.map((id) => data.PERSONNEL.find((entry) => entry.id === id)).filter(Boolean);
+    body.innerHTML = people.length
+      ? people
+          .map(
+            (person) =>
+              `<tr><td><div class="person-cell"><span class="person-avatar" style="background:${avatarColor(person.name)}">${esc(avatarText(person.name))}</span><span class="person-cell-name">${esc(person.name)}</span></div></td><td class="person-remove-cell"><button type="button" class="person-remove" data-person-remove="${esc(person.id)}">移除</button></td></tr>`
+          )
+          .join("")
       : `<tr><td colspan="2"><div class="inspection-empty">暂无选中人员</div></td></tr>`;
   }
 
-  function openDispatcherPicker() {
+  function openPersonPicker(fieldKey) {
     closePersonPicker();
-    const currentId = (state.form.dispatcherIds || [])[0] || "";
+    const multi = fieldKey === "otherCcIds";
+    const current = state.form[fieldKey] || [];
     state.picker = {
+      fieldKey,
+      multi,
       deptId: "",
       keyword: "",
       deptKeyword: "",
       deptCollapsed: new Set(),
-      selectedId: currentId,
+      selectedId: multi ? "" : current[0] || "",
+      selectedIds: multi ? [...current] : [],
     };
     const mask = document.createElement("div");
     mask.className = "inspection-person-mask";
@@ -177,27 +198,47 @@
     renderPersonSelected();
   }
 
-  function renderDispatcherMode() {
-    const isUser = state.form.dispatcherType === "user";
-    const roleField = $("[data-dispatcher-role-field]");
-    const userField = $("[data-dispatcher-user-field]");
+  function renderRoleUserMode(typeKey, idsKey, roleAttr, userAttr) {
+    const isUser = state.form[typeKey] === "user";
+    const roleField = $(`[${roleAttr}]`);
+    const userField = $(`[${userAttr}]`);
     if (roleField) roleField.hidden = isUser;
     if (userField) userField.hidden = !isUser;
-    renderDispatcherUserLabel();
+    renderPersonLabel(idsKey);
   }
 
-  function renderDispatcherUserLabel() {
-    const label = $("[data-dispatcher-user-label]");
+  function renderPersonLabel(fieldKey) {
+    const label = $(`[data-person-label="${fieldKey}"]`);
     if (!label) return;
-    const id = (state.form.dispatcherIds || [])[0];
-    const person = data.PERSONNEL.find((item) => item.id === id);
-    if (person) {
-      label.textContent = person.name;
+    const ids = state.form[fieldKey] || [];
+    const people = ids.map((id) => data.PERSONNEL.find((item) => item.id === id)).filter(Boolean);
+    if (people.length) {
+      label.textContent = people.map((person) => person.name).join("、");
       label.classList.remove("is-placeholder");
     } else {
       label.textContent = "请选择用户";
       label.classList.add("is-placeholder");
     }
+  }
+
+  function renderAssigneeAcceptorModes() {
+    renderRoleUserMode("dispatcherType", "dispatcherIds", "data-dispatcher-role-field", "data-dispatcher-user-field");
+    renderRoleUserMode("acceptorType", "acceptorIds", "data-acceptor-role-field", "data-acceptor-user-field");
+    renderPersonLabel("otherCcIds");
+  }
+
+  function entityNoun() {
+    return state.tab === "emergency" ? "事件" : "工单";
+  }
+
+  function renderBizLabels() {
+    const noun = entityNoun();
+    $$("[data-biz-label]").forEach((el) => {
+      el.textContent = `${noun}${el.dataset.bizLabel}`;
+    });
+    $$("[data-biz-assign-hint]").forEach((el) => {
+      el.textContent = `期间，未调度的${noun}指派给`;
+    });
   }
 
   function loadTab(tabKey) {
@@ -207,7 +248,8 @@
     state.openMulti = null;
     bindFormControls();
     renderVisibility();
-    renderDispatcherMode();
+    renderAssigneeAcceptorModes();
+    renderBizLabels();
     renderMultiSelects();
     $$("[data-dispatch-tab]").forEach((btn) => {
       const active = btn.dataset.dispatchTab === tabKey;
@@ -218,22 +260,19 @@
 
   function bindFormControls() {
     const form = state.form;
-    const dispatchToggle = $('[data-field="dispatchEnabled"]');
     const autoToggle = $('[data-field="autoDispatchEnabled"]');
-    dispatchToggle?.classList.toggle("on", !!form.dispatchEnabled);
-    dispatchToggle?.setAttribute("aria-pressed", String(!!form.dispatchEnabled));
     autoToggle?.classList.toggle("on", !!form.autoDispatchEnabled);
     autoToggle?.setAttribute("aria-pressed", String(!!form.autoDispatchEnabled));
 
     $$('input[name="dispatcherType"]').forEach((input) => {
       input.checked = input.value === form.dispatcherType;
     });
-    $$('input[name="acceptor"]').forEach((input) => {
-      input.checked = input.value === form.acceptor;
+    $$('input[name="acceptorType"]').forEach((input) => {
+      input.checked = input.value === form.acceptorType;
     });
-    const ccDispatcher = $('[data-field="ccDispatcher"]');
+    const ccAcceptor = $('[data-field="ccAcceptor"]');
     const ccAssignee = $('[data-field="ccAssignee"]');
-    if (ccDispatcher) ccDispatcher.checked = !!form.ccDispatcher;
+    if (ccAcceptor) ccAcceptor.checked = !!form.ccAcceptor;
     if (ccAssignee) ccAssignee.checked = !!form.ccAssignee;
     const start = $('[data-field="startTime"]');
     const end = $('[data-field="endTime"]');
@@ -257,16 +296,14 @@
   }
 
   function sourceForKey(key) {
-    if (key === "dispatcherIds") return data.ROLES;
-    if (key === "otherCcIds") return data.USERS;
+    if (key === "dispatcherIds" || key === "acceptorIds") return data.ROLES;
     if (key === "departmentIds") return data.DEPARTMENTS;
     if (key === "peopleIds") return data.peopleOfDepartments(state.form.departmentIds || []);
     return [];
   }
 
   function placeholderForKey(key) {
-    if (key === "dispatcherIds") return "请选择角色";
-    if (key === "otherCcIds") return "请选择";
+    if (key === "dispatcherIds" || key === "acceptorIds") return "请选择角色";
     if (key === "departmentIds") return "请选择部门（可多选）";
     if (key === "peopleIds") {
       return (state.form.departmentIds || []).length ? "请选择人员（可多选）" : "请先选择部门";
@@ -290,10 +327,10 @@
 
   function renderMultiSelects() {
     prunePeople();
-    const keys =
-      state.form.dispatcherType === "role"
-        ? ["dispatcherIds", "otherCcIds", "departmentIds", "peopleIds"]
-        : ["otherCcIds", "departmentIds", "peopleIds"];
+    const keys = [];
+    if (state.form.dispatcherType === "role") keys.push("dispatcherIds");
+    if (state.form.acceptorType === "role") keys.push("acceptorIds");
+    keys.push("departmentIds", "peopleIds");
     keys.forEach((key) => {
       const component = $(`[data-multi-select="${key}"]`);
       if (!component || component.hidden) return;
@@ -337,6 +374,10 @@
     if (count) count.textContent = `${(state.form.remark || "").length} / 200`;
   }
 
+  function personTriggerHost(fieldKey) {
+    return $(`[data-open-person-picker="${fieldKey}"]`);
+  }
+
   function validate() {
     clearErrors();
     captureSimpleFields();
@@ -344,9 +385,17 @@
     if (state.form.dispatchEnabled && !(state.form.dispatcherIds || []).length) {
       const host =
         state.form.dispatcherType === "user"
-          ? $(".dispatch-person-trigger")
+          ? personTriggerHost("dispatcherIds")
           : $('[data-multi-select="dispatcherIds"] .dispatch-tag-control');
-      markError(host, "请选择工单调度人");
+      markError(host, `请选择${entityNoun()}指派人`);
+      valid = false;
+    }
+    if (state.form.dispatchEnabled && !(state.form.acceptorIds || []).length) {
+      const host =
+        state.form.acceptorType === "user"
+          ? personTriggerHost("acceptorIds")
+          : $('[data-multi-select="acceptorIds"] .dispatch-tag-control');
+      markError(host, `请选择${entityNoun()}验收人`);
       valid = false;
     }
     if (state.form.dispatchEnabled && state.form.autoDispatchEnabled) {
@@ -436,25 +485,49 @@
         renderPersonList();
         return;
       }
-      if (event.target.closest("[data-person-clear]") || event.target.closest("[data-person-remove]")) {
-        state.picker.selectedId = "";
+      if (event.target.closest("[data-person-clear]")) {
+        if (state.picker.multi) state.picker.selectedIds = [];
+        else state.picker.selectedId = "";
+        renderPersonList();
+        renderPersonSelected();
+        return;
+      }
+      const removeBtn = event.target.closest("[data-person-remove]");
+      if (removeBtn) {
+        const id = removeBtn.dataset.personRemove;
+        if (state.picker.multi) {
+          state.picker.selectedIds = (state.picker.selectedIds || []).filter((item) => item !== id);
+        } else {
+          state.picker.selectedId = "";
+        }
         renderPersonList();
         renderPersonSelected();
         return;
       }
       const personRow = event.target.closest("#personListBody tr");
       if (personRow) {
-        const radio = personRow.querySelector("[data-person-pick]");
-        if (radio) {
-          state.picker.selectedId = radio.dataset.personPick;
+        const input = personRow.querySelector("[data-person-pick]");
+        if (input) {
+          const id = input.dataset.personPick;
+          if (state.picker.multi) {
+            const list = state.picker.selectedIds || [];
+            state.picker.selectedIds = list.includes(id) ? list.filter((item) => item !== id) : list.concat(id);
+          } else {
+            state.picker.selectedId = id;
+          }
           renderPersonList();
           renderPersonSelected();
         }
         return;
       }
       if (event.target.closest("[data-person-confirm]")) {
-        state.form.dispatcherIds = state.picker.selectedId ? [state.picker.selectedId] : [];
-        renderDispatcherUserLabel();
+        const fieldKey = state.picker.fieldKey;
+        state.form[fieldKey] = state.picker.multi
+          ? [...(state.picker.selectedIds || [])]
+          : state.picker.selectedId
+            ? [state.picker.selectedId]
+            : [];
+        renderPersonLabel(fieldKey);
         clearErrors();
         closePersonPicker();
         return;
@@ -481,8 +554,9 @@
       return;
     }
 
-    if (event.target.closest("[data-open-dispatcher-picker]")) {
-      openDispatcherPicker();
+    const personPickerBtn = event.target.closest("[data-open-person-picker]");
+    if (personPickerBtn) {
+      openPersonPicker(personPickerBtn.dataset.openPersonPicker);
       return;
     }
 
@@ -524,6 +598,7 @@
       const key = multiTrigger.dataset.multiTrigger;
       if (key === "peopleIds" && !(state.form.departmentIds || []).length) return;
       if (key === "dispatcherIds" && state.form.dispatcherType === "user") return;
+      if (key === "acceptorIds" && state.form.acceptorType === "user") return;
       state.openMulti = state.openMulti === key ? null : key;
       renderMultiSelects();
       return;
@@ -549,16 +624,20 @@
       state.form.dispatcherType = event.target.value;
       state.form.dispatcherIds = [];
       state.openMulti = null;
-      renderDispatcherMode();
+      renderAssigneeAcceptorModes();
       renderMultiSelects();
       return;
     }
-    if (event.target.name === "acceptor") {
-      state.form.acceptor = event.target.value;
+    if (event.target.name === "acceptorType") {
+      state.form.acceptorType = event.target.value;
+      state.form.acceptorIds = [];
+      state.openMulti = null;
+      renderAssigneeAcceptorModes();
+      renderMultiSelects();
       return;
     }
-    if (event.target.matches('[data-field="ccDispatcher"]')) {
-      state.form.ccDispatcher = event.target.checked;
+    if (event.target.matches('[data-field="ccAcceptor"]')) {
+      state.form.ccAcceptor = event.target.checked;
       return;
     }
     if (event.target.matches('[data-field="ccAssignee"]')) {

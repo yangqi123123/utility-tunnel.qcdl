@@ -1040,9 +1040,9 @@
       title: "指派工单",
       body: `<form class="wo-form-grid" data-wo-form="assign" data-id="${esc(item.id)}">
         <div class="form-field form-span-2"><span class="form-label">工单编号</span><div class="info-value">${esc(item.code)}</div></div>
-        <div class="form-field form-span-2"><span class="form-label form-required">指派人</span>
+        <div class="form-field form-span-2"><span class="form-label form-required">任务执行人</span>
           <div class="inspection-person-field" data-wo-person-trigger>
-            <input class="form-control inspection-person-input" data-wo-field="assignee" readonly placeholder="请选择指派人" value="" autocomplete="off">
+            <input class="form-control inspection-person-input" data-wo-field="assignee" readonly placeholder="请选择任务执行人" value="" autocomplete="off">
             <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
           </div>
         </div>
@@ -1059,7 +1059,7 @@
     const id = form.dataset.id;
     const assignee = form.querySelector('[data-wo-field="assignee"]')?.value?.trim() || "";
     const note = form.querySelector('[data-wo-field="assignNote"]')?.value?.trim() || "";
-    if (!assignee) { toast("请选择指派人"); return; }
+    if (!assignee) { toast("请选择任务执行人"); return; }
     updateOrder(id, (item) => {
       item.status = "待处理";
       item.handler = assignee;

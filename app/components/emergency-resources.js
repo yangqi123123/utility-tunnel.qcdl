@@ -1,7 +1,7 @@
 (function () {
   const ui = window.EMERGENCY_UI;
   const DEFAULT_EVENT_ID = "EVT-20260930-001";
-  let state = { records: [], filtered: [], categories: [], page: 1, pageSize: 10, editId: "", stockId: "", stockAction: "" };
+  let state = { records: [], filtered: [], categories: [], page: 1, pageSize: 10, editId: "", stockId: "", stockAction: "", detailTab: "info" };
   const store = () => window.EMERGENCY_STORE;
   const text = (value) => ui.escapeHtml(value || "-");
   const attr = (value) => text(value).replaceAll("'", "&#39;");
@@ -232,22 +232,62 @@
     });
   }
 
-  function detail(id) {
-    const item = normalize(state.records.find((record) => record.resourceId === id) || {});
+  function stockRecordsOf(item) {
+    return [...(item.usageRecords || [])].sort((a, b) => String(b.at || "").localeCompare(String(a.at || "")));
+  }
+
+  function detailBody(item, tab = "info") {
+    const unit = item.unit || "件";
     const pairs = [
-      ["物资编号", item.resourceId], ["分类", item.category], ["规格型号", item.model],
-      ["库存总量", `${item.total} ${item.unit || "件"}`], ["可用数量", `${item.available} ${item.unit || "件"}`],
-      ["已占用数量", `${item.occupied} ${item.unit || "件"}`],
+      ["物资编号", item.resourceId], ["物资名称", item.name], ["分类", item.category], ["规格型号", item.model],
+      ["库存总量", `${item.total} ${unit}`], ["可用数量", `${item.available} ${unit}`],
+      ["已占用数量", `${item.occupied} ${unit}`],
       ["所在仓库", item.warehouse || "-"], ["具体位置", item.location || "-"], ["负责人", item.owner],
       ["有效期", item.expiry], ["状态", item.status],
       ["经度", item.longitude === "" ? "-" : Number(item.longitude).toFixed(6)],
       ["纬度", item.latitude === "" ? "-" : Number(item.latitude).toFixed(6)],
     ];
+    const infoPanel = `<section class="emergency-detail-panel ${tab === "info" ? "" : "hidden"}" data-resource-detail-panel="info">
+      <div class="emergency-detail-grid">${pairs.map(([label, value]) => `<div class="emergency-detail-item"><span class="emergency-detail-label">${label}</span><span class="emergency-detail-value">${label === "状态" ? ui.renderStatus(value) : text(value)}</span></div>`).join("")}</div>
+    </section>`;
+    const records = stockRecordsOf(item);
+    const timeline = records.length
+      ? records.map((record) => `<div class="emergency-timeline-item">
+          <span class="emergency-timeline-dot"></span>
+          <div class="emergency-timeline-body">
+            <div class="emergency-timeline-head"><strong>${text(record.action)}</strong><time>${text(record.at)}</time></div>
+            <div class="emergency-timeline-meta">${text(record.operator || "-")}</div>
+            <p>${text(record.note || "-")}</p>
+          </div>
+        </div>`).join("")
+      : `<div class="emergency-empty">暂无出入库记录</div>`;
+    const recordPanel = `<section class="emergency-detail-panel ${tab === "records" ? "" : "hidden"}" data-resource-detail-panel="records">
+      <div class="emergency-timeline">${timeline}</div>
+    </section>`;
+    const tabs = `<div class="emergency-detail-tabs">
+      <button type="button" class="${tab === "info" ? "active" : ""}" data-resource-detail-tab="info" data-resource-id="${attr(item.resourceId)}">物资信息</button>
+      <button type="button" class="${tab === "records" ? "active" : ""}" data-resource-detail-tab="records" data-resource-id="${attr(item.resourceId)}">出入库记录</button>
+    </div>`;
+    return tabs + infoPanel + recordPanel;
+  }
+
+  function detail(id, tab = "info") {
+    const raw = state.records.find((record) => record.resourceId === id) || {};
+    const item = normalize(raw);
+    item.usageRecords = Array.isArray(raw.usageRecords) ? raw.usageRecords : [];
+    state.detailTab = tab === "records" ? "records" : "info";
     ui.openEntityDrawer({
       title: `${item.name} · 物资详情`,
-      body: `<div class="emergency-detail-grid">${pairs.map(([label, value]) => `<div class="emergency-detail-item"><span class="emergency-detail-label">${label}</span><span class="emergency-detail-value">${label === "状态" ? ui.renderStatus(value) : text(value)}</span></div>`).join("")}</div>`,
+      body: detailBody(item, state.detailTab),
       footer: `<button class="btn btn-secondary" type="button" data-drawer-close>关闭</button><button class="btn btn-primary" type="button" data-resource-action="edit" data-resource-id="${attr(id)}">编辑</button>`,
     });
+  }
+
+  function appendUsageRecord(resourceId, entry) {
+    const current = store()?.getResource?.(resourceId) || state.records.find((record) => record.resourceId === resourceId);
+    if (!current) return;
+    const usageRecords = [...(current.usageRecords || []), entry];
+    store().saveResource({ ...current, usageRecords, updatedAt: entry.at || ui.nowText() });
   }
 
   function stockForm(action, item) {
@@ -287,6 +327,14 @@
     data.longitude = data.longitude ? Number(data.longitude) : "";
     data.latitude = data.latitude ? Number(data.latitude) : "";
     data.updatedAt = ui.nowText();
+    if (!state.editId) {
+      data.usageRecords = [{
+        action: "入库",
+        at: data.updatedAt,
+        operator: data.owner || "系统",
+        note: `新增物资入库 ${data.total} ${data.unit || "件"}`,
+      }];
+    }
     try {
       if (!store()?.saveResource) throw new Error("物资数据服务尚未就绪");
       store().saveResource(data);
@@ -302,21 +350,30 @@
     const quantity = Number(new FormData(formNode).get("quantity"));
     if (!Number.isInteger(quantity) || quantity <= 0) { ui.showToast("数量必须大于 0", "error"); return; }
     const raw = state.records.find((record) => record.resourceId === state.stockId);
-    const item = normalize(raw);
+    const item = normalize({ ...raw, usageRecords: raw?.usageRecords || [] });
+    item.usageRecords = Array.isArray(raw?.usageRecords) ? raw.usageRecords : [];
     const action = state.stockAction;
     if (action === "outbound" && quantity > item.available) { ui.showToast("可用库存不足", "error"); return; }
+    const actionLabel = { inbound: "入库", outbound: "出库", lock: "锁定", release: "释放" }[action] || "库存操作";
+    const at = ui.nowText();
+    const note = `${actionLabel} ${quantity} ${item.unit || "件"}`;
     try {
-      if (action === "lock" && store()?.lockResource) store().lockResource(DEFAULT_EVENT_ID, item.resourceId, quantity);
-      else if (action === "release" && store()?.releaseResource) store().releaseResource(DEFAULT_EVENT_ID, item.resourceId, quantity);
-      else {
-        const next = { ...item };
+      if (action === "lock" && store()?.lockResource) {
+        store().lockResource(DEFAULT_EVENT_ID, item.resourceId, quantity);
+        appendUsageRecord(item.resourceId, { action: actionLabel, at, operator: item.owner || "系统", note });
+      } else if (action === "release" && store()?.releaseResource) {
+        store().releaseResource(DEFAULT_EVENT_ID, item.resourceId, quantity);
+        appendUsageRecord(item.resourceId, { action: actionLabel, at, operator: item.owner || "系统", note });
+      } else {
+        const next = { ...raw, ...item };
         if (action === "inbound") { next.total += quantity; next.available += quantity; }
         if (action === "outbound") { next.total = Math.max(0, next.total - quantity); next.available -= quantity; }
         if (action === "lock") { next.available -= quantity; next.occupied += quantity; }
         if (action === "release") { next.available += quantity; next.occupied = Math.max(0, next.occupied - quantity); }
         next.status = next.occupied > 0 && next.available <= 0 ? "已占用" : next.status === "报废" ? "报废" : "可用";
         next.alert = isLowStock(next) ? "低库存" : "";
-        next.updatedAt = ui.nowText();
+        next.updatedAt = at;
+        next.usageRecords = [...(item.usageRecords || []), { action: actionLabel, at, operator: item.owner || "系统", note }];
         if (!store()?.saveResource) throw new Error("物资数据服务尚未就绪");
         store().saveResource(next);
       }
@@ -343,9 +400,20 @@
     const formNode = document.getElementById("transferForm");
     if (!formNode?.reportValidity()) return;
     const data = Object.fromEntries(new FormData(formNode).entries());
-    const item = normalize(state.records.find((record) => record.resourceId === id));
+    const raw = state.records.find((record) => record.resourceId === id) || {};
+    const item = normalize(raw);
+    const at = ui.nowText();
+    const from = `${item.warehouse || "-"} / ${item.location || "-"}`;
+    const to = `${data.warehouse} / ${data.location}`;
     try {
-      store().saveResource({ ...item, warehouse: data.warehouse, location: data.location, updatedAt: ui.nowText() });
+      store().saveResource({
+        ...raw,
+        ...item,
+        warehouse: data.warehouse,
+        location: data.location,
+        updatedAt: at,
+        usageRecords: [...(raw.usageRecords || []), { action: "调拨", at, operator: item.owner || "系统", note: `由 ${from} 调拨至 ${to}` }],
+      });
       window.closeAppDrawer?.();
       refresh();
       ui.showToast("物资已调拨");
@@ -492,6 +560,12 @@
           options();
           ui.showToast("分类已删除");
         }
+      }
+
+      const detailTab = event.target.closest("[data-resource-detail-tab]");
+      if (detailTab) {
+        detail(detailTab.dataset.resourceId, detailTab.dataset.resourceDetailTab);
+        return;
       }
 
       const action = event.target.closest("[data-resource-action]");

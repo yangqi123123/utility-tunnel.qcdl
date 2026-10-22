@@ -217,8 +217,8 @@
       <label class="form-field"><span class="form-label">生效日期</span><input class="form-control" type="date" data-field="effectiveAt" value="${val("effectiveAt")}"></label>
       <label class="form-field"><span class="form-label">失效日期</span><input class="form-control" type="date" data-field="expireAt" value="${val("expireAt")}"></label>
       <label class="form-field full"><span class="form-label">内容摘要</span><textarea class="form-control textarea" data-field="summary" maxlength="500" rows="4" placeholder="请输入内容摘要">${val("summary")}</textarea></label>
-      <div class="form-field full"><span class="form-label">上传附件</span><input class="form-control" type="file" multiple data-reg-attachments><div class="form-hint">非必填，单文件不超过 10MB，最多 5 个${record.attachments?.length ? `；已有：${esc(record.attachments.join("、"))}` : ""}</div></div>
-      <div class="form-field full"><span class="form-label">上传图片</span><input class="form-control" type="file" accept=".jpg,.jpeg,.png,.gif,.webp,image/*" multiple data-reg-photos><div class="form-hint">非必填，单张不超过 5MB，最多 6 张${record.photos?.length ? `；已上传 ${record.photos.length} 张` : ""}</div></div>
+      <div class="form-field full"><span class="form-label">上传附件</span><input class="form-control" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar" multiple data-reg-attachments><div class="form-hint">非必填，支持 pdf、doc、docx、xls、xlsx、ppt、pptx、txt、zip、rar，单文件不超过 10MB，最多 5 个${record.attachments?.length ? `；已有：${esc(record.attachments.join("、"))}` : ""}</div></div>
+      <div class="form-field full"><span class="form-label">上传图片</span><input class="form-control" type="file" accept=".jpg,.jpeg,.png,.gif,.webp,image/*" multiple data-reg-photos><div class="form-hint">非必填，支持 jpg、jpeg、png、gif、webp，单张不超过 5MB，最多 6 张${record.photos?.length ? `；已上传 ${record.photos.length} 张` : ""}</div></div>
     </form>`;
   }
 

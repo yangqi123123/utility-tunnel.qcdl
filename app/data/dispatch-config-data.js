@@ -89,8 +89,9 @@
       dispatchEnabled: true,
       dispatcherType: "user",
       dispatcherIds: ["U-014"],
-      acceptor: "assignee",
-      ccDispatcher: true,
+      acceptorType: "user",
+      acceptorIds: ["U-004"],
+      ccAcceptor: true,
       ccAssignee: true,
       otherCcIds: [],
       autoDispatchEnabled: true,
@@ -123,14 +124,36 @@
     localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
   }
 
+  function normalizePersonIds(ids) {
+    return (ids || []).filter((id) => PERSONNEL.some((person) => person.id === id));
+  }
+
   function normalizeConfig(config) {
-    const next = Object.assign(defaultConfig(), config || {});
+    const raw = config || {};
+    const next = Object.assign(defaultConfig(), raw);
     // 页面已隐藏「调度配置」总开关，配置始终按启用处理
     next.dispatchEnabled = true;
+
+    // 兼容旧版：验收人曾为「调度人/指派人」单选
+    if (!raw.acceptorType && raw.acceptor) {
+      next.acceptorType = "user";
+      next.acceptorIds = defaultConfig().acceptorIds;
+    }
+    delete next.acceptor;
+
+    // 兼容旧版：抄送「调度人」→「验收人」
+    if (raw.ccAcceptor == null && raw.ccDispatcher != null) next.ccAcceptor = !!raw.ccDispatcher;
+    delete next.ccDispatcher;
+
     if (next.dispatcherType === "user") {
-      const valid = (next.dispatcherIds || []).filter((id) => PERSONNEL.some((person) => person.id === id));
+      const valid = normalizePersonIds(next.dispatcherIds);
       next.dispatcherIds = valid.length ? valid : defaultConfig().dispatcherIds;
     }
+    if (next.acceptorType === "user") {
+      const valid = normalizePersonIds(next.acceptorIds);
+      next.acceptorIds = valid.length ? valid : defaultConfig().acceptorIds;
+    }
+    next.otherCcIds = normalizePersonIds(next.otherCcIds);
     return next;
   }
 

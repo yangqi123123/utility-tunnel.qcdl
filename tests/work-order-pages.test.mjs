@@ -28,6 +28,29 @@ test("work-order data exposes store and fixtures", async () => {
   assert.match(source, /personnel/);
   assert.match(source, /bizType/);
   assert.match(source, /abnormalDevice/);
+  assert.match(source, /工单列表每次刷新回到种子初始状态/);
+  assert.match(source, /orders:\s*seedOrders\.map\(cloneSeedOrder\)/);
+});
+
+test("device-abnormal seed has one order per status", async () => {
+  const source = await read("app/data/work-order-data.js");
+  const statuses = ["待指派", "待处理", "处理中", "验收中", "已完成", "已撤回"];
+  for (const status of statuses) {
+    assert.match(source, new RegExp(`bizType:\\s*"设备异常"[\\s\\S]*?status:\\s*"${status}"`));
+  }
+  assert.match(source, /WO-D-001/);
+  assert.match(source, /WO-D-002/);
+  assert.match(source, /WO-D-003/);
+  assert.match(source, /WO-D-004/);
+  assert.match(source, /WO-D-005/);
+  assert.match(source, /WO-D-006/);
+});
+
+test("assign drawer labels assignee as task executor", async () => {
+  const source = await read("app/components/work-order.js");
+  assert.match(source, /任务执行人/);
+  assert.match(source, /请选择任务执行人/);
+  assert.doesNotMatch(source, /form-required">指派人</);
 });
 
 const pages = [

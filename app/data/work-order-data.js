@@ -230,6 +230,77 @@
         { id: "R-D-006", action: "开始处理", operator: "彭飞龙", at: "2026-10-11 08:00:00", note: "已到场检查通讯线路", photos: [] },
       ],
     },
+    {
+      id: "WO-D-004", code: "WO2026101104", name: "电力舱温湿度传感器漂移",
+      content: "温湿度传感器读数漂移，已完成现场校准并提交验收",
+      photos: [],
+      bizType: "设备异常",
+      orderType: "环境异常",
+      categoryId: "CAT-005", categoryName: "传感器故障",
+      project: "光谷科学岛综合管廊一期", corridor: "高新大道综合管廊", room: "电力舱", section: "通风口", pipeline: "科学岛电力管线",
+      status: "验收中", handler: "张晓慧", contact: "邹丽平", contactPhone: "13728019966",
+      submittedAt: "2026-10-10 16:00:00", startedAt: "2026-10-10 17:00:00", finishedAt: "",
+      abnormalDevice: {
+        source: "报警信息",
+        taskCode: "AL202610101600002",
+        taskName: "电力舱温湿度超限",
+        deviceName: "温湿度传感器-12",
+        deviceCode: "001_HZHJXT02CG12_0902_0015",
+      },
+      records: [
+        { id: "R-D-007", action: "创建", operator: "系统", at: "2026-10-10 16:00:00", note: "报警转工单", photos: [] },
+        { id: "R-D-008", action: "指派", operator: "张强", at: "2026-10-10 16:20:00", note: "指派给张晓慧", photos: [] },
+        { id: "R-D-009", action: "开始处理", operator: "张晓慧", at: "2026-10-10 17:00:00", note: "现场校准传感器", photos: [] },
+        { id: "R-D-010", action: "提交验收", operator: "张晓慧", at: "2026-10-11 09:30:00", note: "校准完成，申请验收", photos: [] },
+      ],
+    },
+    {
+      id: "WO-D-005", code: "WO2026101105", name: "环岛路半球摄像机离线",
+      content: "半球摄像机供电异常，已更换电源模块并验收通过",
+      photos: [],
+      bizType: "设备异常",
+      orderType: "设备异常",
+      categoryId: "CAT-007", categoryName: "巡检异常上报",
+      project: "科学岛综合管廊", corridor: "环岛路管廊", room: "综合舱", section: "吊装口", pipeline: "科学岛通信光缆",
+      status: "已完成", handler: "黄志深", contact: "李国栋", contactPhone: "13600992318",
+      submittedAt: "2026-10-09 10:00:00", startedAt: "2026-10-09 11:00:00", finishedAt: "2026-10-09 15:30:00",
+      abnormalDevice: {
+        source: "巡检任务",
+        taskCode: "IT202610090930112233",
+        taskName: "环岛路巡检-202610090900",
+        deviceName: "环岛路半球摄像机-02",
+        deviceCode: "001_HZSPXT01QJ02_0701_0006",
+      },
+      records: [
+        { id: "R-D-011", action: "创建", operator: "李国栋", at: "2026-10-09 10:00:00", note: "巡检异常上报生成工单", photos: [] },
+        { id: "R-D-012", action: "指派", operator: "张强", at: "2026-10-09 10:20:00", note: "指派给黄志深", photos: [] },
+        { id: "R-D-013", action: "开始处理", operator: "黄志深", at: "2026-10-09 11:00:00", note: "检查供电模块", photos: [] },
+        { id: "R-D-014", action: "提交验收", operator: "黄志深", at: "2026-10-09 14:40:00", note: "更换电源模块，监控恢复", photos: [] },
+        { id: "R-D-015", action: "验收通过", operator: "张强", at: "2026-10-09 15:30:00", note: "验收合格，工单关闭", photos: [] },
+      ],
+    },
+    {
+      id: "WO-D-006", code: "WO2026101106", name: "综合舱烟感误报",
+      content: "烟感报警误触发，现场确认无火情后撤回工单",
+      photos: [],
+      bizType: "设备异常",
+      orderType: "消防事件",
+      categoryId: "CAT-007", categoryName: "巡检异常上报",
+      project: "光谷科学岛综合管廊一期", corridor: "高新大道综合管廊", room: "综合舱", section: "防火分区", pipeline: "科学岛通信光缆",
+      status: "已撤回", handler: "", contact: "王雅琳", contactPhone: "15019462775",
+      submittedAt: "2026-10-08 14:00:00", startedAt: "", finishedAt: "",
+      abnormalDevice: {
+        source: "报警信息",
+        taskCode: "AL202610081400003",
+        taskName: "综合舱烟感报警",
+        deviceName: "烟感探测器-08",
+        deviceCode: "001_HZXFXT02YG08_0503_0009",
+      },
+      records: [
+        { id: "R-D-016", action: "创建", operator: "系统", at: "2026-10-08 14:00:00", note: "报警转工单", photos: [] },
+        { id: "R-D-017", action: "撤回", operator: "王雅琳", at: "2026-10-08 14:25:00", note: "现场确认误报，撤回工单", photos: [] },
+      ],
+    },
   ];
 
   const personnel = [
@@ -296,12 +367,6 @@
     });
   }
 
-  function ensureDeviceAbnormalSeeds(orders) {
-    const ids = new Set(orders.map((o) => o.id));
-    const extras = seedOrders.filter((o) => o.bizType === "设备异常" && !ids.has(o.id));
-    return extras.length ? [...extras.map(cloneSeedOrder), ...orders] : orders;
-  }
-
   function ensureCategorySeeds(categories) {
     const ids = new Set(categories.map((c) => c.id));
     const extras = seedCategories.filter((c) => !ids.has(c.id));
@@ -311,21 +376,18 @@
   function loadStore() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) {
-        return {
-          categories: seedCategories.map((x) => ({ ...x })),
-          orders: seedOrders.map(cloneSeedOrder),
-        };
+      let categories = seedCategories.map((x) => ({ ...x }));
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        categories = ensureCategorySeeds(
+          Array.isArray(parsed.categories) ? parsed.categories : categories
+        );
       }
-      const parsed = JSON.parse(raw);
-      const categories = ensureCategorySeeds(
-        Array.isArray(parsed.categories) ? parsed.categories : seedCategories.map((x) => ({ ...x }))
-      );
-      let orders = Array.isArray(parsed.orders)
-        ? parsed.orders.map((x) => normalizeOrder(x))
-        : seedOrders.map(cloneSeedOrder);
-      orders = ensureDeviceAbnormalSeeds(orders);
-      return { categories, orders };
+      // 工单列表每次刷新回到种子初始状态；分类仍持久化
+      return {
+        categories,
+        orders: seedOrders.map(cloneSeedOrder),
+      };
     } catch (_) {
       return {
         categories: seedCategories.map((x) => ({ ...x })),
@@ -338,26 +400,8 @@
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ categories, orders }));
   }
 
-  function needsPersistAfterLoad(raw) {
-    if (!raw) return false;
-    try {
-      const parsed = JSON.parse(raw);
-      const prevOrders = Array.isArray(parsed.orders) ? parsed.orders : [];
-      const prevCategories = Array.isArray(parsed.categories) ? parsed.categories : [];
-      const prevOrderIds = new Set(prevOrders.map((o) => o.id));
-      const prevCategoryIds = new Set(prevCategories.map((c) => c.id));
-      if (prevOrders.some((o) => !o.bizType)) return true;
-      if (seedOrders.some((o) => o.bizType === "设备异常" && !prevOrderIds.has(o.id))) return true;
-      if (seedCategories.some((c) => !prevCategoryIds.has(c.id))) return true;
-      return false;
-    } catch (_) {
-      return true;
-    }
-  }
-
-  const rawStore = localStorage.getItem(STORAGE_KEY);
   const store = loadStore();
-  if (needsPersistAfterLoad(rawStore)) saveStore(store.categories, store.orders);
+  saveStore(store.categories, store.orders);
 
   window.WORK_ORDER_DATA = {
     WORK_ORDER_TYPES, CATEGORY_WORK_TYPES, ORDER_STATUSES,

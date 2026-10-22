@@ -127,6 +127,7 @@
       "#0EA5E9", "#22C55E", "#F97316", "#64748B", "#EC4899", "#06B6D4",
     ];
     const pieTotal = systems.reduce((sum, s) => sum + (Number(s.value) || 0), 0);
+    const pieTotalText = Math.round(pieTotal * 100) / 100;
     renderChart("wrapEnergySystemPie", "chartEnergySystemPie", {
       type: "doughnut",
       data: {
@@ -142,11 +143,15 @@
       options: {
         maintainAspectRatio: true,
         aspectRatio: 1,
-        cutout: "62%",
+        cutout: "68%",
         layout: { padding: 4 },
         plugins: { legend: { display: false } },
       },
     });
+    const center = document.getElementById("centerEnergySystemPie");
+    if (center) {
+      center.innerHTML = `<strong>${escapeHtml(String(pieTotalText))}</strong><span>总计</span>`;
+    }
     const legend = document.getElementById("legendEnergySystem");
     if (legend) {
       legend.innerHTML = systems.map((s, i) => {

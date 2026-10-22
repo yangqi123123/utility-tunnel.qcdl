@@ -55,6 +55,13 @@ test("risks page is read-only analysis dashboard", async () => {
   assert.doesNotMatch(script, /saveRisk|转应急事件/);
 });
 
+test("assign event dialog labels assignee as task executor", async () => {
+  const source = await read("app/components/emergency-events.js");
+  assert.match(source, /任务执行人/);
+  assert.match(source, /请选择任务执行人/);
+  assert.doesNotMatch(source, /form-required">指派人</);
+});
+
 test("dispatch console uses three-column layout with right modes", async () => {
   // 断言对齐当前 ds-* 调度台骨架（已非 dispatch-workspace-v2 / view-*-dist）
   const page = await read("web/pages/emergency/dispatch.html");

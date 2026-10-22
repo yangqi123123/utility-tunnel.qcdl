@@ -5,7 +5,7 @@
 })(typeof window !== "undefined" ? window : globalThis, function (root) {
   const keys = {
     personnel: "emergency.personnel.v2",
-    resources: "emergency.resources.v2",
+    resources: "emergency.resources.v3",
     plans: "emergency.plans.v2",
     events: "emergency.events.v4",
     calls: "emergency.calls",
@@ -78,23 +78,46 @@
     resources: [
       {
         resourceId: "R-001", name: "气体检测仪", category: "抢修工具", model: "GAS-9000", unit: "台", total: 6, available: 5, occupied: 1, safetyStock: 2,
-        warehouse: "东段应急仓", location: "K2+300 物资柜 A-03", owner: "孙志强", expiryDate: "2029-09-30", status: "可用", longitude: 114.4240, latitude: 30.4680, updatedAt: "2026-09-30T08:00:00.000Z", usageRecords: [],
+        warehouse: "东段应急仓", location: "K2+300 物资柜 A-03", owner: "孙志强", expiryDate: "2029-09-30", status: "可用", longitude: 114.4240, latitude: 30.4680, updatedAt: "2026-09-30T08:00:00.000Z",
+        usageRecords: [
+          { action: "锁定", at: "2026-10-12 08:30:00", operator: "周建国", note: "关联事件 EVT-20261012-001，锁定 1 台用于现场检测" },
+          { action: "入库", at: "2026-09-28 10:00:00", operator: "孙志强", note: "补充入库 2 台，可用库存增至 6 台" },
+          { action: "出库", at: "2026-09-15 14:20:00", operator: "李海峰", note: "演练领用 1 台，出库后归还前占用" },
+          { action: "入库", at: "2026-08-01 09:00:00", operator: "孙志强", note: "首次入库 5 台至东段应急仓" },
+        ],
       },
       {
         resourceId: "R-002", name: "防毒面具", category: "防护装备", model: "MF-6", unit: "套", total: 20, available: 14, occupied: 6, safetyStock: 5,
-        warehouse: "东段应急仓", location: "K2+300 物资柜 B-01", owner: "孙志强", expiryDate: "2028-06-30", status: "可用", longitude: 114.4268, latitude: 30.4656, updatedAt: "2026-09-30T08:00:00.000Z", usageRecords: [],
+        warehouse: "东段应急仓", location: "K2+300 物资柜 B-01", owner: "孙志强", expiryDate: "2028-06-30", status: "可用", longitude: 114.4268, latitude: 30.4656, updatedAt: "2026-09-30T08:00:00.000Z",
+        usageRecords: [
+          { action: "锁定", at: "2026-10-12 08:32:00", operator: "周建国", note: "关联事件锁定 4 套" },
+          { action: "出库", at: "2026-10-05 11:10:00", operator: "孙志强", note: "日常维保更换 2 套" },
+          { action: "入库", at: "2026-08-20 09:30:00", operator: "孙志强", note: "批量入库 20 套" },
+        ],
       },
       {
         resourceId: "R-003", name: "警戒带", category: "交通疏散", model: "警戒带 50m", unit: "卷", total: 30, available: 28, occupied: 2, safetyStock: 8,
-        warehouse: "中心应急仓", location: "中心仓库 C-12", owner: "陈立", expiryDate: "2030-12-31", status: "可用", longitude: 114.4296, latitude: 30.4630, updatedAt: "2026-09-30T08:00:00.000Z", usageRecords: [],
+        warehouse: "中心应急仓", location: "中心仓库 C-12", owner: "陈立", expiryDate: "2030-12-31", status: "可用", longitude: 114.4296, latitude: 30.4630, updatedAt: "2026-09-30T08:00:00.000Z",
+        usageRecords: [
+          { action: "锁定", at: "2026-10-12 09:30:00", operator: "周建国", note: "积水事件现场警戒锁定 2 卷" },
+          { action: "入库", at: "2026-09-01 08:00:00", operator: "陈立", note: "中心仓补货入库 30 卷" },
+        ],
       },
       {
         resourceId: "R-004", name: "灭火器", category: "消防器材", model: "MFZ/ABC4", unit: "具", total: 40, available: 36, occupied: 4, safetyStock: 10,
-        warehouse: "东段应急仓", location: "K2+400 消防柜 D-02", owner: "王晓玲", expiryDate: "2028-12-31", status: "可用", longitude: 114.4255, latitude: 30.4675, updatedAt: "2026-09-30T08:00:00.000Z", usageRecords: [],
+        warehouse: "东段应急仓", location: "K2+400 消防柜 D-02", owner: "王晓玲", expiryDate: "2028-12-31", status: "可用", longitude: 114.4255, latitude: 30.4675, updatedAt: "2026-09-30T08:00:00.000Z",
+        usageRecords: [
+          { action: "调拨", at: "2026-10-08 16:00:00", operator: "王晓玲", note: "由中心应急仓调拨至东段 K2+400 消防柜" },
+          { action: "入库", at: "2026-07-12 10:00:00", operator: "王晓玲", note: "年度换装入库 40 具" },
+        ],
       },
       {
         resourceId: "R-005", name: "急救箱", category: "医疗急救", model: "急救包标准型", unit: "套", total: 12, available: 10, occupied: 2, safetyStock: 3,
-        warehouse: "中心应急仓", location: "中心仓库 M-01", owner: "周建国", expiryDate: "2027-06-30", status: "可用", longitude: 114.4235, latitude: 30.4692, updatedAt: "2026-09-30T08:00:00.000Z", usageRecords: [],
+        warehouse: "中心应急仓", location: "中心仓库 M-01", owner: "周建国", expiryDate: "2027-06-30", status: "可用", longitude: 114.4235, latitude: 30.4692, updatedAt: "2026-09-30T08:00:00.000Z",
+        usageRecords: [
+          { action: "出库", at: "2026-09-22 13:40:00", operator: "周建国", note: "演练消耗后补齐前临时出库 2 套" },
+          { action: "入库", at: "2026-06-15 09:00:00", operator: "周建国", note: "首次入库 12 套至中心仓库" },
+        ],
       },
     ],
     plans: [

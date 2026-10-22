@@ -636,26 +636,37 @@
     return "其他";
   }
 
+  function parsePropertyLocation(property) {
+    const parts = String(property || "").split(/\s*\/\s*/).map((part) => part.trim()).filter(Boolean);
+    if (parts.length < 2) return {};
+    const result = { corridor: parts[0], room: parts[1] };
+    if (parts[2]) result.section = parts[2];
+    const matched = locationTree.find((project) => (project.corridors || []).some((item) => item.name === parts[0]));
+    if (matched) result.project = matched.name;
+    return result;
+  }
+
   function draftFromAlarm(alarm = {}) {
     const levelMap = { "告警": "P1", "预警": "P2", "提醒": "P3" };
     const defaults = defaultLocationPrefill();
+    const parsed = parsePropertyLocation(alarm.property || alarm.location);
     const title = `${alarm.device || ""}${alarm.message || ""}`.slice(0, 50);
     const longitude = Number(alarm.longitude ?? alarm.lng);
     const latitude = Number(alarm.latitude ?? alarm.lat);
     return {
       title,
-      project: alarm.project || defaults.project,
-      corridor: alarm.corridor || defaults.corridor,
-      room: alarm.room || defaults.room,
-      section: alarm.section || defaults.section,
+      project: alarm.project || parsed.project || defaults.project,
+      corridor: alarm.corridor || parsed.corridor || defaults.corridor,
+      room: alarm.room || parsed.room || defaults.room,
+      section: alarm.section || parsed.section || defaults.section,
       pipeline: alarm.pipeline || defaults.pipeline,
       eventType: alarm.eventType || mapAlarmEventType(alarm),
       level: levelMap[alarm.level] || "P2",
       contact: "",
       contactPhone: "",
       description: alarm.message || "",
-      longitude: Number.isFinite(longitude) ? longitude : "",
-      latitude: Number.isFinite(latitude) ? latitude : "",
+      longitude: Number.isFinite(longitude) ? longitude : 114.4240,
+      latitude: Number.isFinite(latitude) ? latitude : 30.4680,
       photos: [],
       attachments: [],
       relatedPersonIds: [],
@@ -1123,9 +1134,9 @@
       title: "指派事件",
       body: `<form class="emergency-form-grid" data-event-form="assign" data-event-id="${esc(item.eventId)}">
         <div class="form-field full"><span class="form-label">事件编号</span><div class="info-value">${esc(item.eventId)}</div></div>
-        <div class="form-field full"><span class="form-label form-required">指派人</span>
+        <div class="form-field full"><span class="form-label form-required">任务执行人</span>
           <div class="inspection-person-field" data-event-person-trigger>
-            <input class="form-control inspection-person-input" data-event-field="assignee" readonly placeholder="请选择指派人" value="" autocomplete="off">
+            <input class="form-control inspection-person-input" data-event-field="assignee" readonly placeholder="请选择任务执行人" value="" autocomplete="off">
             <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
           </div>
         </div>
@@ -1142,7 +1153,7 @@
     if (!item || item.status !== "待指派") { toast("当前状态不支持指派", "error"); return; }
     const assignee = form.querySelector('[data-event-field="assignee"]')?.value.trim() || "";
     const note = form.querySelector('[data-event-field="assignNote"]')?.value.trim() || "";
-    if (!assignee) { toast("请选择指派人", "error"); return; }
+    if (!assignee) { toast("请选择任务执行人", "error"); return; }
     persist({ ...item, status: "待处理", handler: assignee }, { title: "指派", message: note || `指派给${assignee}` });
     closeCenterOpsModal();
     window.closeAppDrawer?.();

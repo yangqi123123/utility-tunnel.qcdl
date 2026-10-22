@@ -24,7 +24,7 @@
           <form class="dispatch-form" id="dispatchForm" autocomplete="off">
             <div class="dispatch-block" data-block="dispatch-body">
               <div class="dispatch-row">
-                <div class="dispatch-label">工单调度人</div>
+                <div class="dispatch-label" data-biz-label="指派人">工单指派人</div>
                 <div class="dispatch-value">
                   <div class="dispatch-inline">
                     <label class="dispatch-choice"><input type="radio" name="dispatcherType" value="role"> <span>角色</span></label>
@@ -38,31 +38,44 @@
                     <div class="dispatch-tag-dropdown" data-multi-options="dispatcherIds"></div>
                   </div>
                   <div class="dispatch-person-field" data-dispatcher-user-field>
-                    <button class="form-control dispatch-person-trigger" type="button" data-open-dispatcher-picker>
-                      <span data-dispatcher-user-label class="is-placeholder">请选择用户</span>
+                    <button class="form-control dispatch-person-trigger" type="button" data-open-person-picker="dispatcherIds">
+                      <span data-person-label="dispatcherIds" class="is-placeholder">请选择用户</span>
                       <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
                     </button>
                   </div>
                 </div>
               </div>
               <div class="dispatch-row">
-                <div class="dispatch-label">工单验收人</div>
+                <div class="dispatch-label" data-biz-label="验收人">工单验收人</div>
                 <div class="dispatch-value">
                   <div class="dispatch-inline">
-                    <label class="dispatch-choice"><input type="radio" name="acceptor" value="dispatcher"> <span>调度人</span></label>
-                    <label class="dispatch-choice"><input type="radio" name="acceptor" value="assignee" checked> <span>指派人</span></label>
+                    <label class="dispatch-choice"><input type="radio" name="acceptorType" value="role"> <span>角色</span></label>
+                    <label class="dispatch-choice"><input type="radio" name="acceptorType" value="user" checked> <span>用户</span></label>
+                  </div>
+                  <div class="dispatch-tag-select" data-multi-select="acceptorIds" data-acceptor-role-field hidden>
+                    <button class="dispatch-tag-control" type="button" data-multi-trigger="acceptorIds" aria-expanded="false">
+                      <span data-multi-value="acceptorIds"></span>
+                      <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+                    </button>
+                    <div class="dispatch-tag-dropdown" data-multi-options="acceptorIds"></div>
+                  </div>
+                  <div class="dispatch-person-field" data-acceptor-user-field>
+                    <button class="form-control dispatch-person-trigger" type="button" data-open-person-picker="acceptorIds">
+                      <span data-person-label="acceptorIds" class="is-placeholder">请选择用户</span>
+                      <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                    </button>
                   </div>
                 </div>
               </div>
               <div class="dispatch-row">
-                <div class="dispatch-label">工单抄送人</div>
+                <div class="dispatch-label" data-biz-label="抄送人">工单抄送人</div>
                 <div class="dispatch-value">
                   <div class="dispatch-inline">
                     <label class="dispatch-choice"><input type="checkbox" disabled checked> <span>发起人</span></label>
                     <span class="dispatch-hint">发起人默认通知，不写入配置</span>
                   </div>
                   <div class="dispatch-inline">
-                    <label class="dispatch-choice"><input type="checkbox" data-field="ccDispatcher"> <span>调度人</span></label>
+                    <label class="dispatch-choice"><input type="checkbox" data-field="ccAcceptor"> <span>验收人</span></label>
                     <label class="dispatch-choice"><input type="checkbox" data-field="ccAssignee"> <span>指派人</span></label>
                   </div>
                 </div>
@@ -70,12 +83,11 @@
               <div class="dispatch-row">
                 <div class="dispatch-label">其他抄送人</div>
                 <div class="dispatch-value">
-                  <div class="dispatch-tag-select" data-multi-select="otherCcIds">
-                    <button class="dispatch-tag-control" type="button" data-multi-trigger="otherCcIds" aria-expanded="false">
-                      <span data-multi-value="otherCcIds"></span>
-                      <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+                  <div class="dispatch-person-field">
+                    <button class="form-control dispatch-person-trigger" type="button" data-open-person-picker="otherCcIds">
+                      <span data-person-label="otherCcIds" class="is-placeholder">请选择用户</span>
+                      <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
                     </button>
-                    <div class="dispatch-tag-dropdown" data-multi-options="otherCcIds"></div>
                   </div>
                 </div>
               </div>
@@ -94,7 +106,7 @@
                       <input class="form-control" type="time" data-field="startTime">
                       <span>→</span>
                       <input class="form-control" type="time" data-field="endTime">
-                      <span>期间，未调度的工单指派给</span>
+                      <span data-biz-assign-hint>期间，未调度的工单指派给</span>
                     </div>
                     <div class="dispatch-assign-grid">
                       <div class="form-field form-item">

@@ -3,9 +3,7 @@
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   root.MAINTENANCE_STATS_LOGIC = api;
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
-  const GRACE_MINUTES = 15;
-  const SUBMITTED_STATUSES = ["验收中", "已完成"];
-  const MISS_STATUSES = ["待保养", "保养中"];
+  const OPEN_STATUSES = ["待保养", "保养中"];
   const DEMO_NOW = new Date("2026-10-04T12:00:00");
 
   function parseDate(value) {
@@ -14,22 +12,18 @@
     return Number.isNaN(date.getTime()) ? null : date;
   }
 
-  function judgeExecution(task, nowInput) {
+  function isOverdue(task, nowInput) {
+    if (task?.overdue === "已逾期") return true;
+    if (task?.overdue === "未逾期" || task?.overdue === "未超期") return false;
     const now = nowInput instanceof Date ? nowInput : parseDate(nowInput) || DEMO_NOW;
-    const plannedAt = parseDate(task?.plannedAt);
-    const startedAt = parseDate(task?.startedAt);
     const deadline = parseDate(task?.deadline);
     const status = task?.status || "";
+    return !!(deadline && now > deadline && OPEN_STATUSES.includes(status));
+  }
 
-    if (startedAt && plannedAt) {
-      const latestStart = new Date(plannedAt.getTime() + GRACE_MINUTES * 60 * 1000);
-      return startedAt.getTime() <= latestStart.getTime() ? "正点" : "误点";
-    }
-    // 已关闭不计入漏保养；仅待保养/保养中且已过截止视为漏保养
-    if (deadline && now > deadline && MISS_STATUSES.includes(status)) {
-      return "漏保养";
-    }
-    return "未判定";
+  /** 正点=未逾期，误点=已逾期；不再使用漏保养口径 */
+  function judgeExecution(task, nowInput) {
+    return isOverdue(task, nowInput) ? "误点" : "正点";
   }
 
   function pct(num, den) {
@@ -43,10 +37,9 @@
       ...task,
       executionJudge: judgeExecution(task, now),
     }));
-    const judged = rows.filter((row) => ["正点", "误点", "漏保养"].includes(row.executionJudge));
+    const judged = rows.filter((row) => ["正点", "误点"].includes(row.executionJudge));
     const onTime = judged.filter((row) => row.executionJudge === "正点").length;
     const late = judged.filter((row) => row.executionJudge === "误点").length;
-    const missed = judged.filter((row) => row.executionJudge === "漏保养").length;
     const completed = rows.filter((row) => row.status === "已完成").length;
     const abnormalEvents = rows.reduce((sum, row) => {
       if (Number(row.abnormalCount) > 0) return sum + Number(row.abnormalCount);
@@ -58,7 +51,6 @@
       total: rows.length,
       onTime,
       late,
-      missed,
       judgedCount: judged.length,
       onTimeRate: pct(onTime, judged.length),
       lateRate: pct(late, judged.length),
@@ -69,11 +61,10 @@
   }
 
   return {
-    GRACE_MINUTES,
     DEMO_NOW,
-    SUBMITTED_STATUSES,
-    MISS_STATUSES,
+    OPEN_STATUSES,
     parseDate,
+    isOverdue,
     judgeExecution,
     pct,
     summarize,
