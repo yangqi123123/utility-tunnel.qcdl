@@ -14,13 +14,13 @@
         id: "D-10024", name: "低压配电柜", model: "PWR-柜-004", vendor: "正泰电器设备有限公司", category: "供配电", system: "电力监测平台", smart: "是", note: "电力舱低压配电设备。",
       },
       {
-        id: "D-10025", name: "火灾报警主机", model: "FIRE-CTRL-005", vendor: "青鸟消防股份有限公司", category: "消防设备", system: "消防监控系统", smart: "是", note: "消防监控室火灾报警控制主机。",
+        id: "D-10025", name: "火灾报警主机", model: "FIRE-CTRL-005", vendor: "青鸟消防股份有限公司", category: "消防设备", system: "智慧消防", smart: "是", note: "消防监控室火灾报警控制主机。",
       },
       {
-        id: "D-10026", name: "灭火器", model: "FIRE-EXT-006", vendor: "淮海消防器材有限公司", category: "消防设备", system: "消防监控系统", smart: "否", note: "手提式干粉灭火器，非智能化设备。",
+        id: "D-10026", name: "灭火器", model: "FIRE-EXT-006", vendor: "淮海消防器材有限公司", category: "消防设备", system: "智慧消防", smart: "否", note: "手提式干粉灭火器，非智能化设备。",
       },
       {
-        id: "D-10027", name: "消防栓", model: "FIRE-HYDRANT-007", vendor: "天广消防股份有限公司", category: "消防设备", system: "消防监控系统", smart: "否", note: "室内消火栓，非智能化设备。",
+        id: "D-10027", name: "消防栓", model: "FIRE-HYDRANT-007", vendor: "天广消防股份有限公司", category: "消防设备", system: "智慧消防", smart: "否", note: "室内消火栓，非智能化设备。",
       },
       {
         id: "D-10028", name: "枪式摄像机-北侧入口", model: "VIDEO-BULLET-008", vendor: "海康威视", category: "枪式摄像机", system: "视频监控系统", smart: "是", note: "北侧出入口视频监控。",

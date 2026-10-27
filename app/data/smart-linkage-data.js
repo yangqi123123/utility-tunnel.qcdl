@@ -69,7 +69,7 @@
     { id: "DEV-BREAKER-01", name: "非消防电源断路器", system: "电力监测系统", project: "光谷科学岛综合开发项目", corridor: "高新大道综合管廊", cabin: "电力舱", section: "防火分区 F0201", pipeline: "10kV电力管线", properties: ["开关状态", "电流"], actions: ["分闸", "合闸", "切断非消防电源"] },
     { id: "DEV-BROADCAST-01", name: "紧急广播分区-综合舱", system: "通信系统", project: "光谷科学岛综合开发项目", corridor: "高新大道综合管廊", cabin: "综合舱", section: "防火分区 F0103", pipeline: "通信管线", properties: ["广播状态"], actions: ["启动广播", "停止广播"] },
     { id: "DEV-FIBER-01", name: "感温光纤主机-01", system: "火灾报警系统", project: "光谷科学岛综合开发项目", corridor: "高新大道综合管廊", cabin: "电力舱", section: "防火分区 F0201", pipeline: "感温光纤回路", properties: ["最高温度", "报警状态"], actions: ["消音", "复位"] },
-    { id: "DEV-FIRE-01", name: "本区灭火装置", system: "消防监控系统", project: "光谷科学岛综合开发项目", corridor: "高新大道综合管廊", cabin: "电力舱", section: "防火分区 F0201", pipeline: "感温光纤回路", properties: ["装置状态", "压力"], actions: ["联动启动", "停止", "强制关闭防火门"] },
+    { id: "DEV-FIRE-01", name: "本区灭火装置", system: "智慧消防", project: "光谷科学岛综合开发项目", corridor: "高新大道综合管廊", cabin: "电力舱", section: "防火分区 F0201", pipeline: "感温光纤回路", properties: ["装置状态", "压力"], actions: ["联动启动", "停止", "强制关闭防火门"] },
     { id: "DEV-CAM-01", name: "综合舱防火分区枪机 01", system: "视频监控系统", project: "光谷科学岛综合开发项目", corridor: "高新大道综合管廊", cabin: "综合舱", section: "防火分区 F0103", pipeline: "通信管线", properties: ["在线状态"], actions: ["调取预置位", "开始录像", "停止录像"] },
   ];
 
@@ -79,10 +79,10 @@
       name: "火灾确认跨系统处置",
       description: "感温光纤或 FAS 确认火警后，按区段执行灭火、通风排烟、切非、疏散与视频复核。",
       steps: [
-        { id: "S1", order: 1, system: "消防监控系统", action: "START_EXTINGUISH", name: "启动本区灭火装置", confirmLevel: "dual" },
+        { id: "S1", order: 1, system: "智慧消防", action: "START_EXTINGUISH", name: "启动本区灭火装置", confirmLevel: "dual" },
         { id: "S2", order: 2, system: "环境与设备监控", action: "STOP_HVAC_START_SMOKE", name: "关闭通风空调并启动排烟风机", confirmLevel: "danger" },
         { id: "S3", order: 3, system: "电力监测系统", action: "CUT_NON_FIRE", name: "切断非消防电源", confirmLevel: "dual" },
-        { id: "S4", order: 4, system: "消防监控系统", action: "EVAC_GUIDE", name: "应急照明与疏散指示改向", confirmLevel: "normal" },
+        { id: "S4", order: 4, system: "智慧消防", action: "EVAC_GUIDE", name: "应急照明与疏散指示改向", confirmLevel: "normal" },
         { id: "S5", order: 5, system: "视频监控系统", action: "PULL_NEARBY_VIDEO", name: "调取报警点附近视频", confirmLevel: "normal" },
         { id: "S6", order: 6, system: "通信系统", action: "EMERGENCY_BROADCAST", name: "紧急广播提示", confirmLevel: "normal", optional: true },
       ],
@@ -109,7 +109,7 @@
     {
       id: "CMD-1001",
       layer: "L3",
-      system: "消防监控系统",
+      system: "智慧消防",
       targetType: "planStep",
       targetId: "S1",
       targetName: "启动本区灭火装置",
@@ -237,16 +237,16 @@
           ],
         },
       ],
-      system: "消防监控系统",
+      system: "智慧消防",
       device: "本区灭火装置 / 电力舱排烟风机-01 / 非消防电源断路器",
       action: "联动启动",
       execTime: "持续至触发条件解除",
       results: [
-        { system: "消防监控系统", device: "本区防火阀", action: "关闭", execTime: "30 秒" },
-        { system: "消防监控系统", device: "本区灭火装置", action: "联动启动", execTime: "持续至触发条件解除" },
+        { system: "智慧消防", device: "本区防火阀", action: "关闭", execTime: "30 秒" },
+        { system: "智慧消防", device: "本区灭火装置", action: "联动启动", execTime: "持续至触发条件解除" },
         { system: "环境与设备监控", device: "电力舱排烟风机-01", action: "启动", execTime: "持续至触发条件解除" },
         { system: "电力监测系统", device: "非消防电源断路器", action: "切断非消防电源", execTime: "30 秒" },
-        { system: "消防监控系统", device: "应急照明与疏散指示", action: "应急改向", execTime: "持续至触发条件解除" },
+        { system: "智慧消防", device: "应急照明与疏散指示", action: "应急改向", execTime: "持续至触发条件解除" },
         { system: "视频监控系统", device: "综合舱防火分区枪机 01", action: "调取预置位", execTime: "5 分钟" },
         { system: "通信系统", device: "紧急广播分区-综合舱", action: "启动广播", execTime: "10 分钟" },
       ],
@@ -266,7 +266,7 @@
     "电力监测系统": { L1: ["BREAKER_OPEN", "BREAKER_CLOSE", "CUT_NON_FIRE"], L2: ["ACK_ALARM"] },
     "通信系统": { L1: ["START_BROADCAST", "STOP_BROADCAST"], L2: ["ACK_FAULT"] },
     "火灾报警系统": { L1: ["SILENCE", "RESET"], L2: ["ACK_FIRE", "ACK_FAULT"] },
-    "消防监控系统": { L1: ["START_EXTINGUISH", "EVAC_GUIDE", "FORCE_FIRE_DOOR"], L2: ["ACK_ALARM"] },
+    "智慧消防": { L1: ["START_EXTINGUISH", "EVAC_GUIDE", "FORCE_FIRE_DOOR"], L2: ["ACK_ALARM"] },
   };
 
   global.SMART_LINKAGE_DATA = {

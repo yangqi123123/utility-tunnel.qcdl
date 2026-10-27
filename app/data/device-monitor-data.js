@@ -1,4 +1,4 @@
-﻿(function () {
+(function () {
   /* =========================================================================
    * 设备监测总览（首页）数据源
    * 1) systems        —— 全网设备规模统计（口径合计 1,286 台）
@@ -21,7 +21,7 @@
     { name: "通信系统", code: "COM", total: 68, online: 55, warn: 0, fault: 7, offline: 6 },
     { name: "电力监测系统", code: "POMS", total: 186, online: 176, warn: 3, fault: 4, offline: 3 },
     { name: "火灾报警系统", code: "FAS", total: 162, online: 156, warn: 2, fault: 2, offline: 2 },
-    { name: "消防监控系统", code: "FMS", total: 92, online: 88, warn: 0, fault: 2, offline: 2 },
+    { name: "智慧消防", code: "FMS", total: 92, online: 88, warn: 0, fault: 2, offline: 2 },
     { name: "安全防范系统", code: "SPS", total: 96, online: 91, warn: 1, fault: 2, offline: 2 },
     { name: "电子巡更系统", code: "EPS", total: 56, online: 53, warn: 1, fault: 1, offline: 1 },
   ];
@@ -234,9 +234,9 @@
     { name: "综合舱智能电表", system: "电力监测系统", type: "电表", status: "online", corridor: "高新大道综合管廊", cabin: "综合舱", section: "防火分区", model: "PWR-METER-011" },
     { name: "管廊照明控制箱", system: "电力监测系统", type: "照明设备", status: "online", corridor: "高新大道综合管廊", cabin: "综合舱", section: "出入口", model: "PWR-LIGHT-003" },
     { name: "光伏并网逆变器 01", system: "电力监测系统", type: "光伏并网逆变器", status: "online", corridor: "科学岛东区综合管廊", cabin: "燃气舱", section: "吊装口", model: "PWR-PV-001" },
-    { name: "消防监控主机", system: "消防监控系统", type: "消防设备", status: "online", corridor: "高新大道综合管廊", cabin: "综合舱", section: "防火分区", model: "FIRE-CTRL-005" },
-    { name: "燃气舱燃气报警器 01", system: "消防监控系统", type: "燃气报警", status: "warn", corridor: "科学岛东区综合管廊", cabin: "燃气舱", section: "通风口", model: "FIRE-GAS-001", metrics: { "甲烷浓度": 58 } },
-    { name: "防火门监控模块 02", system: "消防监控系统", type: "输入输出模块", status: "online", corridor: "高新大道综合管廊", cabin: "电力舱", section: "防火分区", model: "FIRE-IO-002" },
+    { name: "消防监控主机", system: "智慧消防", type: "消防设备", status: "online", corridor: "高新大道综合管廊", cabin: "综合舱", section: "防火分区", model: "FIRE-CTRL-005" },
+    { name: "燃气舱燃气报警器 01", system: "智慧消防", type: "燃气报警", status: "warn", corridor: "科学岛东区综合管廊", cabin: "燃气舱", section: "通风口", model: "FIRE-GAS-001", metrics: { "甲烷浓度": 58 } },
+    { name: "防火门监控模块 02", system: "智慧消防", type: "输入输出模块", status: "online", corridor: "高新大道综合管廊", cabin: "电力舱", section: "防火分区", model: "FIRE-IO-002" },
     { name: "管廊枪式摄像机 01", system: "视频监控系统", type: "枪式摄像机", status: "online", corridor: "高新大道综合管廊", cabin: "综合舱", section: "出入口", model: "VIDEO-BULLET-008", channel: 1, resolution: "2560×1440", ptz: true },
     { name: "综合舱球型摄像机 02", system: "视频监控系统", type: "球型摄像机", status: "online", corridor: "高新大道综合管廊", cabin: "综合舱", section: "防火分区", model: "VIDEO-PTZ-009", channel: 2, resolution: "2560×1440", ptz: true },
     { name: "电力舱半球摄像机 03", system: "视频监控系统", type: "半球摄像机", status: "offline", corridor: "高新大道综合管廊", cabin: "电力舱", section: "通风口", model: "VIDEO-DOME-010", channel: 3, resolution: "1920×1080", ptz: false, lastOnline: "2026-09-30 11:13:58", remark: "通信中断，离线超过 46 分钟。" },
@@ -265,7 +265,7 @@
   var brandBySystem = {
     "环境与设备监控": ["昆仑海岸", "北京昆仑海岸传感技术有限公司"],
     "电力监测系统": ["安科瑞", "安科瑞电气股份有限公司"],
-    "消防监控系统": ["青鸟消防", "青鸟消防股份有限公司"],
+    "智慧消防": ["青鸟消防", "青鸟消防股份有限公司"],
     "火灾报警系统": ["海湾", "海湾安全技术有限公司"],
     "视频监控系统": ["海康威视", "杭州海康威视数字技术股份有限公司"],
     "电子巡更系统": ["兰德华", "北京兰德华电子技术有限公司"],

@@ -3,17 +3,18 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>消防监测 - 消防监控系统 - 科学岛管廊监控中心</title>
+  <title>消防监测 - 智慧消防 - 科学岛管廊监控中心</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   <link rel="stylesheet" href="../../assets/css/tob-ui.css">
   <link rel="stylesheet" href="../../assets/css/home-monitor.css?v=5">
   <link rel="stylesheet" href="../../assets/css/monitoring.css">
   <link rel="stylesheet" href="../../assets/css/environment-monitor.css">
   <link rel="stylesheet" href="../../assets/css/base-map.css?v=1">
+  <link rel="stylesheet" href="../../assets/css/gis-map-ux.css?v=1">
   <link rel="stylesheet" href="../../assets/css/intrusion-monitor.css">
   <link rel="stylesheet" href="../../assets/vendor/leaflet/leaflet.css">
 </head>
-<body class="dm-page fire-monitor-page" data-menu-key="fire-monitor.monitor" data-page-section="消防监控系统" data-page-title="消防监测">
+<body class="dm-page fire-monitor-page" data-menu-key="fire-monitor.monitor" data-page-section="智慧消防" data-page-title="消防监测">
 <div class="app-shell">
   <aside id="app-sidebar" class="sidebar"></aside>
   <header id="app-header" class="header"></header>
@@ -78,7 +79,7 @@
         <aside class="dm-panel dm-right">
           <div class="dm-panel-head">
             <h2>消防监控明细</h2>
-            <p id="dmScope">所属系统：消防监控系统</p>
+            <p id="dmScope">所属系统：智慧消防</p>
           </div>
           <div class="dm-table-wrap" id="dmTableWrap">
             <table class="dm-table dm-point-table">
@@ -215,6 +216,7 @@
 
   <script src="../../assets/vendor/leaflet/leaflet.js"></script>
   <script src="../../../app/components/base-map.js"></script>
+  <script src="../../assets/js/gis-map-ux.js?v=1"></script>
   <script src="../../../app/components/device-detail-info.js"></script>
   <script src="../../../app/config/menu.js?v=nav-hide-1"></script>
   <script src="../../../app/components/sidebar.js?v=nav-home-1"></script>
@@ -258,7 +260,7 @@
       name: item.name,
       code: item.code,
       kind: item.kind,
-      system: "消防监控",
+      system: "智慧消防",
       type: type,
       status: status,
       rawStatus: item.status,
@@ -300,7 +302,7 @@
       scrapDate: item.scrapDate || "—",
       factoryCode: item.factoryCode || "—",
       cadCode: item.cadCode || ("CAD-" + (item.code || item.id)),
-      sourceModule: item.sourceModule || "消防监控系统",
+      sourceModule: item.sourceModule || "智慧消防",
       service: item.service || "消防监测",
       remark: item.alarm ? (item.alarm.message || "") : (item.remark || ""),
       smart: "是",
@@ -311,7 +313,7 @@
   });
 
   var SYSTEMS = (function () {
-    var sum = { name: "消防监控系统", total: 0, online: 0, warn: 0, fault: 0, offline: 0 };
+    var sum = { name: "智慧消防", total: 0, online: 0, warn: 0, fault: 0, offline: 0 };
     DEVICES.forEach(function (d) {
       sum.total += 1;
       if (d.isAlarm || d.rawStatus === "warn") sum.warn += 1;
@@ -540,7 +542,7 @@
     var host = el("dmLegendBody");
     if (!host) return;
     var names = LEGEND_ORDER.slice();
-    el("dmLegendScope").textContent = state.system === "all" ? "消防监控" : state.system;
+    el("dmLegendScope").textContent = state.system === "all" ? "智慧消防" : state.system;
     if (!names.length) { host.innerHTML = '<div class="dm-legend-empty">当前系统暂无设备分类</div>'; return; }
     host.innerHTML = names.map(function (name) {
       var style = (D.categoryStyles || {})[name] || { color: "#6B7B8C" };
@@ -575,7 +577,7 @@
     }
     renderPointPager(list.length, pages);
     el("dmPointCount").textContent = list.length;
-    var scope = "所属系统：" + (state.system === "all" ? "消防监控系统" : state.system);
+    var scope = "所属系统：" + (state.system === "all" ? "智慧消防" : state.system);
     if (state.spaceValue) scope += "　空间维度：" + state.spaceValue;
     el("dmScope").textContent = scope;
   }
@@ -600,12 +602,25 @@
     map = baseMap ? baseMap.map : null;
     if (!map) return;
     markerLayer = L.layerGroup().addTo(map);
+    if (window.GIS_MAP_UX) {
+      window.GIS_MAP_UX.attachCorridor(map);
+      map.on("zoomend", renderMap);
+    }
     renderMap();
     window.setTimeout(function () { map.invalidateSize(); }, 150);
   }
 
   function renderMap() {
     if (!map || !markerLayer) return;
+    if (window.GIS_MAP_UX) {
+      window.GIS_MAP_UX.renderDeviceMarkers({
+        map: map,
+        layer: markerLayer,
+        devices: visibleDevices(),
+        onOpenDetail: function (d) { openDetail(d.id); }
+      });
+      return;
+    }
     markerLayer.clearLayers();
     visibleDevices().forEach(function (d) {
       if (d.lat == null || d.lng == null) return;
@@ -913,7 +928,7 @@
       host.innerHTML =
         '<div class="dm-tree-row' + (listState.system === "intrusion" ? " is-active" : "") + '" data-ias-system="intrusion" role="treeitem" style="padding-left:6px">'
         + '<button class="dm-tree-toggle is-leaf" type="button" tabindex="-1" aria-hidden="true"></button>'
-        + '<span class="dm-tree-name">消防监控系统</span>'
+        + '<span class="dm-tree-name">智慧消防</span>'
         + '<span class="dm-tree-count">' + DEVICES.length + "</span></div>"
         + '<div class="dm-tree-row' + (listState.system === "video" ? " is-active" : "") + '" data-ias-system="video" role="treeitem" style="padding-left:6px">'
         + '<button class="dm-tree-toggle is-leaf" type="button" tabindex="-1" aria-hidden="true"></button>'
@@ -949,7 +964,7 @@
 
   function scopeLabel() {
     if (listState.mode === "system") {
-      return listState.system === "video" ? "视频监控系统" : "消防监控系统";
+      return listState.system === "video" ? "视频监控系统" : "智慧消防";
     }
     var path = listState.spacePath;
     if (!path.project) return "全部空间";

@@ -10,7 +10,7 @@ const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
 const SYSTEMS = [
   "视频监控系统", "环境与设备监控", "入侵报警系统", "门禁系统", "智能井盖系统",
-  "电力监测系统", "通信系统", "火灾报警系统", "消防监控系统", "安全防范系统", "电子巡更系统",
+  "电力监测系统", "通信系统", "火灾报警系统", "智慧消防", "安全防范系统", "电子巡更系统",
 ];
 
 test("menu places linkage management above big-data", async () => {

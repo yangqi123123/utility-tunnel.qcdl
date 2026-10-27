@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="../../assets/css/home-monitor.css?v=5">
   <link rel="stylesheet" href="../../assets/css/monitoring.css">
   <link rel="stylesheet" href="../../assets/vendor/leaflet/leaflet.css">
-  <link rel="stylesheet" href="../../assets/css/gis-one-map.css?v=17">
+  <link rel="stylesheet" href="../../assets/css/gis-one-map.css?v=20">
 <style>
 #gisPanel4 .gis-fire-inspection .gis-card-head .gis-tag{font-size:0}#gisPanel4 .gis-fire-inspection .gis-card-head .gis-tag:after{content:'已逾期 1';font-size:9px}#gisPanel4 .gis-fire-inspection-summary .bad{font-size:0}#gisPanel4 .gis-fire-inspection-summary .bad:before{content:'已逾期';font-size:7px;display:block}#gisPanel4 .gis-fire-inspection-summary .bad b{font-size:11px}#gisPanel4 .gis-fire-alarm .gis-fire-alarm-summary{margin-bottom:12px}
 /* 通信广播面板（真实入口 gisPanel4） */
@@ -891,6 +891,27 @@
   <div class="gis-drawer-foot"><button class="gis-btn" type="button" id="gisDrawerOk">关闭</button></div>
 </aside>
 <div class="gis-toast" id="gisToast"></div>
+<div class="gis-stack-modal" id="gisStackModal" hidden>
+  <div class="gis-stack-panel" role="dialog" aria-modal="true" aria-labelledby="gisStackTitle">
+    <div class="gis-stack-head">
+      <h2 id="gisStackTitle">设备信息</h2>
+      <button type="button" class="gis-stack-close" data-gis-stack-close aria-label="关闭">×</button>
+    </div>
+    <div class="gis-stack-filters">
+      <label>设备名称<input id="gisStackNameFilter" type="search" placeholder="请输入设备名称" autocomplete="off"></label>
+      <label>设备编码<input id="gisStackCodeFilter" type="search" placeholder="请输入设备编码" autocomplete="off"></label>
+    </div>
+    <div class="gis-stack-cats" id="gisStackCats" role="tablist"></div>
+    <div class="gis-stack-body">
+      <aside class="gis-stack-names" id="gisStackNames"></aside>
+      <section class="gis-stack-detail">
+        <div class="gis-stack-status"><span class="gis-stack-badge" id="gisStackBadge">在线</span></div>
+        <dl class="gis-stack-fields" id="gisStackFields"></dl>
+        <div class="gis-stack-actions"><button type="button" class="gis-btn primary" id="gisStackDetailBtn">查看详情</button></div>
+      </section>
+    </div>
+  </div>
+</div>
 
 <div class="dm-modal-mask" id="gisDeviceModalMask">
   <section class="dm-modal gis-device-modal" role="dialog" aria-modal="true" aria-labelledby="gisDeviceModalTitle">
@@ -1134,6 +1155,172 @@
 </script>
 
 <script src="../../assets/vendor/leaflet/leaflet.js"></script>
+<script>
+(function(){
+  var STATUS={alarm:'报警',warn:'预警',offline:'离线',ok:'正常',normal:'在线'};
+  var ZONE_STATUS={a:'报警',w:'预警',o:'离线',g:'已巡','':'正常'};
+  function esc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+  function stakeOf(t){var m=Math.round(Math.max(0,Math.min(1,t))*2100);return 'K'+Math.floor(m/1000)+'+'+String(m%1000).padStart(3,'0');}
+  function zoneInfo(i){
+    var info=window.GIS_REGION&&window.GIS_REGION.infoOf?window.GIS_REGION.infoOf(i):null;
+    var code=(window.GIS_REGION&&window.GIS_REGION.codeOf?window.GIS_REGION.codeOf(i):'')||('F01'+String(i+1).padStart(2,'0'));
+    var startT=i/21,endT=(i+1)/21,len=Math.round(2100/21);
+    return {
+      index:i,
+      fireCode:code,
+      fireName:(info?info.chamber:'防火分区')+' '+code,
+      fireLength:len+' m',
+      fireStart:stakeOf(startT),
+      fireEnd:stakeOf(endT),
+      sectionCode:code,
+      sectionName:(info?info.chamber+'区段 ':'区段 ')+code,
+      project:info&&info.project||'光谷科学岛综合开发项目',
+      corridor:info&&info.corridor||'高新大道综合管廊',
+      chamber:info&&info.chamber||'综合舱',
+      start:stakeOf(startT),
+      end:stakeOf(endT),
+      length:len+' m',
+      status:ZONE_STATUS['']
+    };
+  }
+  function openZoneDrawer(i,status){
+    var z=zoneInfo(i);z.status=ZONE_STATUS[status||'']||'正常';
+    var rows=[['防火分区编号',z.fireCode],['防火分区名称',z.fireName],['防火分区长度',z.fireLength],['防火分区起点桩号',z.fireStart],['防火分区止点桩号',z.fireEnd],['区段编码',z.sectionCode],['区段名称',z.sectionName],['所属项目',z.project],['所属管廊',z.corridor],['所属舱室',z.chamber],['起始桩号',z.start],['结束桩号',z.end],['区段长度',z.length],['区段状态',z.status]];
+    var mask=document.getElementById('gisMask'),drawer=document.getElementById('gisDrawer');
+    document.getElementById('gisDrawerTitle').textContent=z.sectionName;
+    var sub=document.getElementById('gisDrawerSub');if(sub){sub.hidden=true;sub.textContent='';}
+    document.getElementById('gisDrawerIcon').style.background='#135AFA';
+    document.getElementById('gisDrawerIcon').innerHTML='<i class="fa-solid fa-map-location-dot"></i>';
+    document.getElementById('gisDrawerGrid').innerHTML=rows.map(function(r){return '<div class="gis-info"><span class="l">'+r[0]+'</span><span class="v">'+r[1]+'</span></div>';}).join('');
+    document.getElementById('gisDrawerNote').textContent='';
+    if(mask)mask.classList.add('open');if(drawer)drawer.classList.add('open');
+  }
+  function enrichPoint(p,ctx){
+    var zi=Math.min(20,Math.floor((p.t||0)*21));
+    var info=window.GIS_REGION&&window.GIS_REGION.infoOf?window.GIS_REGION.infoOf(zi):null;
+    var layer=ctx.layerOf(p.layer);
+    var pos=ctx.posAt(p.t);
+    return {
+      point:p, layer:layer, pos:pos, zoneIndex:zi,
+      name:p.name||layer.label, code:p.code||((layer.key||'DEV').toUpperCase()+'-'+String(zi+1).padStart(2,'0')),
+      system:layer.label, location:(info?info.chamber+' · ':'')+(ctx.zoneName(zi)),
+      install:p.install||(info?info.shortPath:ctx.zoneName(zi)),
+      status:p.status||'normal', statusText:STATUS[p.status]||'在线'
+    };
+  }
+  function clusterKey(map,latlng){
+    var p=map.latLngToLayerPoint(L.latLng(latlng[0],latlng[1]));
+    var zoom=map.getZoom();
+    var size=zoom>=16?28:zoom>=15?48:zoom>=14?72:96;
+    return Math.floor(p.x/size)+'_'+Math.floor(p.y/size);
+  }
+  function coordKey(latlng){return latlng[0].toFixed(6)+','+latlng[1].toFixed(6);}
+  var stackState={items:[],cat:'all',index:0,nameQ:'',codeQ:''};
+  function stackItems(){
+    var nameQ=String(stackState.nameQ||'').trim().toLowerCase();
+    var codeQ=String(stackState.codeQ||'').trim().toLowerCase();
+    return stackState.items.filter(function(it){
+      if(stackState.cat!=='all'&&it.layer.key!==stackState.cat)return false;
+      if(nameQ&&String(it.name||'').toLowerCase().indexOf(nameQ)<0)return false;
+      if(codeQ&&String(it.code||'').toLowerCase().indexOf(codeQ)<0)return false;
+      return true;
+    });
+  }
+  function renderStack(){
+    var cats=document.getElementById('gisStackCats'),names=document.getElementById('gisStackNames');
+    var fields=document.getElementById('gisStackFields'),badge=document.getElementById('gisStackBadge');
+    if(!cats||!names||!fields)return;
+    var groups={},order=['all'];
+    stackState.items.forEach(function(it){if(!groups[it.layer.key]){groups[it.layer.key]=it.layer;order.push(it.layer.key);}});
+    cats.innerHTML='<button type="button" class="'+(stackState.cat==='all'?'is-active':'')+'" data-gis-stack-cat="all">全部</button>'+
+      order.slice(1).map(function(k){return '<button type="button" class="'+(stackState.cat===k?'is-active':'')+'" data-gis-stack-cat="'+k+'">'+esc(groups[k].label)+'</button>';}).join('');
+    var list=stackItems();
+    if(stackState.index>=list.length)stackState.index=0;
+    if(!list.length){
+      names.innerHTML='<p class="gis-stack-empty">暂无匹配设备</p>';
+      badge.textContent='';
+      fields.innerHTML='';
+      return;
+    }
+    names.innerHTML=list.map(function(it,i){return '<button type="button" class="'+(i===stackState.index?'is-active':'')+'" data-gis-stack-name="'+i+'">'+esc(it.name)+'</button>';}).join('');
+    var cur=list[stackState.index];if(!cur)return;
+    badge.textContent=cur.statusText;
+    badge.className='gis-stack-badge is-'+cur.status;
+    fields.innerHTML=[['设备名称',cur.name],['设备编码',cur.code],['所属系统',cur.system],['空间位置',cur.location],['安装位置',cur.install]].map(function(r){return '<div><dt>'+r[0]+'</dt><dd>'+esc(r[1])+'</dd></div>';}).join('');
+  }
+  function openStack(items){
+    var modal=document.getElementById('gisStackModal');if(!modal||!items||!items.length)return;
+    stackState.items=items;stackState.cat='all';stackState.index=0;stackState.nameQ='';stackState.codeQ='';
+    var nameFilter=document.getElementById('gisStackNameFilter');if(nameFilter)nameFilter.value='';
+    var codeFilter=document.getElementById('gisStackCodeFilter');if(codeFilter)codeFilter.value='';
+    renderStack();modal.hidden=false;
+  }
+  function closeStack(){var modal=document.getElementById('gisStackModal');if(modal)modal.hidden=true;}
+  function currentStackItem(){return stackItems()[stackState.index]||null;}
+  document.addEventListener('click',function(e){
+    var modal=document.getElementById('gisStackModal');if(!modal||modal.hidden)return;
+    if(e.target===modal||e.target.closest('[data-gis-stack-close]')){closeStack();return;}
+    var cat=e.target.closest('[data-gis-stack-cat]');
+    if(cat){stackState.cat=cat.getAttribute('data-gis-stack-cat');stackState.index=0;renderStack();return;}
+    var name=e.target.closest('[data-gis-stack-name]');
+    if(name){stackState.index=Number(name.getAttribute('data-gis-stack-name'))||0;renderStack();return;}
+    if(e.target.closest('#gisStackDetailBtn')){
+      var it=currentStackItem();if(!it)return;
+      if(typeof window.openDeviceDetail==='function')window.openDeviceDetail(it.point);
+    }
+  });
+  document.addEventListener('input',function(e){
+    var t=e.target;if(!t)return;
+    if(t.id==='gisStackNameFilter'){stackState.nameQ=t.value;stackState.index=0;renderStack();}
+    if(t.id==='gisStackCodeFilter'){stackState.codeQ=t.value;stackState.index=0;renderStack();}
+  });
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')closeStack();});
+
+  window.GIS_MAP_UX={
+    openZoneDrawer:openZoneDrawer,
+    attachZoneClicks:function(map,lines,zones){
+      (lines||[]).forEach(function(line,i){
+        line.on('click',function(ev){if(ev&&ev.originalEvent)L.DomEvent.stopPropagation(ev.originalEvent);openZoneDrawer(i,zones&&zones[i]);});
+      });
+    },
+    renderClusteredPoints:function(ctx){
+      var map=ctx.map,points=ctx.points||[],groups=ctx.groups||{},scope=ctx.scope,suffix=ctx.suffix;
+      Object.keys(groups).forEach(function(k){groups[k].clearLayers();});
+      var zoom=map.getZoom(),clustered=zoom<16,buckets={};
+      points.forEach(function(p){
+        var item=enrichPoint(p,ctx);
+        var key=clustered?clusterKey(map,item.pos):coordKey(item.pos);
+        if(!buckets[key])buckets[key]={items:[],pos:item.pos};
+        buckets[key].items.push(item);
+      });
+      var n=0;
+      Object.keys(buckets).forEach(function(key){
+        var bucket=buckets[key],items=bucket.items,first=items[0],count=items.length;
+        var worst=items.some(function(it){return it.status==='alarm';})?'alarm':items.some(function(it){return it.status==='warn';})?'warn':items.some(function(it){return it.status==='offline';})?'offline':'';
+        var html,size,anchor;
+        if(clustered&&count>1){
+          html='<span class="gis-cluster '+worst+'">'+count+'</span>';size=[36,36];anchor=[18,18];
+        }else if(!clustered&&count>1){
+          html='<span class="gis-marker stack '+worst+'" style="--c:'+first.layer.color+'"><i class="fa-solid '+(first.layer.icon||'fa-location-dot')+'"></i><b>'+count+'</b></span>';size=[28,28];anchor=[14,14];
+        }else{
+          html='<span class="gis-marker '+worst+'" style="--c:'+first.layer.color+'"><i class="fa-solid '+(first.layer.icon||'fa-location-dot')+'"></i></span>';size=[24,24];anchor=[12,12];
+        }
+        var mk=L.marker(bucket.pos,{icon:L.divIcon({className:'gis-marker-wrap',html:html,iconSize:size,iconAnchor:anchor}),riseOnHover:true,keyboard:false});
+        mk.bindTooltip(count>1?(first.layer.label+' · '+count+' 台设备'):first.name,{direction:'top',offset:[0,-14],className:'gis-tip',opacity:1});
+        mk.on('click',function(ev){
+          if(ev&&ev.originalEvent)L.DomEvent.stopPropagation(ev.originalEvent);
+          if(clustered&&count>1){map.setView(bucket.pos,Math.min(18,zoom+2));return;}
+          if(count>1){openStack(items);return;}
+          if(typeof window.openDeviceDetail==='function')window.openDeviceDetail(first.point);
+        });
+        var host=groups[first.layer.key];if(host)mk.addTo(host);n+=count;
+      });
+      var el=scope&&scope.querySelector('#gisPointCount'+suffix);if(el)el.textContent=points.length+' 个点位';
+      return n;
+    }
+  };
+})();
+</script>
 <!-- 系统首页 -->
 <script>
 (function(){
@@ -1173,32 +1360,27 @@
     if(map)return map;
     map=L.map(mapId,{zoomControl:false,minZoom:11,maxZoom:18}).setView(CENTER,14);
     L.polyline(CORRIDOR,{color:'#135AFA',weight:8,opacity:.18}).addTo(map);
+    var zoneLines=[];
     for(var i=0;i<21;i++){
       var st=ZONES[i]||'';
-      L.polyline([posAt(i/21),posAt((i+1)/21)],{color:ZONE_COLOR[st],weight:6,opacity:.85})
-        .addTo(map).bindTooltip(zoneName(i)+' · '+ZONE_TEXT[st],{sticky:true});
+      zoneLines.push(L.polyline([posAt(i/21),posAt((i+1)/21)],{color:ZONE_COLOR[st],weight:10,opacity:.85,interactive:true})
+        .addTo(map).bindTooltip(zoneName(i)+' · '+ZONE_TEXT[st],{sticky:true}));
     }
+    if(window.GIS_MAP_UX)window.GIS_MAP_UX.attachZoneClicks(map,zoneLines,ZONES);
     (ALARMS||[]).forEach(function(a){
       L.circleMarker(posAt(a.t),{radius:9,color:'#F53F57',weight:2,fillColor:'#F53F57',fillOpacity:.25})
         .addTo(map).bindTooltip(a.text,{direction:'top',className:'gis-tip',opacity:1});
     });
     LAYERS.forEach(function(l){groups[l.key]=L.layerGroup().addTo(map);});
     renderPoints();
+    map.on('zoomend',renderPoints);
     setBase('street');
     window.setTimeout(function(){if(map)map.invalidateSize();},150);
     return map;
   }
   function renderPoints(){
-    var n=0;
-    POINTS.forEach(function(p){
-      var l=layerOf(p.layer),pos=posAt(p.t);
-      var icon=L.divIcon({className:'gis-marker-wrap',html:'<span class="gis-marker '+(p.status==='alarm'?'alarm':p.status==='warn'?'warn':p.status==='offline'?'offline':p.status==='ok'?'ok':'')+'" style="--c:'+l.color+'"><i class="fa-solid '+(l.icon||'fa-location-dot')+'"></i></span>',iconSize:[24,24],iconAnchor:[12,12]});
-      var mk=L.marker(pos,{icon:icon,riseOnHover:true,keyboard:false});
-      mk.bindTooltip(p.name,{direction:'top',offset:[0,-14],className:'gis-tip',opacity:1});
-      mk.on('click',function(){openDeviceDetail(p);});
-      mk.addTo(groups[p.layer]);n++;
-    });
-    var el=scope.querySelector('#gisPointCount'+suffix);if(el)el.textContent=n+' 个点位';
+    if(!map||!window.GIS_MAP_UX)return;
+    window.GIS_MAP_UX.renderClusteredPoints({map:map,points:POINTS,groups:groups,scope:scope,suffix:suffix,layerOf:layerOf,posAt:posAt,zoneName:zoneName});
   }
   function setBase(mode){
     var host=document.getElementById(mapId);
@@ -1219,7 +1401,7 @@
     var rows=[['点位名称',p.name],['图层分类',l.label],['防火分区',zoneName(zi)],['里程桩号',stake(p.t)],['设备状态',statusText(p.status)],['经纬度',pos[0].toFixed(5)+', '+pos[1].toFixed(5)],['最近上报',p.time||'刚刚'],['数据说明',p.value||'—']];
     var mask=document.getElementById('gisMask');var drawer=document.getElementById('gisDrawer');
     document.getElementById('gisDrawerTitle').textContent=p.name;
-    document.getElementById('gisDrawerSub').textContent='/ '+l.label+' · '+zoneName(zi);
+    var gisDrawerSub=document.getElementById('gisDrawerSub');if(gisDrawerSub){gisDrawerSub.hidden=false;gisDrawerSub.textContent='/ '+l.label+' · '+zoneName(zi);}
     document.getElementById('gisDrawerIcon').style.background=l.color;
     document.getElementById('gisDrawerIcon').innerHTML='<i class="fa-solid '+(l.icon||'fa-location-dot')+'"></i>';
     document.getElementById('gisDrawerGrid').innerHTML=rows.map(function(r){return '<div class="gis-info"><span class="l">'+r[0]+'</span><span class="v">'+r[1]+'</span></div>';}).join('');
@@ -1323,32 +1505,27 @@
     if(map)return map;
     map=L.map(mapId,{zoomControl:false,minZoom:11,maxZoom:18}).setView(CENTER,14);
     L.polyline(CORRIDOR,{color:'#135AFA',weight:8,opacity:.18}).addTo(map);
+    var zoneLines=[];
     for(var i=0;i<21;i++){
       var st=ZONES[i]||'';
-      L.polyline([posAt(i/21),posAt((i+1)/21)],{color:ZONE_COLOR[st],weight:6,opacity:.85})
-        .addTo(map).bindTooltip(zoneName(i)+' · '+ZONE_TEXT[st],{sticky:true});
+      zoneLines.push(L.polyline([posAt(i/21),posAt((i+1)/21)],{color:ZONE_COLOR[st],weight:10,opacity:.85,interactive:true})
+        .addTo(map).bindTooltip(zoneName(i)+' · '+ZONE_TEXT[st],{sticky:true}));
     }
+    if(window.GIS_MAP_UX)window.GIS_MAP_UX.attachZoneClicks(map,zoneLines,ZONES);
     (ALARMS||[]).forEach(function(a){
       L.circleMarker(posAt(a.t),{radius:9,color:'#F53F57',weight:2,fillColor:'#F53F57',fillOpacity:.25})
         .addTo(map).bindTooltip(a.text,{direction:'top',className:'gis-tip',opacity:1});
     });
     LAYERS.forEach(function(l){groups[l.key]=L.layerGroup().addTo(map);});
     renderPoints();
+    map.on('zoomend',renderPoints);
     setBase('street');
     window.setTimeout(function(){if(map)map.invalidateSize();},150);
     return map;
   }
   function renderPoints(){
-    var n=0;
-    POINTS.forEach(function(p){
-      var l=layerOf(p.layer),pos=posAt(p.t);
-      var icon=L.divIcon({className:'gis-marker-wrap',html:'<span class="gis-marker '+(p.status==='alarm'?'alarm':p.status==='warn'?'warn':p.status==='offline'?'offline':p.status==='ok'?'ok':'')+'" style="--c:'+l.color+'"><i class="fa-solid '+(l.icon||'fa-location-dot')+'"></i></span>',iconSize:[24,24],iconAnchor:[12,12]});
-      var mk=L.marker(pos,{icon:icon,riseOnHover:true,keyboard:false});
-      mk.bindTooltip(p.name,{direction:'top',offset:[0,-14],className:'gis-tip',opacity:1});
-      mk.on('click',function(){openDeviceDetail(p);});
-      mk.addTo(groups[p.layer]);n++;
-    });
-    var el=scope.querySelector('#gisPointCount'+suffix);if(el)el.textContent=n+' 个点位';
+    if(!map||!window.GIS_MAP_UX)return;
+    window.GIS_MAP_UX.renderClusteredPoints({map:map,points:POINTS,groups:groups,scope:scope,suffix:suffix,layerOf:layerOf,posAt:posAt,zoneName:zoneName});
   }
   function setBase(mode){
     var host=document.getElementById(mapId);
@@ -1369,7 +1546,7 @@
     var rows=[['点位名称',p.name],['图层分类',l.label],['防火分区',zoneName(zi)],['里程桩号',stake(p.t)],['设备状态',statusText(p.status)],['经纬度',pos[0].toFixed(5)+', '+pos[1].toFixed(5)],['最近上报',p.time||'刚刚'],['数据说明',p.value||'—']];
     var mask=document.getElementById('gisMask');var drawer=document.getElementById('gisDrawer');
     document.getElementById('gisDrawerTitle').textContent=p.name;
-    document.getElementById('gisDrawerSub').textContent='/ '+l.label+' · '+zoneName(zi);
+    var gisDrawerSub=document.getElementById('gisDrawerSub');if(gisDrawerSub){gisDrawerSub.hidden=false;gisDrawerSub.textContent='/ '+l.label+' · '+zoneName(zi);}
     document.getElementById('gisDrawerIcon').style.background=l.color;
     document.getElementById('gisDrawerIcon').innerHTML='<i class="fa-solid '+(l.icon||'fa-location-dot')+'"></i>';
     document.getElementById('gisDrawerGrid').innerHTML=rows.map(function(r){return '<div class="gis-info"><span class="l">'+r[0]+'</span><span class="v">'+r[1]+'</span></div>';}).join('');
@@ -1473,32 +1650,27 @@
     if(map)return map;
     map=L.map(mapId,{zoomControl:false,minZoom:11,maxZoom:18}).setView(CENTER,14);
     L.polyline(CORRIDOR,{color:'#135AFA',weight:8,opacity:.18}).addTo(map);
+    var zoneLines=[];
     for(var i=0;i<21;i++){
       var st=ZONES[i]||'';
-      L.polyline([posAt(i/21),posAt((i+1)/21)],{color:ZONE_COLOR[st],weight:6,opacity:.85})
-        .addTo(map).bindTooltip(zoneName(i)+' · '+ZONE_TEXT[st],{sticky:true});
+      zoneLines.push(L.polyline([posAt(i/21),posAt((i+1)/21)],{color:ZONE_COLOR[st],weight:10,opacity:.85,interactive:true})
+        .addTo(map).bindTooltip(zoneName(i)+' · '+ZONE_TEXT[st],{sticky:true}));
     }
+    if(window.GIS_MAP_UX)window.GIS_MAP_UX.attachZoneClicks(map,zoneLines,ZONES);
     (ALARMS||[]).forEach(function(a){
       L.circleMarker(posAt(a.t),{radius:9,color:'#F53F57',weight:2,fillColor:'#F53F57',fillOpacity:.25})
         .addTo(map).bindTooltip(a.text,{direction:'top',className:'gis-tip',opacity:1});
     });
     LAYERS.forEach(function(l){groups[l.key]=L.layerGroup().addTo(map);});
     renderPoints();
+    map.on('zoomend',renderPoints);
     setBase('street');
     window.setTimeout(function(){if(map)map.invalidateSize();},150);
     return map;
   }
   function renderPoints(){
-    var n=0;
-    POINTS.forEach(function(p){
-      var l=layerOf(p.layer),pos=posAt(p.t);
-      var icon=L.divIcon({className:'gis-marker-wrap',html:'<span class="gis-marker '+(p.status==='alarm'?'alarm':p.status==='warn'?'warn':p.status==='offline'?'offline':p.status==='ok'?'ok':'')+'" style="--c:'+l.color+'"><i class="fa-solid '+(l.icon||'fa-location-dot')+'"></i></span>',iconSize:[24,24],iconAnchor:[12,12]});
-      var mk=L.marker(pos,{icon:icon,riseOnHover:true,keyboard:false});
-      mk.bindTooltip(p.name,{direction:'top',offset:[0,-14],className:'gis-tip',opacity:1});
-      mk.on('click',function(){openDeviceDetail(p);});
-      mk.addTo(groups[p.layer]);n++;
-    });
-    var el=scope.querySelector('#gisPointCount'+suffix);if(el)el.textContent=n+' 个点位';
+    if(!map||!window.GIS_MAP_UX)return;
+    window.GIS_MAP_UX.renderClusteredPoints({map:map,points:POINTS,groups:groups,scope:scope,suffix:suffix,layerOf:layerOf,posAt:posAt,zoneName:zoneName});
   }
   function setBase(mode){
     var host=document.getElementById(mapId);
@@ -1519,7 +1691,7 @@
     var rows=[['点位名称',p.name],['图层分类',l.label],['防火分区',zoneName(zi)],['里程桩号',stake(p.t)],['设备状态',statusText(p.status)],['经纬度',pos[0].toFixed(5)+', '+pos[1].toFixed(5)],['最近上报',p.time||'刚刚'],['数据说明',p.value||'—']];
     var mask=document.getElementById('gisMask');var drawer=document.getElementById('gisDrawer');
     document.getElementById('gisDrawerTitle').textContent=p.name;
-    document.getElementById('gisDrawerSub').textContent='/ '+l.label+' · '+zoneName(zi);
+    var gisDrawerSub=document.getElementById('gisDrawerSub');if(gisDrawerSub){gisDrawerSub.hidden=false;gisDrawerSub.textContent='/ '+l.label+' · '+zoneName(zi);}
     document.getElementById('gisDrawerIcon').style.background=l.color;
     document.getElementById('gisDrawerIcon').innerHTML='<i class="fa-solid '+(l.icon||'fa-location-dot')+'"></i>';
     document.getElementById('gisDrawerGrid').innerHTML=rows.map(function(r){return '<div class="gis-info"><span class="l">'+r[0]+'</span><span class="v">'+r[1]+'</span></div>';}).join('');
@@ -1623,32 +1795,27 @@
     if(map)return map;
     map=L.map(mapId,{zoomControl:false,minZoom:11,maxZoom:18}).setView(CENTER,14);
     L.polyline(CORRIDOR,{color:'#135AFA',weight:8,opacity:.18}).addTo(map);
+    var zoneLines=[];
     for(var i=0;i<21;i++){
       var st=ZONES[i]||'';
-      L.polyline([posAt(i/21),posAt((i+1)/21)],{color:ZONE_COLOR[st],weight:6,opacity:.85})
-        .addTo(map).bindTooltip(zoneName(i)+' · '+ZONE_TEXT[st],{sticky:true});
+      zoneLines.push(L.polyline([posAt(i/21),posAt((i+1)/21)],{color:ZONE_COLOR[st],weight:10,opacity:.85,interactive:true})
+        .addTo(map).bindTooltip(zoneName(i)+' · '+ZONE_TEXT[st],{sticky:true}));
     }
+    if(window.GIS_MAP_UX)window.GIS_MAP_UX.attachZoneClicks(map,zoneLines,ZONES);
     (ALARMS||[]).forEach(function(a){
       L.circleMarker(posAt(a.t),{radius:9,color:'#F53F57',weight:2,fillColor:'#F53F57',fillOpacity:.25})
         .addTo(map).bindTooltip(a.text,{direction:'top',className:'gis-tip',opacity:1});
     });
     LAYERS.forEach(function(l){groups[l.key]=L.layerGroup().addTo(map);});
     renderPoints();
+    map.on('zoomend',renderPoints);
     setBase('street');
     window.setTimeout(function(){if(map)map.invalidateSize();},150);
     return map;
   }
   function renderPoints(){
-    var n=0;
-    POINTS.forEach(function(p){
-      var l=layerOf(p.layer),pos=posAt(p.t);
-      var icon=L.divIcon({className:'gis-marker-wrap',html:'<span class="gis-marker '+(p.status==='alarm'?'alarm':p.status==='warn'?'warn':p.status==='offline'?'offline':p.status==='ok'?'ok':'')+'" style="--c:'+l.color+'"><i class="fa-solid '+(l.icon||'fa-location-dot')+'"></i></span>',iconSize:[24,24],iconAnchor:[12,12]});
-      var mk=L.marker(pos,{icon:icon,riseOnHover:true,keyboard:false});
-      mk.bindTooltip(p.name,{direction:'top',offset:[0,-14],className:'gis-tip',opacity:1});
-      mk.on('click',function(){openDeviceDetail(p);});
-      mk.addTo(groups[p.layer]);n++;
-    });
-    var el=scope.querySelector('#gisPointCount'+suffix);if(el)el.textContent=n+' 个点位';
+    if(!map||!window.GIS_MAP_UX)return;
+    window.GIS_MAP_UX.renderClusteredPoints({map:map,points:POINTS,groups:groups,scope:scope,suffix:suffix,layerOf:layerOf,posAt:posAt,zoneName:zoneName});
   }
   function setBase(mode){
     var host=document.getElementById(mapId);
@@ -1669,7 +1836,7 @@
     var rows=[['点位名称',p.name],['图层分类',l.label],['防火分区',zoneName(zi)],['里程桩号',stake(p.t)],['设备状态',statusText(p.status)],['经纬度',pos[0].toFixed(5)+', '+pos[1].toFixed(5)],['最近上报',p.time||'刚刚'],['数据说明',p.value||'—']];
     var mask=document.getElementById('gisMask');var drawer=document.getElementById('gisDrawer');
     document.getElementById('gisDrawerTitle').textContent=p.name;
-    document.getElementById('gisDrawerSub').textContent='/ '+l.label+' · '+zoneName(zi);
+    var gisDrawerSub=document.getElementById('gisDrawerSub');if(gisDrawerSub){gisDrawerSub.hidden=false;gisDrawerSub.textContent='/ '+l.label+' · '+zoneName(zi);}
     document.getElementById('gisDrawerIcon').style.background=l.color;
     document.getElementById('gisDrawerIcon').innerHTML='<i class="fa-solid '+(l.icon||'fa-location-dot')+'"></i>';
     document.getElementById('gisDrawerGrid').innerHTML=rows.map(function(r){return '<div class="gis-info"><span class="l">'+r[0]+'</span><span class="v">'+r[1]+'</span></div>';}).join('');
@@ -1773,32 +1940,27 @@
     if(map)return map;
     map=L.map(mapId,{zoomControl:false,minZoom:11,maxZoom:18}).setView(CENTER,14);
     L.polyline(CORRIDOR,{color:'#135AFA',weight:8,opacity:.18}).addTo(map);
+    var zoneLines=[];
     for(var i=0;i<21;i++){
       var st=ZONES[i]||'';
-      L.polyline([posAt(i/21),posAt((i+1)/21)],{color:ZONE_COLOR[st],weight:6,opacity:.85})
-        .addTo(map).bindTooltip(zoneName(i)+' · '+ZONE_TEXT[st],{sticky:true});
+      zoneLines.push(L.polyline([posAt(i/21),posAt((i+1)/21)],{color:ZONE_COLOR[st],weight:10,opacity:.85,interactive:true})
+        .addTo(map).bindTooltip(zoneName(i)+' · '+ZONE_TEXT[st],{sticky:true}));
     }
+    if(window.GIS_MAP_UX)window.GIS_MAP_UX.attachZoneClicks(map,zoneLines,ZONES);
     (ALARMS||[]).forEach(function(a){
       L.circleMarker(posAt(a.t),{radius:9,color:'#F53F57',weight:2,fillColor:'#F53F57',fillOpacity:.25})
         .addTo(map).bindTooltip(a.text,{direction:'top',className:'gis-tip',opacity:1});
     });
     LAYERS.forEach(function(l){groups[l.key]=L.layerGroup().addTo(map);});
     renderPoints();
+    map.on('zoomend',renderPoints);
     setBase('street');
     window.setTimeout(function(){if(map)map.invalidateSize();},150);
     return map;
   }
   function renderPoints(){
-    var n=0;
-    POINTS.forEach(function(p){
-      var l=layerOf(p.layer),pos=posAt(p.t);
-      var icon=L.divIcon({className:'gis-marker-wrap',html:'<span class="gis-marker '+(p.status==='alarm'?'alarm':p.status==='warn'?'warn':p.status==='offline'?'offline':p.status==='ok'?'ok':'')+'" style="--c:'+l.color+'"><i class="fa-solid '+(l.icon||'fa-location-dot')+'"></i></span>',iconSize:[24,24],iconAnchor:[12,12]});
-      var mk=L.marker(pos,{icon:icon,riseOnHover:true,keyboard:false});
-      mk.bindTooltip(p.name,{direction:'top',offset:[0,-14],className:'gis-tip',opacity:1});
-      mk.on('click',function(){openDeviceDetail(p);});
-      mk.addTo(groups[p.layer]);n++;
-    });
-    var el=scope.querySelector('#gisPointCount'+suffix);if(el)el.textContent=n+' 个点位';
+    if(!map||!window.GIS_MAP_UX)return;
+    window.GIS_MAP_UX.renderClusteredPoints({map:map,points:POINTS,groups:groups,scope:scope,suffix:suffix,layerOf:layerOf,posAt:posAt,zoneName:zoneName});
   }
   function setBase(mode){
     var host=document.getElementById(mapId);
@@ -1819,7 +1981,7 @@
     var rows=[['点位名称',p.name],['图层分类',l.label],['防火分区',zoneName(zi)],['里程桩号',stake(p.t)],['设备状态',statusText(p.status)],['经纬度',pos[0].toFixed(5)+', '+pos[1].toFixed(5)],['最近上报',p.time||'刚刚'],['数据说明',p.value||'—']];
     var mask=document.getElementById('gisMask');var drawer=document.getElementById('gisDrawer');
     document.getElementById('gisDrawerTitle').textContent=p.name;
-    document.getElementById('gisDrawerSub').textContent='/ '+l.label+' · '+zoneName(zi);
+    var gisDrawerSub=document.getElementById('gisDrawerSub');if(gisDrawerSub){gisDrawerSub.hidden=false;gisDrawerSub.textContent='/ '+l.label+' · '+zoneName(zi);}
     document.getElementById('gisDrawerIcon').style.background=l.color;
     document.getElementById('gisDrawerIcon').innerHTML='<i class="fa-solid '+(l.icon||'fa-location-dot')+'"></i>';
     document.getElementById('gisDrawerGrid').innerHTML=rows.map(function(r){return '<div class="gis-info"><span class="l">'+r[0]+'</span><span class="v">'+r[1]+'</span></div>';}).join('');
@@ -1930,8 +2092,8 @@ right.innerHTML=`<section class="gis-card gis-fire-card"><div class="gis-card-he
   var map=null,groups={},baseLayer=null,loaded=0,failed=0,settled=false,hlLayer=null;
   function highlight(i){if(!map)return;clearHighlight();var a=posAt(i/21),b=posAt((i+1)/21),st=ZONES[i]||'',c=ZONE_COLOR[st]||'#135AFA';hlLayer=L.layerGroup([L.polyline([a,b],{color:c,weight:18,opacity:.18}),L.polyline([a,b],{color:c,weight:7,opacity:1}),L.circleMarker(posAt((i+0.5)/21),{radius:7,color:'#fff',weight:3,fillColor:c,fillOpacity:1})]).addTo(map);}
   function clearHighlight(){if(map&&hlLayer){map.removeLayer(hlLayer);hlLayer=null;}}
-  function initMap(){var host=document.getElementById(mapId);if(!window.L){if(host)host.classList.add('is-offline');return null;}if(map)return map;map=L.map(mapId,{zoomControl:false,minZoom:11,maxZoom:18}).setView(CENTER,14);L.polyline(CORRIDOR,{color:'#135AFA',weight:8,opacity:.18}).addTo(map);for(var i=0;i<21;i++){var st=ZONES[i]||'';L.polyline([posAt(i/21),posAt((i+1)/21)],{color:ZONE_COLOR[st],weight:6,opacity:.85}).addTo(map).bindTooltip(zoneName(i)+' · '+ZONE_TEXT[st],{sticky:true});}(ALARMS||[]).forEach(function(a){L.circleMarker(posAt(a.t),{radius:9,color:'#F53F57',weight:2,fillColor:'#F53F57',fillOpacity:.25}).addTo(map).bindTooltip(a.text,{direction:'top',className:'gis-tip',opacity:1});});LAYERS.forEach(function(l){groups[l.key]=L.layerGroup().addTo(map);});renderPoints();setBase('street');window.setTimeout(function(){if(map)map.invalidateSize();},150);return map;}
-  function renderPoints(){var n=0;POINTS.forEach(function(p){var l=layerOf(p.layer),pos=posAt(p.t);var icon=L.divIcon({className:'gis-marker-wrap',html:'<span class="gis-marker '+(p.status==='alarm'?'alarm':p.status==='warn'?'warn':p.status==='offline'?'offline':'')+'" style="--c:'+l.color+'"><i class="fa-solid '+(l.icon||'fa-location-dot')+'"></i></span>',iconSize:[24,24],iconAnchor:[12,12]});var mk=L.marker(pos,{icon:icon,riseOnHover:true,keyboard:false});mk.bindTooltip(p.name,{direction:'top',offset:[0,-14],className:'gis-tip',opacity:1});mk.on('click',function(){if(typeof window.openDeviceDetail==='function')window.openDeviceDetail(p);else toast(p.name);});mk.addTo(groups[p.layer]);n++;});var el=scope.querySelector('#gisPointCount'+suffix);if(el)el.textContent=n+' 个点位';}
+  function initMap(){var host=document.getElementById(mapId);if(!window.L){if(host)host.classList.add('is-offline');return null;}if(map)return map;map=L.map(mapId,{zoomControl:false,minZoom:11,maxZoom:18}).setView(CENTER,14);L.polyline(CORRIDOR,{color:'#135AFA',weight:8,opacity:.18}).addTo(map);var zoneLines=[];for(var i=0;i<21;i++){var st=ZONES[i]||'';zoneLines.push(L.polyline([posAt(i/21),posAt((i+1)/21)],{color:ZONE_COLOR[st],weight:10,opacity:.85,interactive:true}).addTo(map).bindTooltip(zoneName(i)+' · '+ZONE_TEXT[st],{sticky:true}));}if(window.GIS_MAP_UX)window.GIS_MAP_UX.attachZoneClicks(map,zoneLines,ZONES);(ALARMS||[]).forEach(function(a){L.circleMarker(posAt(a.t),{radius:9,color:'#F53F57',weight:2,fillColor:'#F53F57',fillOpacity:.25}).addTo(map).bindTooltip(a.text,{direction:'top',className:'gis-tip',opacity:1});});LAYERS.forEach(function(l){groups[l.key]=L.layerGroup().addTo(map);});renderPoints();map.on('zoomend',renderPoints);setBase('street');window.setTimeout(function(){if(map)map.invalidateSize();},150);return map;}
+  function renderPoints(){if(!map||!window.GIS_MAP_UX)return;window.GIS_MAP_UX.renderClusteredPoints({map:map,points:POINTS,groups:groups,scope:scope,suffix:suffix,layerOf:layerOf,posAt:posAt,zoneName:zoneName});}
   function setBase(mode){var host=document.getElementById(mapId);if(!map)return;if(baseLayer){map.removeLayer(baseLayer);baseLayer=null;}if(host)host.classList.remove('is-offline');if(mode==='offline'){if(host)host.classList.add('is-offline');return;}baseLayer=L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}',{subdomains:['1','2','3','4'],maxZoom:18,attribution:'© 高德地图'});loaded=0;failed=0;settled=false;baseLayer.on('tileload',function(){loaded+=1;});baseLayer.on('tileerror',function(){failed+=1;if(!settled&&loaded===0&&failed>=4){settled=true;if(host)host.classList.add('is-offline');}});baseLayer.addTo(map);window.setTimeout(function(){if(!settled&&loaded===0){settled=true;if(host)host.classList.add('is-offline');}},4000);}
   function bind(){scope.querySelectorAll('.gis-layer input').forEach(function(input){input.addEventListener('change',function(){var key=input.closest('.gis-layer').dataset.layer;if(!map||!groups[key])return;if(input.checked)map.addLayer(groups[key]);else map.removeLayer(groups[key]);toast('图层已'+(input.checked?'显示':'隐藏'));});});scope.querySelectorAll('[data-map-act]').forEach(function(b){b.addEventListener('click',function(){var a=b.dataset.mapAct;if(!map){toast('地图组件未加载，已使用保底底图');return;}if(a==='in')map.zoomIn();else if(a==='out')map.zoomOut();else if(a==='reset')map.setView(CENTER,14);else{var h=scope.querySelector('.gis-map-stage');if(h&&h.requestFullscreen)h.requestFullscreen();}});});var treeHost=scope.querySelector('#gisTree'+suffix);if(treeHost&&window.GIS_REGION)window.GIS_REGION.mount(treeHost,{zoneState:function(i){return ZONES[i]||'';},onPick:function(i,code,path){if(map)map.setView(posAt((i+0.5)/21),16);highlight(i);toast('已定位 '+code+' · '+path);},onReset:function(){clearHighlight();toast('已切换为全部区段');}});var search=scope.querySelector('#gisSearch'+suffix);if(search)search.addEventListener('keydown',function(e){if(e.key!=='Enter')return;var q=search.value.trim().toLowerCase();if(!q){toast('请输入设备名称 / 位号');return;}var hit=POINTS.filter(function(p){return (p.name||'').toLowerCase().indexOf(q)>=0;});if(!hit.length){toast('未匹配到点位');return;}if(map)map.setView(posAt(hit[0].t),17);toast('已定位 '+hit[0].name);});}
   function run(){initMap();bind();window.gisMapInstances=window.gisMapInstances||{};window.gisMapInstances[suffix]={map:map,invalidate:function(){if(map)map.invalidateSize();}};}
@@ -1977,32 +2139,27 @@ right.innerHTML=`<section class="gis-card gis-fire-card"><div class="gis-card-he
     if(map)return map;
     map=L.map(mapId,{zoomControl:false,minZoom:11,maxZoom:18}).setView(CENTER,14);
     L.polyline(CORRIDOR,{color:'#135AFA',weight:8,opacity:.18}).addTo(map);
+    var zoneLines=[];
     for(var i=0;i<21;i++){
       var st=ZONES[i]||'';
-      L.polyline([posAt(i/21),posAt((i+1)/21)],{color:ZONE_COLOR[st],weight:6,opacity:.85})
-        .addTo(map).bindTooltip(zoneName(i)+' · '+ZONE_TEXT[st],{sticky:true});
+      zoneLines.push(L.polyline([posAt(i/21),posAt((i+1)/21)],{color:ZONE_COLOR[st],weight:10,opacity:.85,interactive:true})
+        .addTo(map).bindTooltip(zoneName(i)+' · '+ZONE_TEXT[st],{sticky:true}));
     }
+    if(window.GIS_MAP_UX)window.GIS_MAP_UX.attachZoneClicks(map,zoneLines,ZONES);
     (ALARMS||[]).forEach(function(a){
       L.circleMarker(posAt(a.t),{radius:9,color:'#F53F57',weight:2,fillColor:'#F53F57',fillOpacity:.25})
         .addTo(map).bindTooltip(a.text,{direction:'top',className:'gis-tip',opacity:1});
     });
     LAYERS.forEach(function(l){groups[l.key]=L.layerGroup().addTo(map);});
     renderPoints();
+    map.on('zoomend',renderPoints);
     setBase('street');
     window.setTimeout(function(){if(map)map.invalidateSize();},150);
     return map;
   }
   function renderPoints(){
-    var n=0;
-    POINTS.forEach(function(p){
-      var l=layerOf(p.layer),pos=posAt(p.t);
-      var icon=L.divIcon({className:'gis-marker-wrap',html:'<span class="gis-marker '+(p.status==='alarm'?'alarm':p.status==='warn'?'warn':p.status==='offline'?'offline':p.status==='ok'?'ok':'')+'" style="--c:'+l.color+'"><i class="fa-solid '+(l.icon||'fa-location-dot')+'"></i></span>',iconSize:[24,24],iconAnchor:[12,12]});
-      var mk=L.marker(pos,{icon:icon,riseOnHover:true,keyboard:false});
-      mk.bindTooltip(p.name,{direction:'top',offset:[0,-14],className:'gis-tip',opacity:1});
-      mk.on('click',function(){openDeviceDetail(p);});
-      mk.addTo(groups[p.layer]);n++;
-    });
-    var el=scope.querySelector('#gisPointCount'+suffix);if(el)el.textContent=n+' 个点位';
+    if(!map||!window.GIS_MAP_UX)return;
+    window.GIS_MAP_UX.renderClusteredPoints({map:map,points:POINTS,groups:groups,scope:scope,suffix:suffix,layerOf:layerOf,posAt:posAt,zoneName:zoneName});
   }
   function setBase(mode){
     var host=document.getElementById(mapId);
@@ -2023,7 +2180,7 @@ right.innerHTML=`<section class="gis-card gis-fire-card"><div class="gis-card-he
     var rows=[['点位名称',p.name],['图层分类',l.label],['防火分区',zoneName(zi)],['里程桩号',stake(p.t)],['设备状态',statusText(p.status)],['经纬度',pos[0].toFixed(5)+', '+pos[1].toFixed(5)],['最近上报',p.time||'刚刚'],['数据说明',p.value||'—']];
     var mask=document.getElementById('gisMask');var drawer=document.getElementById('gisDrawer');
     document.getElementById('gisDrawerTitle').textContent=p.name;
-    document.getElementById('gisDrawerSub').textContent='/ '+l.label+' · '+zoneName(zi);
+    var gisDrawerSub=document.getElementById('gisDrawerSub');if(gisDrawerSub){gisDrawerSub.hidden=false;gisDrawerSub.textContent='/ '+l.label+' · '+zoneName(zi);}
     document.getElementById('gisDrawerIcon').style.background=l.color;
     document.getElementById('gisDrawerIcon').innerHTML='<i class="fa-solid '+(l.icon||'fa-location-dot')+'"></i>';
     document.getElementById('gisDrawerGrid').innerHTML=rows.map(function(r){return '<div class="gis-info"><span class="l">'+r[0]+'</span><span class="v">'+r[1]+'</span></div>';}).join('');
@@ -2127,32 +2284,27 @@ right.innerHTML=`<section class="gis-card gis-fire-card"><div class="gis-card-he
     if(map)return map;
     map=L.map(mapId,{zoomControl:false,minZoom:11,maxZoom:18}).setView(CENTER,14);
     L.polyline(CORRIDOR,{color:'#135AFA',weight:8,opacity:.18}).addTo(map);
+    var zoneLines=[];
     for(var i=0;i<21;i++){
       var st=ZONES[i]||'';
-      L.polyline([posAt(i/21),posAt((i+1)/21)],{color:ZONE_COLOR[st],weight:6,opacity:.85})
-        .addTo(map).bindTooltip(zoneName(i)+' · '+ZONE_TEXT[st],{sticky:true});
+      zoneLines.push(L.polyline([posAt(i/21),posAt((i+1)/21)],{color:ZONE_COLOR[st],weight:10,opacity:.85,interactive:true})
+        .addTo(map).bindTooltip(zoneName(i)+' · '+ZONE_TEXT[st],{sticky:true}));
     }
+    if(window.GIS_MAP_UX)window.GIS_MAP_UX.attachZoneClicks(map,zoneLines,ZONES);
     (ALARMS||[]).forEach(function(a){
       L.circleMarker(posAt(a.t),{radius:9,color:'#F53F57',weight:2,fillColor:'#F53F57',fillOpacity:.25})
         .addTo(map).bindTooltip(a.text,{direction:'top',className:'gis-tip',opacity:1});
     });
     LAYERS.forEach(function(l){groups[l.key]=L.layerGroup().addTo(map);});
     renderPoints();
+    map.on('zoomend',renderPoints);
     setBase('street');
     window.setTimeout(function(){if(map)map.invalidateSize();},150);
     return map;
   }
   function renderPoints(){
-    var n=0;
-    POINTS.forEach(function(p){
-      var l=layerOf(p.layer),pos=posAt(p.t);
-      var icon=L.divIcon({className:'gis-marker-wrap',html:'<span class="gis-marker '+(p.status==='alarm'?'alarm':p.status==='warn'?'warn':p.status==='offline'?'offline':p.status==='ok'?'ok':'')+'" style="--c:'+l.color+'"><i class="fa-solid '+(l.icon||'fa-location-dot')+'"></i></span>',iconSize:[24,24],iconAnchor:[12,12]});
-      var mk=L.marker(pos,{icon:icon,riseOnHover:true,keyboard:false});
-      mk.bindTooltip(p.name,{direction:'top',offset:[0,-14],className:'gis-tip',opacity:1});
-      mk.on('click',function(){openDeviceDetail(p);});
-      mk.addTo(groups[p.layer]);n++;
-    });
-    var el=scope.querySelector('#gisPointCount'+suffix);if(el)el.textContent=n+' 个点位';
+    if(!map||!window.GIS_MAP_UX)return;
+    window.GIS_MAP_UX.renderClusteredPoints({map:map,points:POINTS,groups:groups,scope:scope,suffix:suffix,layerOf:layerOf,posAt:posAt,zoneName:zoneName});
   }
   function setBase(mode){
     var host=document.getElementById(mapId);
@@ -2173,7 +2325,7 @@ right.innerHTML=`<section class="gis-card gis-fire-card"><div class="gis-card-he
     var rows=[['点位名称',p.name],['图层分类',l.label],['防火分区',zoneName(zi)],['里程桩号',stake(p.t)],['设备状态',statusText(p.status)],['经纬度',pos[0].toFixed(5)+', '+pos[1].toFixed(5)],['最近上报',p.time||'刚刚'],['数据说明',p.value||'—']];
     var mask=document.getElementById('gisMask');var drawer=document.getElementById('gisDrawer');
     document.getElementById('gisDrawerTitle').textContent=p.name;
-    document.getElementById('gisDrawerSub').textContent='/ '+l.label+' · '+zoneName(zi);
+    var gisDrawerSub=document.getElementById('gisDrawerSub');if(gisDrawerSub){gisDrawerSub.hidden=false;gisDrawerSub.textContent='/ '+l.label+' · '+zoneName(zi);}
     document.getElementById('gisDrawerIcon').style.background=l.color;
     document.getElementById('gisDrawerIcon').innerHTML='<i class="fa-solid '+(l.icon||'fa-location-dot')+'"></i>';
     document.getElementById('gisDrawerGrid').innerHTML=rows.map(function(r){return '<div class="gis-info"><span class="l">'+r[0]+'</span><span class="v">'+r[1]+'</span></div>';}).join('');
@@ -2277,32 +2429,27 @@ right.innerHTML=`<section class="gis-card gis-fire-card"><div class="gis-card-he
     if(map)return map;
     map=L.map(mapId,{zoomControl:false,minZoom:11,maxZoom:18}).setView(CENTER,14);
     L.polyline(CORRIDOR,{color:'#135AFA',weight:8,opacity:.18}).addTo(map);
+    var zoneLines=[];
     for(var i=0;i<21;i++){
       var st=ZONES[i]||'';
-      L.polyline([posAt(i/21),posAt((i+1)/21)],{color:ZONE_COLOR[st],weight:6,opacity:.85})
-        .addTo(map).bindTooltip(zoneName(i)+' · '+ZONE_TEXT[st],{sticky:true});
+      zoneLines.push(L.polyline([posAt(i/21),posAt((i+1)/21)],{color:ZONE_COLOR[st],weight:10,opacity:.85,interactive:true})
+        .addTo(map).bindTooltip(zoneName(i)+' · '+ZONE_TEXT[st],{sticky:true}));
     }
+    if(window.GIS_MAP_UX)window.GIS_MAP_UX.attachZoneClicks(map,zoneLines,ZONES);
     (ALARMS||[]).forEach(function(a){
       L.circleMarker(posAt(a.t),{radius:9,color:'#F53F57',weight:2,fillColor:'#F53F57',fillOpacity:.25})
         .addTo(map).bindTooltip(a.text,{direction:'top',className:'gis-tip',opacity:1});
     });
     LAYERS.forEach(function(l){groups[l.key]=L.layerGroup().addTo(map);});
     renderPoints();
+    map.on('zoomend',renderPoints);
     setBase('street');
     window.setTimeout(function(){if(map)map.invalidateSize();},150);
     return map;
   }
   function renderPoints(){
-    var n=0;
-    POINTS.forEach(function(p){
-      var l=layerOf(p.layer),pos=posAt(p.t);
-      var icon=L.divIcon({className:'gis-marker-wrap',html:'<span class="gis-marker '+(p.status==='alarm'?'alarm':p.status==='warn'?'warn':p.status==='offline'?'offline':p.status==='ok'?'ok':'')+'" style="--c:'+l.color+'"><i class="fa-solid '+(l.icon||'fa-location-dot')+'"></i></span>',iconSize:[24,24],iconAnchor:[12,12]});
-      var mk=L.marker(pos,{icon:icon,riseOnHover:true,keyboard:false});
-      mk.bindTooltip(p.name,{direction:'top',offset:[0,-14],className:'gis-tip',opacity:1});
-      mk.on('click',function(){openDeviceDetail(p);});
-      mk.addTo(groups[p.layer]);n++;
-    });
-    var el=scope.querySelector('#gisPointCount'+suffix);if(el)el.textContent=n+' 个点位';
+    if(!map||!window.GIS_MAP_UX)return;
+    window.GIS_MAP_UX.renderClusteredPoints({map:map,points:POINTS,groups:groups,scope:scope,suffix:suffix,layerOf:layerOf,posAt:posAt,zoneName:zoneName});
   }
   function setBase(mode){
     var host=document.getElementById(mapId);
@@ -2323,7 +2470,7 @@ right.innerHTML=`<section class="gis-card gis-fire-card"><div class="gis-card-he
     var rows=[['点位名称',p.name],['图层分类',l.label],['防火分区',zoneName(zi)],['里程桩号',stake(p.t)],['设备状态',statusText(p.status)],['经纬度',pos[0].toFixed(5)+', '+pos[1].toFixed(5)],['最近上报',p.time||'刚刚'],['数据说明',p.value||'—']];
     var mask=document.getElementById('gisMask');var drawer=document.getElementById('gisDrawer');
     document.getElementById('gisDrawerTitle').textContent=p.name;
-    document.getElementById('gisDrawerSub').textContent='/ '+l.label+' · '+zoneName(zi);
+    var gisDrawerSub=document.getElementById('gisDrawerSub');if(gisDrawerSub){gisDrawerSub.hidden=false;gisDrawerSub.textContent='/ '+l.label+' · '+zoneName(zi);}
     document.getElementById('gisDrawerIcon').style.background=l.color;
     document.getElementById('gisDrawerIcon').innerHTML='<i class="fa-solid '+(l.icon||'fa-location-dot')+'"></i>';
     document.getElementById('gisDrawerGrid').innerHTML=rows.map(function(r){return '<div class="gis-info"><span class="l">'+r[0]+'</span><span class="v">'+r[1]+'</span></div>';}).join('');
@@ -2427,32 +2574,27 @@ right.innerHTML=`<section class="gis-card gis-fire-card"><div class="gis-card-he
     if(map)return map;
     map=L.map(mapId,{zoomControl:false,minZoom:11,maxZoom:18}).setView(CENTER,14);
     L.polyline(CORRIDOR,{color:'#135AFA',weight:8,opacity:.18}).addTo(map);
+    var zoneLines=[];
     for(var i=0;i<21;i++){
       var st=ZONES[i]||'';
-      L.polyline([posAt(i/21),posAt((i+1)/21)],{color:ZONE_COLOR[st],weight:6,opacity:.85})
-        .addTo(map).bindTooltip(zoneName(i)+' · '+ZONE_TEXT[st],{sticky:true});
+      zoneLines.push(L.polyline([posAt(i/21),posAt((i+1)/21)],{color:ZONE_COLOR[st],weight:10,opacity:.85,interactive:true})
+        .addTo(map).bindTooltip(zoneName(i)+' · '+ZONE_TEXT[st],{sticky:true}));
     }
+    if(window.GIS_MAP_UX)window.GIS_MAP_UX.attachZoneClicks(map,zoneLines,ZONES);
     (ALARMS||[]).forEach(function(a){
       L.circleMarker(posAt(a.t),{radius:9,color:'#F53F57',weight:2,fillColor:'#F53F57',fillOpacity:.25})
         .addTo(map).bindTooltip(a.text,{direction:'top',className:'gis-tip',opacity:1});
     });
     LAYERS.forEach(function(l){groups[l.key]=L.layerGroup().addTo(map);});
     renderPoints();
+    map.on('zoomend',renderPoints);
     setBase('street');
     window.setTimeout(function(){if(map)map.invalidateSize();},150);
     return map;
   }
   function renderPoints(){
-    var n=0;
-    POINTS.forEach(function(p){
-      var l=layerOf(p.layer),pos=posAt(p.t);
-      var icon=L.divIcon({className:'gis-marker-wrap',html:'<span class="gis-marker '+(p.status==='alarm'?'alarm':p.status==='warn'?'warn':p.status==='offline'?'offline':p.status==='ok'?'ok':'')+'" style="--c:'+l.color+'"><i class="fa-solid '+(l.icon||'fa-location-dot')+'"></i></span>',iconSize:[24,24],iconAnchor:[12,12]});
-      var mk=L.marker(pos,{icon:icon,riseOnHover:true,keyboard:false});
-      mk.bindTooltip(p.name,{direction:'top',offset:[0,-14],className:'gis-tip',opacity:1});
-      mk.on('click',function(){openDeviceDetail(p);});
-      mk.addTo(groups[p.layer]);n++;
-    });
-    var el=scope.querySelector('#gisPointCount'+suffix);if(el)el.textContent=n+' 个点位';
+    if(!map||!window.GIS_MAP_UX)return;
+    window.GIS_MAP_UX.renderClusteredPoints({map:map,points:POINTS,groups:groups,scope:scope,suffix:suffix,layerOf:layerOf,posAt:posAt,zoneName:zoneName});
   }
   function setBase(mode){
     var host=document.getElementById(mapId);
@@ -2473,7 +2615,7 @@ right.innerHTML=`<section class="gis-card gis-fire-card"><div class="gis-card-he
     var rows=[['点位名称',p.name],['图层分类',l.label],['防火分区',zoneName(zi)],['里程桩号',stake(p.t)],['设备状态',statusText(p.status)],['经纬度',pos[0].toFixed(5)+', '+pos[1].toFixed(5)],['最近上报',p.time||'刚刚'],['数据说明',p.value||'—']];
     var mask=document.getElementById('gisMask');var drawer=document.getElementById('gisDrawer');
     document.getElementById('gisDrawerTitle').textContent=p.name;
-    document.getElementById('gisDrawerSub').textContent='/ '+l.label+' · '+zoneName(zi);
+    var gisDrawerSub=document.getElementById('gisDrawerSub');if(gisDrawerSub){gisDrawerSub.hidden=false;gisDrawerSub.textContent='/ '+l.label+' · '+zoneName(zi);}
     document.getElementById('gisDrawerIcon').style.background=l.color;
     document.getElementById('gisDrawerIcon').innerHTML='<i class="fa-solid '+(l.icon||'fa-location-dot')+'"></i>';
     document.getElementById('gisDrawerGrid').innerHTML=rows.map(function(r){return '<div class="gis-info"><span class="l">'+r[0]+'</span><span class="v">'+r[1]+'</span></div>';}).join('');
@@ -2577,32 +2719,27 @@ right.innerHTML=`<section class="gis-card gis-fire-card"><div class="gis-card-he
     if(map)return map;
     map=L.map(mapId,{zoomControl:false,minZoom:11,maxZoom:18}).setView(CENTER,14);
     L.polyline(CORRIDOR,{color:'#135AFA',weight:8,opacity:.18}).addTo(map);
+    var zoneLines=[];
     for(var i=0;i<21;i++){
       var st=ZONES[i]||'';
-      L.polyline([posAt(i/21),posAt((i+1)/21)],{color:ZONE_COLOR[st],weight:6,opacity:.85})
-        .addTo(map).bindTooltip(zoneName(i)+' · '+ZONE_TEXT[st],{sticky:true});
+      zoneLines.push(L.polyline([posAt(i/21),posAt((i+1)/21)],{color:ZONE_COLOR[st],weight:10,opacity:.85,interactive:true})
+        .addTo(map).bindTooltip(zoneName(i)+' · '+ZONE_TEXT[st],{sticky:true}));
     }
+    if(window.GIS_MAP_UX)window.GIS_MAP_UX.attachZoneClicks(map,zoneLines,ZONES);
     (ALARMS||[]).forEach(function(a){
       L.circleMarker(posAt(a.t),{radius:9,color:'#F53F57',weight:2,fillColor:'#F53F57',fillOpacity:.25})
         .addTo(map).bindTooltip(a.text,{direction:'top',className:'gis-tip',opacity:1});
     });
     LAYERS.forEach(function(l){groups[l.key]=L.layerGroup().addTo(map);});
     renderPoints();
+    map.on('zoomend',renderPoints);
     setBase('street');
     window.setTimeout(function(){if(map)map.invalidateSize();},150);
     return map;
   }
   function renderPoints(){
-    var n=0;
-    POINTS.forEach(function(p){
-      var l=layerOf(p.layer),pos=posAt(p.t);
-      var icon=L.divIcon({className:'gis-marker-wrap',html:'<span class="gis-marker '+(p.status==='alarm'?'alarm':p.status==='warn'?'warn':p.status==='offline'?'offline':p.status==='ok'?'ok':'')+'" style="--c:'+l.color+'"><i class="fa-solid '+(l.icon||'fa-location-dot')+'"></i></span>',iconSize:[24,24],iconAnchor:[12,12]});
-      var mk=L.marker(pos,{icon:icon,riseOnHover:true,keyboard:false});
-      mk.bindTooltip(p.name,{direction:'top',offset:[0,-14],className:'gis-tip',opacity:1});
-      mk.on('click',function(){openDeviceDetail(p);});
-      mk.addTo(groups[p.layer]);n++;
-    });
-    var el=scope.querySelector('#gisPointCount'+suffix);if(el)el.textContent=n+' 个点位';
+    if(!map||!window.GIS_MAP_UX)return;
+    window.GIS_MAP_UX.renderClusteredPoints({map:map,points:POINTS,groups:groups,scope:scope,suffix:suffix,layerOf:layerOf,posAt:posAt,zoneName:zoneName});
   }
   function setBase(mode){
     var host=document.getElementById(mapId);
@@ -2623,7 +2760,7 @@ right.innerHTML=`<section class="gis-card gis-fire-card"><div class="gis-card-he
     var rows=[['点位名称',p.name],['图层分类',l.label],['防火分区',zoneName(zi)],['里程桩号',stake(p.t)],['设备状态',statusText(p.status)],['经纬度',pos[0].toFixed(5)+', '+pos[1].toFixed(5)],['最近上报',p.time||'刚刚'],['数据说明',p.value||'—']];
     var mask=document.getElementById('gisMask');var drawer=document.getElementById('gisDrawer');
     document.getElementById('gisDrawerTitle').textContent=p.name;
-    document.getElementById('gisDrawerSub').textContent='/ '+l.label+' · '+zoneName(zi);
+    var gisDrawerSub=document.getElementById('gisDrawerSub');if(gisDrawerSub){gisDrawerSub.hidden=false;gisDrawerSub.textContent='/ '+l.label+' · '+zoneName(zi);}
     document.getElementById('gisDrawerIcon').style.background=l.color;
     document.getElementById('gisDrawerIcon').innerHTML='<i class="fa-solid '+(l.icon||'fa-location-dot')+'"></i>';
     document.getElementById('gisDrawerGrid').innerHTML=rows.map(function(r){return '<div class="gis-info"><span class="l">'+r[0]+'</span><span class="v">'+r[1]+'</span></div>';}).join('');
@@ -2727,32 +2864,27 @@ right.innerHTML=`<section class="gis-card gis-fire-card"><div class="gis-card-he
     if(map)return map;
     map=L.map(mapId,{zoomControl:false,minZoom:11,maxZoom:18}).setView(CENTER,14);
     L.polyline(CORRIDOR,{color:'#135AFA',weight:8,opacity:.18}).addTo(map);
+    var zoneLines=[];
     for(var i=0;i<21;i++){
       var st=ZONES[i]||'';
-      L.polyline([posAt(i/21),posAt((i+1)/21)],{color:ZONE_COLOR[st],weight:6,opacity:.85})
-        .addTo(map).bindTooltip(zoneName(i)+' · '+ZONE_TEXT[st],{sticky:true});
+      zoneLines.push(L.polyline([posAt(i/21),posAt((i+1)/21)],{color:ZONE_COLOR[st],weight:10,opacity:.85,interactive:true})
+        .addTo(map).bindTooltip(zoneName(i)+' · '+ZONE_TEXT[st],{sticky:true}));
     }
+    if(window.GIS_MAP_UX)window.GIS_MAP_UX.attachZoneClicks(map,zoneLines,ZONES);
     (ALARMS||[]).forEach(function(a){
       L.circleMarker(posAt(a.t),{radius:9,color:'#F53F57',weight:2,fillColor:'#F53F57',fillOpacity:.25})
         .addTo(map).bindTooltip(a.text,{direction:'top',className:'gis-tip',opacity:1});
     });
     LAYERS.forEach(function(l){groups[l.key]=L.layerGroup().addTo(map);});
     renderPoints();
+    map.on('zoomend',renderPoints);
     setBase('street');
     window.setTimeout(function(){if(map)map.invalidateSize();},150);
     return map;
   }
   function renderPoints(){
-    var n=0;
-    POINTS.forEach(function(p){
-      var l=layerOf(p.layer),pos=posAt(p.t);
-      var icon=L.divIcon({className:'gis-marker-wrap',html:'<span class="gis-marker '+(p.status==='alarm'?'alarm':p.status==='warn'?'warn':p.status==='offline'?'offline':p.status==='ok'?'ok':'')+'" style="--c:'+l.color+'"><i class="fa-solid '+(l.icon||'fa-location-dot')+'"></i></span>',iconSize:[24,24],iconAnchor:[12,12]});
-      var mk=L.marker(pos,{icon:icon,riseOnHover:true,keyboard:false});
-      mk.bindTooltip(p.name,{direction:'top',offset:[0,-14],className:'gis-tip',opacity:1});
-      mk.on('click',function(){openDeviceDetail(p);});
-      mk.addTo(groups[p.layer]);n++;
-    });
-    var el=scope.querySelector('#gisPointCount'+suffix);if(el)el.textContent=n+' 个点位';
+    if(!map||!window.GIS_MAP_UX)return;
+    window.GIS_MAP_UX.renderClusteredPoints({map:map,points:POINTS,groups:groups,scope:scope,suffix:suffix,layerOf:layerOf,posAt:posAt,zoneName:zoneName});
   }
   function setBase(mode){
     var host=document.getElementById(mapId);
@@ -2773,7 +2905,7 @@ right.innerHTML=`<section class="gis-card gis-fire-card"><div class="gis-card-he
     var rows=[['点位名称',p.name],['图层分类',l.label],['防火分区',zoneName(zi)],['里程桩号',stake(p.t)],['设备状态',statusText(p.status)],['经纬度',pos[0].toFixed(5)+', '+pos[1].toFixed(5)],['最近上报',p.time||'刚刚'],['数据说明',p.value||'—']];
     var mask=document.getElementById('gisMask');var drawer=document.getElementById('gisDrawer');
     document.getElementById('gisDrawerTitle').textContent=p.name;
-    document.getElementById('gisDrawerSub').textContent='/ '+l.label+' · '+zoneName(zi);
+    var gisDrawerSub=document.getElementById('gisDrawerSub');if(gisDrawerSub){gisDrawerSub.hidden=false;gisDrawerSub.textContent='/ '+l.label+' · '+zoneName(zi);}
     document.getElementById('gisDrawerIcon').style.background=l.color;
     document.getElementById('gisDrawerIcon').innerHTML='<i class="fa-solid '+(l.icon||'fa-location-dot')+'"></i>';
     document.getElementById('gisDrawerGrid').innerHTML=rows.map(function(r){return '<div class="gis-info"><span class="l">'+r[0]+'</span><span class="v">'+r[1]+'</span></div>';}).join('');
@@ -2877,32 +3009,27 @@ right.innerHTML=`<section class="gis-card gis-fire-card"><div class="gis-card-he
     if(map)return map;
     map=L.map(mapId,{zoomControl:false,minZoom:11,maxZoom:18}).setView(CENTER,14);
     L.polyline(CORRIDOR,{color:'#135AFA',weight:8,opacity:.18}).addTo(map);
+    var zoneLines=[];
     for(var i=0;i<21;i++){
       var st=ZONES[i]||'';
-      L.polyline([posAt(i/21),posAt((i+1)/21)],{color:ZONE_COLOR[st],weight:6,opacity:.85})
-        .addTo(map).bindTooltip(zoneName(i)+' · '+ZONE_TEXT[st],{sticky:true});
+      zoneLines.push(L.polyline([posAt(i/21),posAt((i+1)/21)],{color:ZONE_COLOR[st],weight:10,opacity:.85,interactive:true})
+        .addTo(map).bindTooltip(zoneName(i)+' · '+ZONE_TEXT[st],{sticky:true}));
     }
+    if(window.GIS_MAP_UX)window.GIS_MAP_UX.attachZoneClicks(map,zoneLines,ZONES);
     (ALARMS||[]).forEach(function(a){
       L.circleMarker(posAt(a.t),{radius:9,color:'#F53F57',weight:2,fillColor:'#F53F57',fillOpacity:.25})
         .addTo(map).bindTooltip(a.text,{direction:'top',className:'gis-tip',opacity:1});
     });
     LAYERS.forEach(function(l){groups[l.key]=L.layerGroup().addTo(map);});
     renderPoints();
+    map.on('zoomend',renderPoints);
     setBase('street');
     window.setTimeout(function(){if(map)map.invalidateSize();},150);
     return map;
   }
   function renderPoints(){
-    var n=0;
-    POINTS.forEach(function(p){
-      var l=layerOf(p.layer),pos=posAt(p.t);
-      var icon=L.divIcon({className:'gis-marker-wrap',html:'<span class="gis-marker '+(p.status==='alarm'?'alarm':p.status==='warn'?'warn':p.status==='offline'?'offline':p.status==='ok'?'ok':'')+'" style="--c:'+l.color+'"><i class="fa-solid '+(l.icon||'fa-location-dot')+'"></i></span>',iconSize:[24,24],iconAnchor:[12,12]});
-      var mk=L.marker(pos,{icon:icon,riseOnHover:true,keyboard:false});
-      mk.bindTooltip(p.name,{direction:'top',offset:[0,-14],className:'gis-tip',opacity:1});
-      mk.on('click',function(){openDeviceDetail(p);});
-      mk.addTo(groups[p.layer]);n++;
-    });
-    var el=scope.querySelector('#gisPointCount'+suffix);if(el)el.textContent=n+' 个点位';
+    if(!map||!window.GIS_MAP_UX)return;
+    window.GIS_MAP_UX.renderClusteredPoints({map:map,points:POINTS,groups:groups,scope:scope,suffix:suffix,layerOf:layerOf,posAt:posAt,zoneName:zoneName});
   }
   function setBase(mode){
     var host=document.getElementById(mapId);
@@ -2923,7 +3050,7 @@ right.innerHTML=`<section class="gis-card gis-fire-card"><div class="gis-card-he
     var rows=[['点位名称',p.name],['图层分类',l.label],['防火分区',zoneName(zi)],['里程桩号',stake(p.t)],['设备状态',statusText(p.status)],['经纬度',pos[0].toFixed(5)+', '+pos[1].toFixed(5)],['最近上报',p.time||'刚刚'],['数据说明',p.value||'—']];
     var mask=document.getElementById('gisMask');var drawer=document.getElementById('gisDrawer');
     document.getElementById('gisDrawerTitle').textContent=p.name;
-    document.getElementById('gisDrawerSub').textContent='/ '+l.label+' · '+zoneName(zi);
+    var gisDrawerSub=document.getElementById('gisDrawerSub');if(gisDrawerSub){gisDrawerSub.hidden=false;gisDrawerSub.textContent='/ '+l.label+' · '+zoneName(zi);}
     document.getElementById('gisDrawerIcon').style.background=l.color;
     document.getElementById('gisDrawerIcon').innerHTML='<i class="fa-solid '+(l.icon||'fa-location-dot')+'"></i>';
     document.getElementById('gisDrawerGrid').innerHTML=rows.map(function(r){return '<div class="gis-info"><span class="l">'+r[0]+'</span><span class="v">'+r[1]+'</span></div>';}).join('');
@@ -3027,32 +3154,27 @@ right.innerHTML=`<section class="gis-card gis-fire-card"><div class="gis-card-he
     if(map)return map;
     map=L.map(mapId,{zoomControl:false,minZoom:11,maxZoom:18}).setView(CENTER,14);
     L.polyline(CORRIDOR,{color:'#135AFA',weight:8,opacity:.18}).addTo(map);
+    var zoneLines=[];
     for(var i=0;i<21;i++){
       var st=ZONES[i]||'';
-      L.polyline([posAt(i/21),posAt((i+1)/21)],{color:ZONE_COLOR[st],weight:6,opacity:.85})
-        .addTo(map).bindTooltip(zoneName(i)+' · '+ZONE_TEXT[st],{sticky:true});
+      zoneLines.push(L.polyline([posAt(i/21),posAt((i+1)/21)],{color:ZONE_COLOR[st],weight:10,opacity:.85,interactive:true})
+        .addTo(map).bindTooltip(zoneName(i)+' · '+ZONE_TEXT[st],{sticky:true}));
     }
+    if(window.GIS_MAP_UX)window.GIS_MAP_UX.attachZoneClicks(map,zoneLines,ZONES);
     (ALARMS||[]).forEach(function(a){
       L.circleMarker(posAt(a.t),{radius:9,color:'#F53F57',weight:2,fillColor:'#F53F57',fillOpacity:.25})
         .addTo(map).bindTooltip(a.text,{direction:'top',className:'gis-tip',opacity:1});
     });
     LAYERS.forEach(function(l){groups[l.key]=L.layerGroup().addTo(map);});
     renderPoints();
+    map.on('zoomend',renderPoints);
     setBase('street');
     window.setTimeout(function(){if(map)map.invalidateSize();},150);
     return map;
   }
   function renderPoints(){
-    var n=0;
-    POINTS.forEach(function(p){
-      var l=layerOf(p.layer),pos=posAt(p.t);
-      var icon=L.divIcon({className:'gis-marker-wrap',html:'<span class="gis-marker '+(p.status==='alarm'?'alarm':p.status==='warn'?'warn':p.status==='offline'?'offline':p.status==='ok'?'ok':'')+'" style="--c:'+l.color+'"><i class="fa-solid '+(l.icon||'fa-location-dot')+'"></i></span>',iconSize:[24,24],iconAnchor:[12,12]});
-      var mk=L.marker(pos,{icon:icon,riseOnHover:true,keyboard:false});
-      mk.bindTooltip(p.name,{direction:'top',offset:[0,-14],className:'gis-tip',opacity:1});
-      mk.on('click',function(){openDeviceDetail(p);});
-      mk.addTo(groups[p.layer]);n++;
-    });
-    var el=scope.querySelector('#gisPointCount'+suffix);if(el)el.textContent=n+' 个点位';
+    if(!map||!window.GIS_MAP_UX)return;
+    window.GIS_MAP_UX.renderClusteredPoints({map:map,points:POINTS,groups:groups,scope:scope,suffix:suffix,layerOf:layerOf,posAt:posAt,zoneName:zoneName});
   }
   function setBase(mode){
     var host=document.getElementById(mapId);
@@ -3073,7 +3195,7 @@ right.innerHTML=`<section class="gis-card gis-fire-card"><div class="gis-card-he
     var rows=[['点位名称',p.name],['图层分类',l.label],['防火分区',zoneName(zi)],['里程桩号',stake(p.t)],['设备状态',statusText(p.status)],['经纬度',pos[0].toFixed(5)+', '+pos[1].toFixed(5)],['最近上报',p.time||'刚刚'],['数据说明',p.value||'—']];
     var mask=document.getElementById('gisMask');var drawer=document.getElementById('gisDrawer');
     document.getElementById('gisDrawerTitle').textContent=p.name;
-    document.getElementById('gisDrawerSub').textContent='/ '+l.label+' · '+zoneName(zi);
+    var gisDrawerSub=document.getElementById('gisDrawerSub');if(gisDrawerSub){gisDrawerSub.hidden=false;gisDrawerSub.textContent='/ '+l.label+' · '+zoneName(zi);}
     document.getElementById('gisDrawerIcon').style.background=l.color;
     document.getElementById('gisDrawerIcon').innerHTML='<i class="fa-solid '+(l.icon||'fa-location-dot')+'"></i>';
     document.getElementById('gisDrawerGrid').innerHTML=rows.map(function(r){return '<div class="gis-info"><span class="l">'+r[0]+'</span><span class="v">'+r[1]+'</span></div>';}).join('');

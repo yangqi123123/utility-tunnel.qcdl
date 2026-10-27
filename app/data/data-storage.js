@@ -2,7 +2,7 @@
   const systems = [
     { id: "env", name: "环境监测", code: "EMS" },
     { id: "power", name: "电力监测平台", code: "POMS" },
-    { id: "fire", name: "消防监控系统", code: "FMS" },
+    { id: "fire", name: "智慧消防", code: "FMS" },
   ];
 
   const devices = [

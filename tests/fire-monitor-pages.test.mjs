@@ -24,10 +24,10 @@ const LEGEND_TYPES = [
   "感温光纤",
 ];
 
-test("一级菜单消防监控系统在火灾报警下方、安全防范上方且含三个二级入口", async () => {
+test("一级菜单智慧消防在火灾报警下方、安全防范上方且含三个二级入口", async () => {
   const menu = await read("app/config/menu.js");
   assert.match(menu, /key:\s*"fire-monitor"/);
-  assert.match(menu, /label:\s*"消防监控系统"/);
+  assert.match(menu, /label:\s*"智慧消防"/);
   assert.match(menu, /fire-monitor\.monitor/);
   assert.match(menu, /label:\s*"消防监测"/);
   assert.match(menu, /fire-monitor\.control/);
@@ -73,7 +73,7 @@ test("监测页支持地图列表切换、视频内嵌与固定 8 类图例", as
   assert.match(page, /FIRE_MONITOR_DATA/);
   assert.match(page, /data-ias-view="map"/);
   assert.match(page, /data-ias-view="list"/);
-  assert.match(page, /消防监控系统/);
+  assert.match(page, /智慧消防/);
   assert.match(page, /视频监控系统/);
   assert.match(page, /embedded=panel/);
   assert.match(page, /LEGEND_ORDER/);
@@ -91,14 +91,14 @@ test("监测页支持地图列表切换、视频内嵌与固定 8 类图例", as
   assert.doesNotMatch(page, /FIRE_ALARM_DATA/);
 });
 
-test("报警记录页具备处置能力且 system 为消防监控", async () => {
+test("报警记录页具备处置能力且 system 为智慧消防", async () => {
   const page = await read("web/pages/monitoring/fire-supervision-alarms.html");
   assert.match(page, /data-menu-key="fire-monitor\.alarms"/);
   assert.match(page, /FIRE_MONITOR_DATA/);
   assert.match(page, /误报/);
   assert.match(page, /转工单/);
-  assert.match(page, /SYSTEM_SCOPE\s*=\s*"消防监控"/);
-  assert.match(page, /消防监控系统 · 消防报警记录/);
+  assert.match(page, /SYSTEM_SCOPE\s*=\s*"智慧消防"/);
+  assert.match(page, /智慧消防 · 消防报警记录/);
   assert.doesNotMatch(page, /INTRUSION_ALARM_DATA/);
   assert.doesNotMatch(page, /FIRE_ALARM_DATA/);
 });

@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="../../assets/css/monitoring.css">
   <link rel="stylesheet" href="../../assets/css/environment-monitor.css">
   <link rel="stylesheet" href="../../assets/css/base-map.css?v=1">
+  <link rel="stylesheet" href="../../assets/css/gis-map-ux.css?v=1">
   <link rel="stylesheet" href="../../assets/css/intrusion-monitor.css">
   <link rel="stylesheet" href="../../assets/vendor/leaflet/leaflet.css">
 </head>
@@ -193,6 +194,7 @@
 
   <script src="../../assets/vendor/leaflet/leaflet.js"></script>
   <script src="../../../app/components/base-map.js"></script>
+  <script src="../../assets/js/gis-map-ux.js?v=1"></script>
   <script src="../../../app/components/device-detail-info.js"></script>
   <script src="../../../app/config/menu.js?v=nav-hide-1"></script>
   <script src="../../../app/components/sidebar.js?v=nav-home-1"></script>
@@ -798,16 +800,27 @@
       }
       function renderMapMarkers() {
         if (!map || !markerLayer || !window.L) return;
-        markerLayer.clearLayers();
-        mapVisible().forEach((d) => {
-          if (d.lat == null || d.lng == null) return;
-          const status = deviceStatus(d);
+        const devices = mapVisible().map((d) => {
           const style = TYPE_STYLE[d.type] || { color: "#6B7B8C", icon: "fa-location-dot" };
+          return Object.assign({}, d, { color: style.color, icon: style.icon, status: deviceStatus(d) });
+        });
+        if (window.GIS_MAP_UX) {
+          window.GIS_MAP_UX.renderDeviceMarkers({
+            map,
+            layer: markerLayer,
+            devices,
+            onOpenDetail: (d) => openDetail(d.id),
+          });
+          return;
+        }
+        markerLayer.clearLayers();
+        devices.forEach((d) => {
+          if (d.lat == null || d.lng == null) return;
           let cls = "dm-marker";
-          if (status !== "online") cls += ` is-${status === "warn" ? "warn" : status}`;
+          if (d.status !== "online") cls += ` is-${d.status === "warn" ? "warn" : d.status}`;
           const icon = L.divIcon({
             className: "dm-marker-wrap",
-            html: `<span class="${cls}" style="--dm-c:${esc(style.color)}"><i class="fa-solid ${esc(style.icon)}"></i></span>`,
+            html: `<span class="${cls}" style="--dm-c:${esc(d.color)}"><i class="fa-solid ${esc(d.icon)}"></i></span>`,
             iconSize: [24, 24], iconAnchor: [12, 12],
           });
           const marker = L.marker([d.lat, d.lng], { icon, riseOnHover: true, keyboard: false });
@@ -831,6 +844,10 @@
         map = baseMap ? baseMap.map : null;
         if (!map) return;
         markerLayer = L.layerGroup().addTo(map);
+        if (window.GIS_MAP_UX) {
+          window.GIS_MAP_UX.attachCorridor(map);
+          map.on("zoomend", renderMap);
+        }
         mapReady = true;
         renderMap();
         window.setTimeout(() => map.invalidateSize(), 150);

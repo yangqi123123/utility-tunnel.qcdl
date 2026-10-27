@@ -152,7 +152,7 @@
       name: "消防告警订阅",
       accessId: "ACC-MD-01",
       accessName: "墨斗物联网平台-生产",
-      systems: ["消防监控系统"],
+      systems: ["智慧消防"],
       types: ["消防设备", "燃气报警"],
       scope: "list",
       deviceIds: ["D-10025", "D-10026"],
@@ -188,8 +188,8 @@
       { startAt: "2026-10-15 16:29:55", endAt: "2026-10-15 16:30:00", result: "成功", summary: "采集测点 130 条", duration: "201 ms", systems: ["环境监测"], types: ["室内环境传感器", "通风设备"] },
     ],
     "S-00027": [
-      { startAt: "2026-10-15 16:39:40", endAt: "2026-10-15 16:39:48", result: "成功", summary: "告警事件 1 条", duration: "96 ms", systems: ["消防监控系统"], types: ["消防设备", "燃气报警"] },
-      { startAt: "2026-10-15 16:20:05", endAt: "2026-10-15 16:20:11", result: "成功", summary: "告警事件 0 条", duration: "88 ms", systems: ["消防监控系统"], types: ["消防设备", "燃气报警"] },
+      { startAt: "2026-10-15 16:39:40", endAt: "2026-10-15 16:39:48", result: "成功", summary: "告警事件 1 条", duration: "96 ms", systems: ["智慧消防"], types: ["消防设备", "燃气报警"] },
+      { startAt: "2026-10-15 16:20:05", endAt: "2026-10-15 16:20:11", result: "成功", summary: "告警事件 0 条", duration: "88 ms", systems: ["智慧消防"], types: ["消防设备", "燃气报警"] },
     ],
     "S-00019": [
       { startAt: "2026-10-15 16:37:50", endAt: "2026-10-15 16:38:00", result: "失败", summary: "连接超时", duration: "--", systems: ["电力监测平台"], types: ["电表", "供配电"] },

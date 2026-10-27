@@ -8,22 +8,22 @@
   });
 
   const devices = [
-    device("DEV-001", "001_HZXFXT03BJ07_0203_001", "裙楼3层F3-2区可燃气体报警器", "消防监控系统", "燃气报警", "高新大道综合管廊", "燃气舱", "防火分区", "科学岛燃气管线", "设备间 1", "SW-009"),
-    device("DEV-002", "001_HZXFXT03BJ07_0292_001", "裙楼3层F3-2区可燃气体故障报警器", "消防监控系统", "燃气报警", "高新大道综合管廊", "燃气舱", "通风口", "科学岛燃气管线", "设备间 2", "SW-009"),
+    device("DEV-001", "001_HZXFXT03BJ07_0203_001", "裙楼3层F3-2区可燃气体报警器", "智慧消防", "燃气报警", "高新大道综合管廊", "燃气舱", "防火分区", "科学岛燃气管线", "设备间 1", "SW-009"),
+    device("DEV-002", "001_HZXFXT03BJ07_0292_001", "裙楼3层F3-2区可燃气体故障报警器", "智慧消防", "燃气报警", "高新大道综合管廊", "燃气舱", "通风口", "科学岛燃气管线", "设备间 2", "SW-009"),
     device("DEV-003", "001_XGXT02BJ01_0001_001", "9层东侧靠北巡更点2", "电子巡更", "巡检点底座", "高新大道综合管廊", "综合舱", "出入口", "科学岛通信光缆", "巡检通道 1", "SW-010"),
     device("DEV-004", "001_LZXT01BJ03_0002_001", "综合舱A区照明配电箱", "电力监测平台", "照明设备", "高新大道综合管廊", "综合舱", "防火分区", "科学岛电力管线", "设备间 3", "SW-005"),
-    device("DEV-005", "001_HZXFXT03BJ07_1871_0006", "塔楼27层送风阀", "消防监控系统", "输入输出模块", "高新大道综合管廊", "电力舱", "吊装口", "科学岛电力管线", "设备间 4", "SW-012"),
+    device("DEV-005", "001_HZXFXT03BJ07_1871_0006", "塔楼27层送风阀", "智慧消防", "输入输出模块", "高新大道综合管廊", "电力舱", "吊装口", "科学岛电力管线", "设备间 4", "SW-012"),
     device("DEV-006", "001_HJJCO2BJ01_0001_001", "空气质量传感器", "环境监测", "室内环境传感器", "科学岛大道综合管廊", "燃气舱", "防火分区", "科学岛燃气管线", "设备间 5", "SW-011"),
     device("DEV-007", "001_PVXT02BJ01_0001_001", "光伏并网逆变器 01", "电力监测平台", "光伏并网逆变器", "科学岛大道综合管廊", "综合舱", "通风口", "科学岛电力管线", "屋面光伏区", "SW-013"),
     device("DEV-008", "001_HJXTFJ01_0002_001", "综合舱B区排风机", "环境监测", "通风设备", "高新大道综合管廊", "综合舱", "通风口", "科学岛给水管线", "设备间 6", "SW-003"),
     device("DEV-009", "001_GDXTGY01_0001_001", "高压配电柜 01", "电力监测平台", "供配电", "高新大道综合管廊", "电力舱", "出入口", "科学岛电力管线", "设备间 7", "SW-002"),
     device("DEV-010", "001_SJXT01BJ01_0001_001", "电力舱出入口枪式摄像机", "视频监控系统", "枪式摄像机", "高新大道综合管廊", "电力舱", "出入口", "科学岛通信光缆", "通道口", "SW-007"),
     device("DEV-011", "001_SJXT01BJ02_0003_001", "综合舱A区球型摄像机", "视频监控系统", "球型摄像机", "科学岛大道综合管廊", "综合舱", "防火分区", "科学岛通信光缆", "通道口", "SW-008"),
-    device("DEV-012", "001_HZXFXT03BJ01_0001_001", "火灾自动报警主机", "消防监控系统", "消防设备", "高新大道综合管廊", "综合舱", "出入口", "科学岛通信光缆", "监控中心", "SW-001"),
+    device("DEV-012", "001_HZXFXT03BJ01_0001_001", "火灾自动报警主机", "智慧消防", "消防设备", "高新大道综合管廊", "综合舱", "出入口", "科学岛通信光缆", "监控中心", "SW-001"),
   ];
 
   const standardWorks = [
-    { id: "SW-001", code: "KCDS_INSP_2072245195876491265", name: "日常巡检", type: "巡检", mode: "并行作业", system: "消防监控系统", category: "消防设备", itemCount: 2, entryCount: 5, creator: "王鹏程", createdAt: "2026-07-01 17:19:13", updater: "王鹏程", updatedAt: "2026-08-17 14:15:56", status: "正常", remark: "日常设备状态巡检。" },
+    { id: "SW-001", code: "KCDS_INSP_2072245195876491265", name: "日常巡检", type: "巡检", mode: "并行作业", system: "智慧消防", category: "消防设备", itemCount: 2, entryCount: 5, creator: "王鹏程", createdAt: "2026-07-01 17:19:13", updater: "王鹏程", updatedAt: "2026-08-17 14:15:56", status: "正常", remark: "日常设备状态巡检。" },
     { id: "SW-002", code: "KCDS_INSP_2072245195876491266", name: "日常巡检", type: "巡检", mode: "并行作业", system: "电力监测平台", category: "供配电", itemCount: 1, entryCount: 3, creator: "103", createdAt: "2026-07-01 17:19:13", updater: "103", updatedAt: "2026-07-01 17:19:13", status: "正常", remark: "供配电设备巡检。" },
     { id: "SW-003", code: "KCDS_INSP_2072245195876491267", name: "日常巡检", type: "巡检", mode: "并行作业", system: "环境监测", category: "通风设备", itemCount: 1, entryCount: 3, creator: "103", createdAt: "2026-07-01 17:19:13", updater: "103", updatedAt: "2026-07-01 17:19:13", status: "正常", remark: "通风设备巡检。" },
     { id: "SW-004", code: "KCDS_INSP_2072245195876491268", name: "日常巡检", type: "巡检", mode: "并行作业", system: "环境监测", category: "排水泵", itemCount: 1, entryCount: 3, creator: "103", createdAt: "2026-07-01 17:19:13", updater: "103", updatedAt: "2026-07-01 17:19:13", status: "正常", remark: "排水泵巡检。" },
@@ -31,10 +31,10 @@
     { id: "SW-006", code: "KCDS_INSP_2072245195876491270", name: "日常巡检", type: "巡检", mode: "并行作业", system: "电力监测平台", category: "电表", itemCount: 1, entryCount: 3, creator: "103", createdAt: "2026-07-01 17:19:13", updater: "103", updatedAt: "2026-07-01 17:19:13", status: "正常", remark: "电表巡检。" },
     { id: "SW-007", code: "KCDS_INSP_2072245195876491271", name: "日常巡检", type: "巡检", mode: "并行作业", system: "视频监控系统", category: "枪式摄像机", itemCount: 1, entryCount: 3, creator: "103", createdAt: "2026-07-01 17:19:13", updater: "103", updatedAt: "2026-07-01 17:19:13", status: "正常", remark: "枪式摄像机巡检。" },
     { id: "SW-008", code: "KCDS_INSP_2072245195876491272", name: "日常巡检", type: "巡检", mode: "顺序作业", system: "视频监控系统", category: "球型摄像机", itemCount: 1, entryCount: 3, creator: "103", createdAt: "2026-07-01 17:19:13", updater: "103", updatedAt: "2026-07-01 17:19:13", status: "正常", remark: "球型摄像机巡检。" },
-    { id: "SW-009", code: "KCDS_INSP_2072245195876491273", name: "日常巡检", type: "巡检", mode: "并行作业", system: "消防监控系统", category: "燃气报警", itemCount: 1, entryCount: 3, creator: "王鹏程", createdAt: "2026-07-02 09:12:41", updater: "王鹏程", updatedAt: "2026-08-05 10:20:33", status: "正常", remark: "燃气报警设备日常巡检。" },
+    { id: "SW-009", code: "KCDS_INSP_2072245195876491273", name: "日常巡检", type: "巡检", mode: "并行作业", system: "智慧消防", category: "燃气报警", itemCount: 1, entryCount: 3, creator: "王鹏程", createdAt: "2026-07-02 09:12:41", updater: "王鹏程", updatedAt: "2026-08-05 10:20:33", status: "正常", remark: "燃气报警设备日常巡检。" },
     { id: "SW-010", code: "KCDS_INSP_2072245195876491274", name: "日常巡检", type: "巡检", mode: "顺序作业", system: "电子巡更", category: "巡检点底座", itemCount: 1, entryCount: 3, creator: "王鹏程", createdAt: "2026-07-02 09:15:02", updater: "王鹏程", updatedAt: "2026-07-30 16:41:07", status: "正常", remark: "巡更点底座日常巡检。" },
     { id: "SW-011", code: "KCDS_INSP_2072245195876491275", name: "日常巡检", type: "巡检", mode: "并行作业", system: "环境监测", category: "室内环境传感器", itemCount: 1, entryCount: 3, creator: "王鹏程", createdAt: "2026-07-02 09:18:26", updater: "王鹏程", updatedAt: "2026-08-11 11:02:58", status: "正常", remark: "室内环境传感器日常巡检。" },
-    { id: "SW-012", code: "KCDS_INSP_2072245195876491276", name: "日常巡检", type: "巡检", mode: "并行作业", system: "消防监控系统", category: "输入输出模块", itemCount: 1, entryCount: 3, creator: "王鹏程", createdAt: "2026-07-02 09:21:19", updater: "王鹏程", updatedAt: "2026-08-19 09:37:44", status: "正常", remark: "输入输出模块日常巡检。" },
+    { id: "SW-012", code: "KCDS_INSP_2072245195876491276", name: "日常巡检", type: "巡检", mode: "并行作业", system: "智慧消防", category: "输入输出模块", itemCount: 1, entryCount: 3, creator: "王鹏程", createdAt: "2026-07-02 09:21:19", updater: "王鹏程", updatedAt: "2026-08-19 09:37:44", status: "正常", remark: "输入输出模块日常巡检。" },
     { id: "SW-013", code: "KCDS_INSP_2072245195876491277", name: "日常巡检", type: "巡检", mode: "并行作业", system: "电力监测平台", category: "光伏并网逆变器", itemCount: 1, entryCount: 3, creator: "王鹏程", createdAt: "2026-07-02 09:24:55", updater: "王鹏程", updatedAt: "2026-08-22 15:26:10", status: "正常", remark: "光伏并网逆变器日常巡检。" },
   ];
 

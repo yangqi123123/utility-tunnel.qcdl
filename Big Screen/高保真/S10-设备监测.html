@@ -66,12 +66,12 @@ const devices=[
  {id:'MEC-F0112-02',name:'2# 集水井排水泵',system:'环境监测',type:'machine',loc:'F0112',zone:14,status:'fault',value:'故障 · 过载保护',icon:'◒',className:'machine-point',metric:'状态',unit:''},
  {id:'SEC-F0107-03',name:'固定式视频监控 03',system:'视频监控系统',type:'security',loc:'F0107',zone:12,status:'online',value:'在线 · 主码流',icon:'▣',className:'security-point',metric:'码流',unit:''},
  {id:'SEC-F0116-01',name:'智能井盖位移传感器 01',system:'智能井盖',type:'sensor',loc:'F0116',zone:17,status:'offline',value:'离线 · 46 分钟',icon:'○',className:'security-point',metric:'电池',unit:'%'},
- {id:'FAS-F0119-02',name:'防火门监控模块 02',system:'消防监控系统',type:'fire',loc:'F0119',zone:19,status:'online',value:'闭合 · 联动投入',icon:'△',className:'fire-point',metric:'状态',unit:''},
+ {id:'FAS-F0119-02',name:'防火门监控模块 02',system:'智慧消防',type:'fire',loc:'F0119',zone:19,status:'online',value:'闭合 · 联动投入',icon:'△',className:'fire-point',metric:'状态',unit:''},
  {id:'PWR-F0101-01',name:'电力运行监测网关 01',system:'电力运行监测平台',type:'machine',loc:'F0101',zone:1,status:'online',value:'在线 · 2 ms',icon:'ϟ',className:'machine-point',metric:'通信延迟',unit:'ms'},
  {id:'ACS-F0108-01',name:'门禁控制器 01',system:'门禁系统',type:'security',loc:'F0108',zone:11,status:'online',value:'在线 · 12 次/月',icon:'⌑',className:'security-point',metric:'开启次数',unit:'次/月'},
  {id:'ENV-F0112-03',name:'集水井水位传感器 03',system:'环境监测',type:'sensor',loc:'F0112',zone:14,status:'warn',value:'0.60 m · 高位预警',icon:'≋',className:'sensor-point',metric:'水位',unit:'m'}
 ];
-const systems=[['火灾自动报警系统',162,162,'ok'],['环境监测',248,244,'ok'],['安全防范系统',96,94,'ok'],['视频监控系统',118,117,'ok'],['入侵报警',72,70,'warn'],['电子巡更',56,56,'ok'],['门禁系统',148,145,'warn'],['智能井盖',40,39,'ok'],['电力运行监测平台',186,182,'ok'],['消防监控系统',92,88,'warn'],['通信广播系统',68,64,'bad']];
+const systems=[['火灾自动报警系统',162,162,'ok'],['环境监测',248,244,'ok'],['安全防范系统',96,94,'ok'],['视频监控系统',118,117,'ok'],['入侵报警',72,70,'warn'],['电子巡更',56,56,'ok'],['门禁系统',148,145,'warn'],['智能井盖',40,39,'ok'],['电力运行监测平台',186,182,'ok'],['智慧消防',92,88,'warn'],['通信广播系统',68,64,'bad']];
 const $=id=>document.getElementById(id);let activeLayer='all', activeQuick='all', applied={system:'all',type:'all',loc:'all',status:'all',search:''};
 function fit(){const f=()=>{const s=Math.min(innerWidth/3840,innerHeight/2160);const st=$('stage');st.style.transform=`translate(-50%,-50%) scale(${s})`};addEventListener('resize',f);f()}
 function clock(){const w=['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];const tick=()=>{const d=new Date(),p=n=>String(n).padStart(2,'0');$('clk').textContent=[d.getHours(),d.getMinutes(),d.getSeconds()].map(p).join(':');$('dat').textContent=`${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${w[d.getDay()]}`};tick();setInterval(tick,1000)}

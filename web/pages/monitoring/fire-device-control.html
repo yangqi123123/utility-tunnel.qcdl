@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>消防设备控制 - 消防监控系统 - 科学岛管廊监控中心</title>
+  <title>消防设备控制 - 智慧消防 - 科学岛管廊监控中心</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   <link rel="stylesheet" href="../../assets/css/tob-ui.css">
   <link rel="stylesheet" href="../../assets/css/home-monitor.css?v=5">
@@ -82,7 +82,7 @@
     }
   </style>
 </head>
-<body class="fdc-body" data-menu-key="fire-monitor.control" data-page-section="消防监控系统" data-page-title="消防设备控制">
+<body class="fdc-body" data-menu-key="fire-monitor.control" data-page-section="智慧消防" data-page-title="消防设备控制">
 <div class="app-shell">
   <aside id="app-sidebar" class="sidebar"></aside>
   <header id="app-header" class="header"></header>
@@ -267,7 +267,7 @@
       name: item.name,
       code: item.code,
       kind: item.kind,
-      system: "消防监控",
+      system: "智慧消防",
       type: type,
       status: mapStatus(item.status),
       rawStatus: item.status,
@@ -308,7 +308,7 @@
       scrapDate: item.scrapDate || "—",
       factoryCode: item.factoryCode || "—",
       cadCode: item.cadCode || ("CAD-" + (item.code || item.id)),
-      sourceModule: item.sourceModule || "消防监控系统",
+      sourceModule: item.sourceModule || "智慧消防",
       service: item.service || "消防设备控制",
       remark: item.remark || "",
       smart: "是",
@@ -561,7 +561,7 @@
       operator: "值班员甲",
       time: nowText(),
       action: actionLabel,
-      system: "消防监控",
+      system: "智慧消防",
       category: device.type || "",
       device: device.name,
       deviceCode: device.code
@@ -885,7 +885,7 @@
         if (event.target.closest("[data-rec-action='export']") && window.openAppDrawer) {
           window.openAppDrawer({
             title: "导出设备控制记录",
-            subtitle: "消防监控系统 · 消防设备控制",
+            subtitle: "智慧消防 · 消防设备控制",
             body: "<p>已按当前筛选条件生成设备控制记录文件（演示）。</p>",
             footer: '<button class="btn btn-secondary" data-drawer-close>取消</button><button class="btn btn-primary" data-drawer-close>确认导出</button>'
           });

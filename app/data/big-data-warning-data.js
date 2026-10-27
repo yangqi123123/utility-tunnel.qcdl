@@ -4,10 +4,10 @@
     { id: 1, device: "配电室网关-01", deviceCode: "PWR-GW-01", system: "电力监测平台", category: "供配电", type: "设备离线", level: "告警", time: "2026-10-07 09:42:16", status: "未处理", project: "光谷科学岛综合开发项目", corridor: "高新大道综合管廊", room: "电力舱", section: "防火分区", handleMethod: "" },
     { id: 2, device: "冷水机组-01", deviceCode: "MEC-CH-01", system: "电力监测平台", category: "供配电", type: "设备属性", level: "预警", time: "2026-10-07 09:18:42", status: "处理中", project: "光谷科学岛综合开发项目", corridor: "高新大道综合管廊", room: "综合舱", section: "出入口", process: { workOrderNo: "WO20261007002" }, handleMethod: "转工单" },
     { id: 3, device: "集水井排水泵-02", deviceCode: "PMP-UG-02", system: "环境监测", category: "排水泵", type: "设备属性", level: "提醒", time: "2026-10-07 08:56:30", status: "已处理", project: "光谷科学岛综合开发项目", corridor: "高新大道综合管廊", room: "综合舱", section: "防火分区", process: { workOrderNo: "WO20261007003" }, closeReason: "告警已解决", handleMethod: "转工单" },
-    { id: 4, device: "消防水箱液位计", deviceCode: "FIRE-LVL-01", system: "消防监控系统", category: "消防设备", type: "设备属性", level: "告警", time: "2026-10-06 22:11:08", status: "未处理", project: "光谷科学岛综合开发项目", corridor: "高新大道综合管廊", room: "综合舱", section: "消防口", handleMethod: "" },
+    { id: 4, device: "消防水箱液位计", deviceCode: "FIRE-LVL-01", system: "智慧消防", category: "消防设备", type: "设备属性", level: "告警", time: "2026-10-06 22:11:08", status: "未处理", project: "光谷科学岛综合开发项目", corridor: "高新大道综合管廊", room: "综合舱", section: "消防口", handleMethod: "" },
     { id: 5, device: "环网交换机-03", deviceCode: "BAS-GW-03", system: "通信系统", category: "环网交换机", type: "设备离线", level: "预警", time: "2026-10-06 18:35:27", status: "已处理", project: "光谷科学岛综合开发项目", corridor: "科学岛大道综合管廊", room: "综合舱", section: "通风口", closeReason: "误报无问题", handleMethod: "误报" },
     { id: 6, device: "排风机-01", deviceCode: "FAN-UG-01", system: "环境监测", category: "通风设备", type: "设备属性", level: "预警", time: "2026-10-08 10:16:24", status: "未处理", project: "光谷科学岛综合开发项目", corridor: "高新大道综合管廊", room: "电力舱", section: "通风口", handleMethod: "" },
-    { id: 7, device: "消防泵-02", deviceCode: "FIRE-PMP-02", system: "消防监控系统", category: "消防设备", type: "设备离线", level: "告警", time: "2026-10-08 09:48:11", status: "未处理", project: "光谷科学岛综合开发项目", corridor: "科学岛大道综合管廊", room: "综合舱", section: "消防口", handleMethod: "" },
+    { id: 7, device: "消防泵-02", deviceCode: "FIRE-PMP-02", system: "智慧消防", category: "消防设备", type: "设备离线", level: "告警", time: "2026-10-08 09:48:11", status: "未处理", project: "光谷科学岛综合开发项目", corridor: "科学岛大道综合管廊", room: "综合舱", section: "消防口", handleMethod: "" },
     { id: 8, device: "照明控制器-05", deviceCode: "LGT-OF-05", system: "电力监测平台", category: "照明设备", type: "设备属性", level: "提醒", time: "2026-10-08 09:22:37", status: "已处理", project: "光谷科学岛综合开发项目", corridor: "高新大道综合管廊", room: "综合舱", section: "出入口", closeReason: "告警已解决", handleMethod: "直接处理" },
     { id: 9, device: "甲烷探测器 03", deviceCode: "001_ENVINDOOR_0003", system: "环境监测", category: "室内环境传感器", type: "设备属性", level: "告警", time: "2026-10-12 10:18:05", status: "未处理", project: "光谷科学岛综合开发项目", corridor: "高新大道综合管廊", room: "燃气舱", section: "防火分区", handleMethod: "" },
     { id: 10, device: "硫化氢传感器 04", deviceCode: "001_ENVINDOOR_0004", system: "环境监测", category: "室内环境传感器", type: "设备属性", level: "预警", time: "2026-10-12 10:05:40", status: "处理中", project: "光谷科学岛综合开发项目", corridor: "科学岛大道综合管廊", room: "综合舱", section: "防火分区", process: { workOrderNo: "WO20261012010" }, handleMethod: "转工单" },
@@ -27,7 +27,7 @@
 
   const SYSTEM_SHORT = {
     视频监控系统: "视频",
-    消防监控系统: "消防",
+    智慧消防: "消防",
     火灾报警系统: "消防",
     入侵报警系统: "入侵",
     电力监测平台: "电力",

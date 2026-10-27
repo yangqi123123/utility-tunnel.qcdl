@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="../../assets/css/monitoring.css">
   <link rel="stylesheet" href="../../assets/css/environment-monitor.css">
   <link rel="stylesheet" href="../../assets/css/base-map.css?v=1">
+  <link rel="stylesheet" href="../../assets/css/gis-map-ux.css?v=1">
   <link rel="stylesheet" href="../../assets/css/intrusion-monitor.css">
   <link rel="stylesheet" href="../../assets/vendor/leaflet/leaflet.css">
 </head>
@@ -209,6 +210,7 @@
 
   <script src="../../assets/vendor/leaflet/leaflet.js"></script>
   <script src="../../../app/components/base-map.js"></script>
+  <script src="../../assets/js/gis-map-ux.js?v=1"></script>
   <script src="../../../app/components/device-detail-info.js"></script>
   <script src="../../../app/config/menu.js?v=nav-hide-1"></script>
   <script src="../../../app/components/sidebar.js?v=nav-home-1"></script>
@@ -582,12 +584,25 @@
     map = baseMap ? baseMap.map : null;
     if (!map) return;
     markerLayer = L.layerGroup().addTo(map);
+    if (window.GIS_MAP_UX) {
+      window.GIS_MAP_UX.attachCorridor(map);
+      map.on("zoomend", renderMap);
+    }
     renderMap();
     window.setTimeout(function () { map.invalidateSize(); }, 150);
   }
 
   function renderMap() {
     if (!map || !markerLayer) return;
+    if (window.GIS_MAP_UX) {
+      window.GIS_MAP_UX.renderDeviceMarkers({
+        map: map,
+        layer: markerLayer,
+        devices: visibleDevices(),
+        onOpenDetail: function (d) { openDetail(d.id); }
+      });
+      return;
+    }
     markerLayer.clearLayers();
     visibleDevices().forEach(function (d) {
       if (d.lat == null || d.lng == null) return;

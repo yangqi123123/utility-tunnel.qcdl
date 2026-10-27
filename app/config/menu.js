@@ -106,7 +106,7 @@
     },
     {
       key: "fire-monitor",
-      label: "消防监控系统",
+      label: "智慧消防",
       icon: "fa-solid fa-fire-extinguisher",
       children: [
         { key: "fire-monitor.monitor", label: "消防监测", href: "../monitoring/fire-supervision.html" },

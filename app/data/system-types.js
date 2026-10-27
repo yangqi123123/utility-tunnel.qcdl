@@ -8,7 +8,7 @@
     { id: 11, name: "通信系统", code: "COM", sort: 6, intro: "管廊通信设备与信息传输管理系统。", image: "", parent: null },
     { id: 9, name: "电力监测系统", code: "POMS", sort: 7, intro: "管廊供配电设备运行监测与管理平台。", image: "", parent: null },
     { id: 1, name: "火灾报警系统", code: "FAS", sort: 8, intro: "管廊火灾探测、报警及联动控制系统。", image: "", parent: null },
-    { id: 10, name: "消防监控系统", code: "FMS", sort: 9, intro: "管廊消防设备状态监控与联动管理系统。", image: "", parent: null },
+    { id: 10, name: "智慧消防", code: "FMS", sort: 9, intro: "管廊消防设备状态监控与联动管理系统。", image: "", parent: null },
     { id: 3, name: "安全防范系统", code: "SPS", sort: 10, intro: "管廊安全防护与综合管理系统。", image: "", parent: null },
     { id: 6, name: "电子巡更系统", code: "EPS", sort: 11, intro: "管廊巡检任务、轨迹及结果管理系统。", image: "", parent: null },
   ];
