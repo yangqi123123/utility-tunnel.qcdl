@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="../../assets/css/tob-ui.css">
   <link rel="stylesheet" href="../../assets/css/alarm-center.css">
   <link rel="stylesheet" href="../../assets/css/emergency.css">
+  <link rel="stylesheet" href="../../assets/css/intrusion-ai.css">
   <style>
     .alarm-detail-grid .info-item { border-bottom: 0; }
     .alarm-detail-grid .info-item.form-span-2 { grid-column: 1 / -1; }
@@ -53,6 +54,163 @@
       border-radius: 6px;
       box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
     }
+    .alarm-view-tabs-bar {
+      display: flex;
+      justify-content: flex-start;
+      width: 100%;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border, #e5e8ef);
+    }
+    .alarm-view-tabs-bar .alarm-view-tabs { margin-left: 0; }
+    .alarm-annot-thumb {
+      position: relative;
+      display: inline-block;
+      width: 72px;
+      height: 48px;
+      border-radius: 4px;
+      overflow: hidden;
+      vertical-align: middle;
+      cursor: pointer;
+      background: #111;
+    }
+    .alarm-annot-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .alarm-annot-thumb .det-box { border-width: 1px; }
+    .alarm-annot-thumb .det-box span { font-size: 8px; top: -12px; }
+    .alarm-annot-thumb .zone-box,
+    .alarm-annot-frame .zone-box,
+    .alarm-video-card .thumb-wrap .zone-box {
+      position: absolute;
+      border: 1px solid #f56c6c;
+      background: rgba(245, 108, 108, 0.18);
+      pointer-events: none;
+      z-index: 2;
+    }
+    .alarm-annot-thumb .play-dot {
+      position: absolute;
+      right: 4px;
+      bottom: 4px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.55);
+      color: #fff;
+      font-size: 8px;
+      display: grid;
+      place-items: center;
+      z-index: 3;
+    }
+    .alarm-annot-frame.is-large,
+    .alarm-annot-frame.is-preview {
+      position: relative;
+      display: block;
+      width: min(860px, 90vw);
+      aspect-ratio: 16 / 10;
+      border-radius: 6px;
+      overflow: hidden;
+      background: #111;
+      margin: 0 auto;
+    }
+    .alarm-annot-frame.is-large img,
+    .alarm-annot-frame.is-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .alarm-video-card .thumb-wrap {
+      position: relative;
+      overflow: hidden;
+    }
+    .alarm-video-card .thumb-wrap .det-box,
+    .alarm-annot-frame .det-box {
+      z-index: 2;
+    }
+    .alarm-video-side-tools {
+      position: absolute;
+      right: 8px;
+      top: 8px;
+      z-index: 4;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .alarm-video-side-tools button {
+      width: 32px;
+      height: 32px;
+      border: 0;
+      border-radius: 4px;
+      background: rgba(0, 0, 0, 0.55);
+      color: #fff;
+      cursor: pointer;
+    }
+    .alarm-more-menu {
+      position: absolute;
+      right: 44px;
+      top: 8px;
+      z-index: 5;
+      min-width: 120px;
+      background: #fff;
+      border: 1px solid var(--border, #e5e8ef);
+      border-radius: 4px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+      overflow: hidden;
+    }
+    .alarm-more-menu button {
+      display: block;
+      width: 100%;
+      border: 0;
+      background: #fff;
+      text-align: left;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .alarm-more-menu button:hover { background: #f5f7fa; }
+    .alarm-video-card-body { padding: 10px 12px 12px; }
+    .alarm-video-card-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .alarm-video-card .alarm-video-actions {
+      display: flex;
+      flex-wrap: nowrap;
+      align-items: center;
+      gap: 4px 10px;
+      padding: 8px 10px;
+      margin: 0 -4px;
+      border-radius: 4px;
+      background: #f5f7fa;
+      overflow-x: auto;
+    }
+    .alarm-video-card .alarm-video-actions .table-action {
+      flex: 0 0 auto;
+      white-space: nowrap;
+    }
+    .alarm-video-card .play-badge { pointer-events: auto; cursor: pointer; }
+    .alarm-video-check {
+      position: absolute;
+      left: 8px;
+      top: 8px;
+      z-index: 5;
+      width: 20px;
+      height: 20px;
+      margin: 0;
+      accent-color: var(--primary, #2f6bff);
+      cursor: pointer;
+      background: #fff;
+      border-radius: 2px;
+    }
+    .alarm-video-check:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
   </style>
 </head>
 <body class="alarm-page alarm-info-page" data-menu-key="intrusion-alarm.alarms" data-page-section="入侵报警系统" data-page-title="入侵报警记录">
@@ -62,6 +220,12 @@
     <main class="main">
       <div class="screen-frame stack">
         <section class="card alarm-filter-card">
+          <div class="alarm-view-tabs-bar">
+            <div class="alarm-view-tabs" role="tablist">
+              <button type="button" class="active" data-alarm-view="list">列表视图</button>
+              <button type="button" data-alarm-view="video">视频视图</button>
+            </div>
+          </div>
           <div class="filter-actions alarm-info-filter-row">
             <label class="form-field"><span class="form-label">报警类型</span><select class="form-control" data-filter="type"><option value="">请选择</option><option>设备属性</option><option>设备离线</option></select></label>
             <label class="form-field"><span class="form-label">报警等级</span><select class="form-control" data-filter="level"><option value="">请选择</option><option>告警</option><option>预警</option><option>提醒</option></select></label>
@@ -73,8 +237,12 @@
           </div>
         </section>
         <section class="card alarm-list-card">
-          <div class="card-title-row alarm-toolbar"><h1 class="card-title">入侵报警记录</h1><div class="btn-row"><button class="btn btn-secondary" type="button" data-action="export"><i class="fa-solid fa-download"></i>导出</button><div class="alarm-batch-menu"><button class="btn btn-primary" type="button">批量处理<i class="fa-solid fa-chevron-down alarm-batch-chevron"></i></button><div class="alarm-batch-panel" data-batch-panel><span class="alarm-batch-count">已选择 <strong data-batch-count>0</strong> 条未处理报警</span><div class="alarm-batch-actions"><button class="btn btn-secondary" type="button" data-batch-action="false">误报</button><button class="btn btn-secondary" type="button" data-batch-action="process">处理</button><button class="btn btn-primary" type="button" data-batch-action="transfer">转工单</button><button class="btn btn-primary" type="button" data-batch-action="to-emergency">转应急事件</button></div></div></div></div></div>
-          <div class="table-wrap"><table class="table alarm-table alarm-info-table"><thead><tr><th class="alarm-select-col">选择</th><th>序号</th><th>报警设备</th><th>设备编码</th><th>报警类型</th><th>报警描述</th><th>图片</th><th>报警等级</th><th>报警时间</th><th>报警状态</th><th>转单状态</th><th>工单编号</th><th>操作</th></tr></thead><tbody id="alarmInfoBody"></tbody></table></div>
+          <div class="card-title-row alarm-toolbar">
+            <h1 class="card-title">入侵报警记录</h1>
+            <div class="btn-row"><button class="btn btn-secondary" type="button" data-action="export"><i class="fa-solid fa-download"></i>导出</button><div class="alarm-batch-menu"><button class="btn btn-primary" type="button">批量处理<i class="fa-solid fa-chevron-down alarm-batch-chevron"></i></button><div class="alarm-batch-panel" data-batch-panel><span class="alarm-batch-count">已选择 <strong data-batch-count>0</strong> 条未处理报警</span><div class="alarm-batch-actions"><button class="btn btn-secondary" type="button" data-batch-action="false">误报</button><button class="btn btn-secondary" type="button" data-batch-action="process">处理</button><button class="btn btn-primary" type="button" data-batch-action="transfer">转工单</button><button class="btn btn-primary" type="button" data-batch-action="to-emergency">转应急事件</button></div></div></div></div>
+          </div>
+          <div class="table-wrap" id="alarmListView"><table class="table alarm-table alarm-info-table"><thead><tr><th class="alarm-select-col">选择</th><th>序号</th><th>报警设备</th><th>设备编码</th><th>报警类型</th><th>报警描述</th><th>视频关键帧</th><th>报警等级</th><th>报警时间</th><th>报警状态</th><th>转单状态</th><th>工单编号</th><th>操作</th></tr></thead><tbody id="alarmInfoBody"></tbody></table></div>
+          <div class="alarm-video-grid hidden" id="alarmVideoGrid"></div>
           <div class="pagination"><span>共 <strong id="alarmInfoCount">0</strong> 条，每页 10 条</span><span class="page-item active">1</span></div>
         </section>
       </div>
@@ -93,13 +261,43 @@
   <script src="../../../app/components/emergency-events.js"></script>
   <script src="../../../app/components/alarm-to-emergency.js"></script>
   <script src="../../../app/data/intrusion-alarm-data.js"></script>
+  <script src="../../../app/data/intrusion-ai-data.js"></script>
   <script>
-    const alarmInfo = (window.INTRUSION_ALARM_DATA?.alarms || []).map((a) => ({ ...a, history: [...(a.history || [])] }));
+    const alarmInfo = (window.AI_ALARM_CLIPS || window.INTRUSION_AI_DATA?.AI_ALARM_CLIPS || []).map((a) => ({ ...a, history: [...(a.history || [])] }));
     const SYSTEM_SCOPE = "入侵报警";
     const scopedAlarmInfo = alarmInfo.filter((item) => item.system === SYSTEM_SCOPE);
     const alarmInfoBody = document.getElementById("alarmInfoBody");
+    const CORRIDOR_FRAME = "../../assets/images/corridor-monitor.jpg";
+    let currentView = "list";
+    let lastFilteredList = scopedAlarmInfo;
+    let playbackRate = 1;
     function levelClass(level) { return level === "告警" ? "high" : level === "预警" ? "medium" : "low"; }
     function statusClass(status) { return status === "未处理" ? "active" : status === "处理中" ? "processing" : "processed"; }
+    function frameSrc(item) { return item?.keyframeUrl || alarmImages(item || {})[0] || CORRIDOR_FRAME; }
+    function annotatedFrameMarkup(item, opts = {}) {
+      const { large = false } = opts;
+      const src = frameSrc(item);
+      const cls = large ? "alarm-annot-frame is-large" : "alarm-annot-thumb";
+      return `<span class="${cls}" data-clip-preview="${item?.id || ""}" title="查看画面">
+        <img src="${src}" alt="视频关帧">
+        <span class="zone-box" style="left:22%;top:20%;width:48%;height:50%"></span>
+        <span class="det-box is-danger" style="left:28%;top:34%;width:10%;height:28%"><span>person:0.82</span></span>
+        <span class="det-box is-danger" style="left:42%;top:38%;width:9%;height:24%"><span>person:0.71</span></span>
+        <span class="det-box is-safe" style="left:8%;top:42%;width:8%;height:22%"><span>person:0.66</span></span>
+        <span class="det-box is-safe" style="left:78%;top:40%;width:9%;height:26%"><span>person:0.58</span></span>
+        ${large ? "" : `<span class="play-dot"><i class="fa-solid fa-play"></i></span>`}
+      </span>`;
+    }
+    function videoActionMarkup(item) {
+      if (item.status === "未处理") {
+        return `<button class="table-action" type="button" data-alarm-action="detail" data-alarm-id="${item.id}">详情</button>
+          <button class="table-action" type="button" data-alarm-action="false" data-alarm-id="${item.id}">误报</button>
+          <button class="table-action" type="button" data-alarm-action="process" data-alarm-id="${item.id}">处理</button>
+          <button class="table-action" type="button" data-alarm-action="transfer" data-alarm-id="${item.id}">转工单</button>
+          <button class="table-action" type="button" data-alarm-action="to-emergency" data-alarm-id="${item.id}">转应急事件</button>`;
+      }
+      return `<button class="table-action" type="button" data-alarm-action="detail" data-alarm-id="${item.id}">详情</button>`;
+    }
     function deviceCode(item) { return item.deviceCode || `DEV-${String(item.id).padStart(4, "0")}`; }
     function transferStatus(item) {
       if (item.transferStatus) return item.transferStatus;
@@ -124,9 +322,7 @@
       return [];
     }
     function listImageMarkup(item) {
-      const images = alarmImages(item);
-      if (!images.length) return `<span class="alarm-thumb-empty" title="暂无图片"><i class="fa-regular fa-image" aria-hidden="true"></i></span>`;
-      return `<img class="alarm-thumb" src="${images[0]}" alt="报警图片" data-alarm-image-preview="${images[0]}" title="查看图片">`;
+      return annotatedFrameMarkup(item);
     }
     function detailImagesMarkup(item) {
       const images = alarmImages(item);
@@ -135,17 +331,90 @@
     }
     function openImagePreview(src) {
       if (!src) return;
+      openClipPreview({ keyframeUrl: src, images: [src], id: "" });
+    }
+    function downloadClip(item) {
+      const src = frameSrc(item) || CORRIDOR_FRAME;
+      if (!src) { alert("暂无可下载内容（Mock）"); return; }
+      const a = document.createElement("a");
+      a.href = src;
+      a.download = `intrusion-clip-${item?.id || "preview"}.jpg`;
+      a.click();
+      alert("已开始下载（Mock）");
+    }
+    function openClipPreview(item) {
       document.getElementById("alarmImagePreview")?.remove();
+      const src = frameSrc(item);
       const mask = document.createElement("div");
       mask.id = "alarmImagePreview";
       mask.className = "alarm-image-preview";
-      mask.innerHTML = `<img src="${src}" alt="报警图片预览">`;
-      mask.addEventListener("click", () => mask.remove());
+      mask.innerHTML = `
+        <div class="clip-preview-panel" style="position:relative;max-width:min(920px,92vw);text-align:center">
+          <div class="alarm-annot-frame is-large is-preview" id="clipPreviewStage">
+            <img src="${src}" alt="预览" id="clipPreviewImg">
+            <span class="zone-box" style="left:22%;top:20%;width:48%;height:50%"></span>
+            <span class="det-box is-danger" style="left:28%;top:34%;width:10%;height:28%"><span>person:0.82</span></span>
+            <span class="det-box is-danger" style="left:42%;top:38%;width:9%;height:24%"><span>person:0.71</span></span>
+            <span class="det-box is-safe" style="left:8%;top:42%;width:8%;height:22%"><span>person:0.66</span></span>
+            <span class="det-box is-safe" style="left:78%;top:40%;width:9%;height:26%"><span>person:0.58</span></span>
+          </div>
+          <div style="display:flex;gap:8px;justify-content:center;margin-top:12px">
+            <button type="button" class="btn btn-secondary" data-action="fullscreen-clip">全屏</button>
+            <button type="button" class="btn btn-primary" data-drawer-close-preview>关闭</button>
+          </div>
+        </div>`;
+      mask.addEventListener("click", (e) => {
+        if (e.target === mask || e.target.matches("[data-drawer-close-preview]")) mask.remove();
+      });
       document.body.append(mask);
     }
+    function renderVideoView(list = scopedAlarmInfo) {
+      const grid = document.getElementById("alarmVideoGrid");
+      if (!grid) return;
+      grid.innerHTML = list.map((item) => `
+        <article class="alarm-video-card" data-alarm-id="${item.id}">
+          <div class="thumb-wrap">
+            <input class="alarm-video-check alarm-row-check" type="checkbox" data-alarm-select="${item.id}" ${item.status === "未处理" ? "" : "disabled"} aria-label="选择${item.cameraName || item.device}">
+            <img src="${frameSrc(item)}" alt="">
+            <span class="zone-box" style="left:22%;top:20%;width:48%;height:50%"></span>
+            <span class="det-box is-danger" style="left:28%;top:34%;width:10%;height:28%"><span>person:0.82</span></span>
+            <span class="det-box is-danger" style="left:42%;top:38%;width:9%;height:24%"><span>person:0.71</span></span>
+            <span class="det-box is-safe" style="left:8%;top:42%;width:8%;height:22%"><span>person:0.66</span></span>
+            <span class="det-box is-safe" style="left:78%;top:40%;width:9%;height:26%"><span>person:0.58</span></span>
+            <span class="play-badge" data-clip-preview="${item.id}"><i class="fa-solid fa-play"></i></span>
+            <div class="alarm-video-side-tools">
+              <button type="button" title="全屏" data-action="card-fullscreen" data-alarm-id="${item.id}"><i class="fa-solid fa-expand"></i></button>
+              <button type="button" title="更多" data-action="card-more" data-alarm-id="${item.id}"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+            </div>
+          </div>
+          <div class="alarm-video-card-body">
+            <div class="alarm-video-card-meta">
+              <div>
+                <div>${item.cameraName || item.device}</div>
+                <div style="font-size:12px;color:#8b93a7">${item.time}</div>
+              </div>
+              <span class="alarm-state ${statusClass(item.status)}">${item.status}</span>
+            </div>
+            <div class="alarm-video-actions">${videoActionMarkup(item)}</div>
+          </div>
+        </article>`).join("") || `<div style="padding:24px;color:#8b93a7">暂无数据</div>`;
+      syncBatchActions();
+    }
+    function setAlarmView(view) {
+      currentView = view === "video" ? "video" : "list";
+      document.querySelectorAll("[data-alarm-view]").forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.alarmView === currentView);
+      });
+      document.getElementById("alarmListView")?.classList.toggle("hidden", currentView !== "list");
+      document.getElementById("alarmVideoGrid")?.classList.toggle("hidden", currentView !== "video");
+      if (currentView === "video") renderVideoView(lastFilteredList);
+      else renderAlarmInfo(lastFilteredList);
+    }
     function renderAlarmInfo(list = scopedAlarmInfo) {
+      lastFilteredList = list;
       alarmInfoBody.innerHTML = list.map((item, index) => `<tr data-alarm-id="${item.id}"><td class="alarm-select-col"><input class="alarm-row-check" type="checkbox" data-alarm-select="${item.id}" ${item.status === "未处理" ? "" : "disabled"} aria-label="选择${item.device}"></td><td>${index + 1}</td><td>${item.device}</td><td>${deviceCode(item)}</td><td>${item.type}</td><td class="alarm-message" title="${item.message}">${item.message}</td><td>${listImageMarkup(item)}</td><td><span class="alarm-level ${levelClass(item.level)}">${item.level}</span></td><td>${item.time}</td><td><span class="alarm-state ${statusClass(item.status)}">${item.status}</span></td><td><span class="alarm-transfer-state ${transferStatus(item) === "已转单" ? "is-transferred" : "is-pending"}">${transferStatus(item)}</span></td><td>${workOrderNoOf(item)}</td><td>${actionMarkup(item)}</td></tr>`).join("");
       document.getElementById("alarmInfoCount").textContent = list.length;
+      if (currentView === "video") renderVideoView(list);
       syncBatchActions();
     }
     function alarmInfoById(id) { return scopedAlarmInfo.find((item) => String(item.id) === String(id)) || scopedAlarmInfo[0]; }
@@ -196,12 +465,71 @@
       renderAlarmInfo();
     }
     document.addEventListener("click", (event) => {
+      const viewBtn = event.target.closest("[data-alarm-view]");
+      if (viewBtn) {
+        setAlarmView(viewBtn.dataset.alarmView);
+        return;
+      }
+      if (event.target.closest(".alarm-video-side-tools, .alarm-more-menu, .alarm-video-check, [data-alarm-select]")) {
+        /* side tools handled below; do not open clip preview */
+      } else {
+        const clipPreview = event.target.closest("[data-clip-preview]");
+        if (clipPreview) {
+          openClipPreview(alarmInfoById(clipPreview.dataset.clipPreview));
+          return;
+        }
+      }
       const preview = event.target.closest("[data-alarm-image-preview]");
       if (preview) {
         openImagePreview(preview.dataset.alarmImagePreview);
         return;
       }
+      const moreBtn = event.target.closest('[data-action="card-more"]');
+      if (moreBtn) {
+        const card = moreBtn.closest(".alarm-video-card");
+        document.querySelectorAll(".alarm-more-menu").forEach((el) => el.remove());
+        const menu = document.createElement("div");
+        menu.className = "alarm-more-menu";
+        menu.innerHTML = `
+          <button type="button" data-action="download-clip" data-alarm-id="${moreBtn.dataset.alarmId}">下载</button>
+          <button type="button" data-action="speed-clip" data-rate="0.5">播放速度 0.5x</button>
+          <button type="button" data-action="speed-clip" data-rate="1">播放速度 1.0x</button>
+          <button type="button" data-action="speed-clip" data-rate="1.5">播放速度 1.5x</button>
+          <button type="button" data-action="speed-clip" data-rate="2">播放速度 2.0x</button>`;
+        card.querySelector(".thumb-wrap")?.append(menu);
+        return;
+      }
+      if (!event.target.closest(".alarm-more-menu") && !event.target.closest('[data-action="card-more"]')) {
+        document.querySelectorAll(".alarm-more-menu").forEach((el) => el.remove());
+      }
       const action = event.target.closest("[data-action]")?.dataset.action;
+      if (action === "card-fullscreen") {
+        const id = event.target.closest("[data-action]")?.dataset.alarmId;
+        openClipPreview(alarmInfoById(id));
+        requestAnimationFrame(() => document.getElementById("clipPreviewStage")?.requestFullscreen?.());
+        return;
+      }
+      if (action === "fullscreen-clip") {
+        document.getElementById("clipPreviewStage")?.requestFullscreen?.() ||
+          document.getElementById("clipPreviewImg")?.requestFullscreen?.();
+        return;
+      }
+      if (action === "download-clip") {
+        const id = event.target.closest("[data-action]")?.dataset.alarmId;
+        downloadClip(id ? alarmInfoById(id) : { keyframeUrl: CORRIDOR_FRAME });
+        document.querySelectorAll(".alarm-more-menu").forEach((el) => el.remove());
+        return;
+      }
+      if (action === "speed-clip") {
+        playbackRate = Number(event.target.closest("[data-action]")?.dataset.rate || 1);
+        document.querySelectorAll(".alarm-more-menu").forEach((el) => el.remove());
+        if (typeof window.openAppConfirm === "function") {
+          window.openAppConfirm({ title: "提示", message: `已切换播放速度为 ${playbackRate}x（Mock）`, confirmText: "知道了" });
+        } else {
+          alert(`已切换播放速度为 ${playbackRate}x（Mock）`);
+        }
+        return;
+      }
       if (action === "search") filterAlarmInfo();
       if (action === "reset") { document.querySelectorAll("[data-filter]").forEach((input) => { input.value = ""; }); renderAlarmInfo(); }
       if (action === "export") window.openAppDrawer({ title: "导出入侵报警记录", subtitle: "入侵报警系统 · 入侵报警记录", body: "<p>已按当前筛选条件生成入侵报警记录文件（Mock）。</p>", footer: "<button class=\"btn btn-secondary\" data-drawer-close>取消</button><button class=\"btn btn-primary\" data-drawer-close>确认导出</button>" });

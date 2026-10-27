@@ -13,7 +13,7 @@ test("environment-data exposes quality devices linkage and alarms", async () => 
   assert.match(source, /controlMode/);
 });
 
-test("environment monitoring is a visible top-level menu with four visible children", async () => {
+test("environment monitoring is a visible top-level menu with visible children", async () => {
   const source = await read("app/config/menu.js");
   const topLevel = source.indexOf('key: "environment-monitoring"');
   const subsystems = source.indexOf('key: "subsystems"');
@@ -22,8 +22,14 @@ test("environment monitoring is a visible top-level menu with four visible child
   assert.match(source, /environment-monitoring\.overview[\s\S]*?hidden:\s*true/);
   assert.match(source, /environment-monitoring\.quality/);
   assert.match(source, /environment-monitoring\.devices/);
+  assert.match(source, /environment-monitoring\.control/);
+  assert.match(source, /environment-device-control\.html/);
   assert.match(source, /environment-monitoring\.linkage/);
   assert.match(source, /environment-monitoring\.alarms/);
+  const devicesIdx = source.indexOf("environment-monitoring.devices");
+  const controlIdx = source.indexOf("environment-monitoring.control");
+  const linkageIdx = source.indexOf("environment-monitoring.linkage");
+  assert.ok(devicesIdx >= 0 && controlIdx > devicesIdx && linkageIdx > controlIdx);
   const subBlock = source.slice(subsystems, source.indexOf('key: "data-storage"'));
   assert.equal(subBlock.includes('key: "environment-monitoring"'), false);
 });
@@ -64,8 +70,13 @@ test("environment quality page uses space filter and device cards", async () => 
   assert.match(source, /id="eqScopeBar"/);
   assert.doesNotMatch(source, /eqScopeBar" hidden/);
   assert.doesNotMatch(source, /共筛选到当前空间下的监测设备/);
+  assert.match(source, /data-eq-filter="category"/);
   assert.match(source, /data-eq-filter="name"/);
   assert.match(source, /data-eq-filter="code"/);
+  assert.match(source, /data-eq-filter="from"/);
+  assert.match(source, /data-eq-filter="to"/);
+  assert.match(source, /data-ias-mode="system"/);
+  assert.match(source, /data-ias-mode="space"/);
   assert.match(source, /data-eq-project/);
   assert.match(source, /dm-modal-mask|dmModalMask/);
   assert.match(source, /data-dm-tab="info"/);

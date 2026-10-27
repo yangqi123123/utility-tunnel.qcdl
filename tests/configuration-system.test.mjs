@@ -26,9 +26,15 @@ test('仅保留网关拓扑与组态图两页签', () => {
   assert.match(page, /flow-line/);
 });
 
-test('组态图仅电力与火灾且无绑点侧栏', () => {
-  assert.match(data, /电力监测组态图/);
-  assert.match(data, /火灾报警组态图/);
+test('组态图列表含三路电力与三路火灾', () => {
+  assert.match(data, /未来一路电力监测/);
+  assert.match(data, /高新七路电力监测/);
+  assert.match(data, /春光路电力监测/);
+  assert.match(data, /未来一路火灾监测/);
+  assert.match(data, /高新七路火灾监测/);
+  assert.match(data, /春光路火灾监测/);
+  const screens = data.slice(data.indexOf("hmiScreens"), data.indexOf("powerHmi"));
+  assert.equal((screens.match(/id: "/g) || []).length, 6);
   assert.doesNotMatch(page, /配置绑定|openBindDrawer|测点详情|组态图测点状态/);
   assert.doesNotMatch(page, /表21|表24|对齐组态图风格/);
   assert.match(page, /diagram-zoom/);

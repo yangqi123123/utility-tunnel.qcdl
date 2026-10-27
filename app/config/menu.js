@@ -23,6 +23,7 @@
         { key: "environment-monitoring.overview", label: "运行总览", href: "../monitoring/environment-overview.html", hidden: true },
         { key: "environment-monitoring.quality", label: "环境质量监测", href: "../monitoring/environment-quality.html" },
         { key: "environment-monitoring.devices", label: "设备状态监视", href: "../monitoring/environment-devices.html" },
+        { key: "environment-monitoring.control", label: "环境设备控制", href: "../monitoring/environment-device-control.html" },
         { key: "environment-monitoring.linkage", label: "环境联动记录", href: "../monitoring/environment-linkage.html" },
         { key: "environment-monitoring.alarms", label: "环境告警记录", href: "../monitoring/environment-alarms.html" },
       ],
@@ -34,6 +35,9 @@
       children: [
         { key: "intrusion-alarm.monitor", label: "入侵报警监测", href: "../monitoring/intrusion-monitor.html" },
         { key: "intrusion-alarm.devices", label: "入侵设备状态", href: "../monitoring/intrusion-devices.html" },
+        { key: "intrusion-alarm.control", label: "入侵设备控制", href: "../monitoring/intrusion-device-control.html" },
+        { key: "intrusion-alarm.algorithms", label: "算法管理", href: "../monitoring/intrusion-algorithms.html" },
+        { key: "intrusion-alarm.deployments", label: "布控管理", href: "../monitoring/intrusion-deployments.html" },
         { key: "intrusion-alarm.linkage", label: "入侵联动记录", href: "../monitoring/intrusion-linkage.html" },
         { key: "intrusion-alarm.alarms", label: "入侵报警记录", href: "../monitoring/intrusion-alarms.html" },
       ],
@@ -45,6 +49,7 @@
       children: [
         { key: "access-control.overview", label: "运行总览", href: "../access-control/overview.html", hidden: true },
         { key: "access-control.devices", label: "门禁设备监控", href: "../access-control/devices.html" },
+        { key: "access-control.control", label: "门禁设备控制", href: "../access-control/device-control.html" },
         { key: "access-control.personnel", label: "人员管理", href: "../access-control/personnel.html" },
         { key: "access-control.permissions", label: "通行权限", href: "../access-control/permissions.html" },
         { key: "access-control.blacklist", label: "黑名单管理", href: "../access-control/blacklist.html" },
@@ -59,6 +64,7 @@
       children: [
         { key: "manhole-cover.monitor", label: "井盖实时监测", href: "../monitoring/manhole-monitor.html" },
         { key: "manhole-cover.devices", label: "井盖状态监测", href: "../monitoring/manhole-devices.html" },
+        { key: "manhole-cover.control", label: "井盖设备控制", href: "../monitoring/manhole-device-control.html" },
         { key: "manhole-cover.alarms", label: "井盖报警记录", href: "../monitoring/manhole-alarms.html" },
       ],
     },
@@ -68,6 +74,7 @@
       icon: "fa-solid fa-bolt",
       children: [
         { key: "power-monitor.realtime", label: "电力实时监测", href: "../monitoring/power-realtime.html" },
+        { key: "power-monitor.control", label: "电力设备控制", href: "../monitoring/power-device-control.html" },
         { key: "power-monitor.status", label: "电力状态监测", href: "../monitoring/power-status.html" },
         { key: "power-monitor.alarms", label: "电力报警记录", href: "../monitoring/power-alarms.html" },
       ],
@@ -93,6 +100,7 @@
       icon: "fa-solid fa-fire-flame-curved",
       children: [
         { key: "fire-alarm.monitor", label: "火灾报警监测", href: "../monitoring/fire-monitor.html" },
+        { key: "fire-alarm.control", label: "火灾设备控制", href: "../monitoring/fire-alarm-device-control.html" },
         { key: "fire-alarm.alarms", label: "火灾报警记录", href: "../monitoring/fire-alarms.html" },
       ],
     },
@@ -102,6 +110,7 @@
       icon: "fa-solid fa-fire-extinguisher",
       children: [
         { key: "fire-monitor.monitor", label: "消防监测", href: "../monitoring/fire-supervision.html" },
+        { key: "fire-monitor.control", label: "消防设备控制", href: "../monitoring/fire-device-control.html" },
         { key: "fire-monitor.alarms", label: "消防报警记录", href: "../monitoring/fire-supervision-alarms.html" },
       ],
     },
@@ -214,6 +223,8 @@
           label: "联动管理系统",
           icon: "fa-solid fa-link",
           children: [
+            { key: "linkage.smart", label: "智能联动", href: "../linkage/smart.html" },
+            { key: "linkage.execute", label: "联动执行台", href: "../smart-linkage/execute.html" },
             { key: "linkage.records", label: "联动记录", href: "../linkage/records.html" },
             { key: "linkage.analysis", label: "联动分析", href: "../linkage/analysis.html" },
           ],

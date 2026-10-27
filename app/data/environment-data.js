@@ -388,9 +388,43 @@
     { zone: "二号舱 · 西段", o2: "20.1", temp: "26.0", humidity: "57", ch4: "4", h2s: "8", level: "0.28", status: "warning" },
   ];
 
+  const controlRecords = [
+    {
+      id: 1,
+      operator: "值班员甲",
+      time: "2026-10-26 09:20:11",
+      action: "启动通风设备",
+      system: "环境监测",
+      category: "通风设备",
+      device: "管道轴流风机",
+      deviceCode: "C01_ENVFAN00_0001",
+    },
+    {
+      id: 2,
+      operator: "值班员乙",
+      time: "2026-10-26 08:45:22",
+      action: "启动排水泵",
+      system: "环境监测",
+      category: "排水泵",
+      device: "1# 集水井排水泵",
+      deviceCode: "C01_ENVPUMP_0008",
+    },
+    {
+      id: 3,
+      operator: "管理员",
+      time: "2026-10-25 18:10:03",
+      action: "点亮照明设备",
+      system: "电力监测平台",
+      category: "照明设备",
+      device: "舱内 LED 照明灯",
+      deviceCode: "C01_PWRLIGHT_0003",
+    },
+  ];
+
   window.ENVIRONMENT_DATA = {
     statusText, runText, powerText, modeText,
     qualityLocationTree, qualitySpatialTree, qualityDevices, qualityMetrics, qualityReportTime,
     devices, keyParams, linkageRecords, alarmRecords, powerSummary, zoneMatrix,
+    controlRecords,
   };
 })(window);

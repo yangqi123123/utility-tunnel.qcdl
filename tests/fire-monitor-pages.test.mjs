@@ -24,15 +24,18 @@ const LEGEND_TYPES = [
   "感温光纤",
 ];
 
-test("一级菜单消防监控系统在火灾报警下方、安全防范上方且含两个二级入口", async () => {
+test("一级菜单消防监控系统在火灾报警下方、安全防范上方且含三个二级入口", async () => {
   const menu = await read("app/config/menu.js");
   assert.match(menu, /key:\s*"fire-monitor"/);
   assert.match(menu, /label:\s*"消防监控系统"/);
   assert.match(menu, /fire-monitor\.monitor/);
   assert.match(menu, /label:\s*"消防监测"/);
+  assert.match(menu, /fire-monitor\.control/);
+  assert.match(menu, /label:\s*"消防设备控制"/);
   assert.match(menu, /fire-monitor\.alarms/);
   assert.match(menu, /label:\s*"消防报警记录"/);
   assert.match(menu, /fire-supervision\.html/);
+  assert.match(menu, /fire-device-control\.html/);
   assert.match(menu, /fire-supervision-alarms\.html/);
 
   const fireAlarmIdx = menu.indexOf('key: "fire-alarm"');
@@ -77,6 +80,13 @@ test("监测页支持地图列表切换、视频内嵌与固定 8 类图例", as
   for (const name of LEGEND_TYPES) {
     assert.match(page, new RegExp(name));
   }
+  assert.match(page, /data-eq-filter="category"/);
+  assert.match(page, /data-eq-filter="name"/);
+  assert.match(page, /data-eq-filter="code"/);
+  assert.match(page, /data-eq-filter="from"/);
+  assert.match(page, /data-eq-filter="to"/);
+  assert.match(page, /data-ias-mode="system"/);
+  assert.match(page, /data-ias-mode="space"/);
   assert.doesNotMatch(page, /INTRUSION_ALARM_DATA/);
   assert.doesNotMatch(page, /FIRE_ALARM_DATA/);
 });

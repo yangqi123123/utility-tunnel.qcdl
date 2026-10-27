@@ -72,6 +72,7 @@
 .drawer:has(.alarm-wizard) { width: min(1080px, calc(100vw - 48px)); }
 .alarm-wizard { min-height: 100%; display: flex; flex-direction: column; }
 .alarm-wizard-steps { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0; padding: 0 0 24px; border-bottom: 1px solid var(--divider); }
+.alarm-wizard-steps.steps-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .alarm-wizard-step { position: relative; display: flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 12px; color: var(--text-secondary); font-size: 16px; }
 .alarm-wizard-step:not(:last-child)::after { content: ""; position: absolute; right: 12px; top: 19px; width: 8px; height: 8px; border-top: 1px solid #b8bdc6; border-right: 1px solid #b8bdc6; transform: rotate(45deg); }
 .alarm-wizard-step::before { content: attr(data-step); width: 32px; height: 32px; display: grid; place-items: center; flex: 0 0 32px; border: 1px solid #c9cdd4; border-radius: 50%; color: var(--text-secondary); font-size: 16px; }

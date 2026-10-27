@@ -5,11 +5,33 @@
   const linkageRecords = data.records || [];
   const systemTypes = data.systems || [];
   const filterCard = document.getElementById("linkageFilterCard");
-  const collapseButton = filterCard.querySelector('[data-action="collapse"]');
+  const collapseButton = filterCard?.querySelector('[data-action="collapse"]');
 
   const state = {
+    tab: "records",
     filters: { name: "", code: "", type: "", result: "", system: "", from: "", to: "" },
+    oplogFilters: { name: "", code: "", system: "", operator: "" },
   };
+
+  function loadSessionOpLogs() {
+    try {
+      const saved = JSON.parse(sessionStorage.getItem("SMART_LINKAGE_OP_LOGS") || "[]");
+      return Array.isArray(saved) ? saved : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function allOperationLogs() {
+    const seeded = data.operationLogs || [];
+    const session = loadSessionOpLogs();
+    const map = new Map();
+    [...session, ...seeded].forEach((item) => {
+      if (!item || !item.id) return;
+      if (!map.has(item.id)) map.set(item.id, item);
+    });
+    return [...map.values()].sort((a, b) => String(b.operateTime || "").localeCompare(String(a.operateTime || "")));
+  }
 
   function esc(value) {
     return String(value ?? "").replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
@@ -42,9 +64,63 @@
   }
 
   function fillSystemFilter() {
-    const select = document.querySelector('[data-filter="system"]');
-    if (!select) return;
-    select.innerHTML = `<option value="">全部系统</option>${systemTypes.map((name) => `<option value="${esc(name)}">${esc(name)}</option>`).join("")}`;
+    const options = `<option value="">全部系统</option>${systemTypes.map((name) => `<option value="${esc(name)}">${esc(name)}</option>`).join("")}`;
+    document.querySelectorAll('[data-filter="system"], [data-oplog-filter="system"]').forEach((select) => {
+      select.innerHTML = options;
+    });
+  }
+
+  function switchTab(tab) {
+    state.tab = tab;
+    document.querySelectorAll("[data-linkage-tab]").forEach((btn) => {
+      const active = btn.dataset.linkageTab === tab;
+      btn.classList.toggle("active", active);
+      btn.setAttribute("aria-selected", active ? "true" : "false");
+    });
+    document.querySelectorAll("[data-linkage-panel]").forEach((panel) => {
+      panel.classList.toggle("hidden", panel.dataset.linkagePanel !== tab);
+    });
+    if (tab === "oplog") renderOplogTable(filteredOpLogs());
+  }
+
+  function filteredOpLogs() {
+    const f = state.oplogFilters;
+    const nameQ = f.name.toLowerCase();
+    const codeQ = f.code.toLowerCase();
+    const operatorQ = f.operator.toLowerCase();
+    return allOperationLogs().filter((item) =>
+      (!nameQ || (item.name || "").toLowerCase().includes(nameQ)) &&
+      (!codeQ || (item.code || "").toLowerCase().includes(codeQ)) &&
+      (!f.system || item.system === f.system) &&
+      (!operatorQ || (item.operator || "").toLowerCase().includes(operatorQ))
+    );
+  }
+
+  function renderOplogTable(list) {
+    const body = document.getElementById("oplogTableBody");
+    const count = document.getElementById("oplogCount");
+    if (!body || !count) return;
+    count.textContent = String(list.length);
+    body.innerHTML = list.map((item) => `
+      <tr data-oplog-id="${attr(item.id)}">
+        <td><span class="linkage-name-cell">${esc(item.name || "-")}</span></td>
+        <td>${esc(item.code || "-")}</td>
+        <td>${esc(item.type || "手动执行")}</td>
+        <td>${esc(item.system || "-")}</td>
+        <td><span class="linkage-devices" title="${attr(item.device || "")}">${esc(item.device || "-")}</span></td>
+        <td>${esc(item.action || "-")}</td>
+        <td>${esc(item.startTime || "-")}</td>
+        <td>${esc(item.endTime || "-")}</td>
+        <td>${esc(item.operator || "-")}</td>
+        <td>${esc(item.operateTime || "-")}</td>
+      </tr>
+    `).join("") || `<tr><td colspan="10" class="empty-cell">暂无手动执行操作日志</td></tr>`;
+  }
+
+  function syncOplogFilters() {
+    document.querySelectorAll("[data-oplog-filter]").forEach((field) => {
+      state.oplogFilters[field.dataset.oplogFilter] = field.value.trim();
+    });
   }
 
   function filteredRecords() {
@@ -63,28 +139,6 @@
         (!f.from || (day && day >= f.from)) &&
         (!f.to || (day && day <= f.to));
     });
-  }
-
-  function renderKpis() {
-    const total = linkageRecords.length;
-    const ok = linkageRecords.filter((item) => item.result === "成功").length;
-    const partial = linkageRecords.filter((item) => item.result === "部分成功").length;
-    const fail = linkageRecords.filter((item) => item.result === "失败").length;
-    const cards = [
-      ["联动总数", total, "fa-solid fa-diagram-project", "is-blue"],
-      ["成功", ok, "fa-solid fa-circle-check", "is-green"],
-      ["部分成功", partial, "fa-solid fa-triangle-exclamation", "is-amber"],
-      ["失败", fail, "fa-solid fa-circle-xmark", "is-red"],
-    ];
-    document.getElementById("linkageKpis").innerHTML = cards.map(([label, value, icon, tone]) => `
-      <article class="analysis-kpi ${tone}">
-        <div class="analysis-kpi-icon"><i class="${icon}"></i></div>
-        <div class="analysis-kpi-body">
-          <span class="analysis-kpi-label">${esc(label)}</span>
-          <strong class="analysis-kpi-value">${esc(value)}</strong>
-        </div>
-      </article>
-    `).join("");
   }
 
   function renderTable(list) {
@@ -120,8 +174,19 @@
   }
 
   function render() {
-    renderKpis();
     renderTable(filteredRecords());
+  }
+
+  function openExportOplogDrawer() {
+    const count = filteredOpLogs().length;
+    window.openAppDrawer({
+      title: "导出操作日志",
+      body: `<p>已按当前筛选条件生成操作日志文件（Mock），共 ${esc(count)} 条。</p>`,
+      footer: `
+        <button class="btn btn-secondary" type="button" data-drawer-close>取消</button>
+        <button class="btn btn-primary" type="button" data-drawer-close>确认导出</button>
+      `,
+    });
   }
 
   function openDetail(id) {
@@ -237,8 +302,32 @@
   }
 
   document.addEventListener("click", (event) => {
+    const tabBtn = event.target.closest("[data-linkage-tab]");
+    if (tabBtn) {
+      switchTab(tabBtn.dataset.linkageTab);
+      return;
+    }
+
+    const oplogAction = event.target.closest("[data-oplog-action]")?.dataset.oplogAction;
+    if (oplogAction === "search") {
+      syncOplogFilters();
+      renderOplogTable(filteredOpLogs());
+      return;
+    }
+    if (oplogAction === "reset") {
+      document.querySelectorAll("[data-oplog-filter]").forEach((field) => { field.value = ""; });
+      state.oplogFilters = { name: "", code: "", system: "", operator: "" };
+      renderOplogTable(filteredOpLogs());
+      return;
+    }
+    if (oplogAction === "export") {
+      openExportOplogDrawer();
+      return;
+    }
+
     const action = event.target.closest("[data-action]")?.dataset.action;
     if (action === "collapse") {
+      if (!filterCard || !collapseButton) return;
       const expanded = filterCard.classList.toggle("expanded");
       collapseButton.querySelector("span").textContent = expanded ? "收起" : "展开";
       collapseButton.querySelector("i").className = expanded ? "fa-solid fa-chevron-up" : "fa-solid fa-chevron-down";
@@ -277,11 +366,19 @@
       syncFilters();
       renderTable(filteredRecords());
     }
+    if (event.key === "Enter" && event.target.matches("[data-oplog-filter]")) {
+      syncOplogFilters();
+      renderOplogTable(filteredOpLogs());
+    }
   });
 
   fillSystemFilter();
   render();
+  renderOplogTable(filteredOpLogs());
 
-  const openId = new URLSearchParams(location.search).get("id");
+  const params = new URLSearchParams(location.search);
+  const openId = params.get("id");
+  const tab = params.get("tab");
+  if (tab === "oplog") switchTab("oplog");
   if (openId) openDetail(openId);
 })();

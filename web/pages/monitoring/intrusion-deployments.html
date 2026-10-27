@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>布控管理 - 入侵报警系统 - 科学岛管廊监控中心</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/tob-ui.css">
+  <link rel="stylesheet" href="../../assets/css/environment-monitor.css">
+  <link rel="stylesheet" href="../../assets/css/intrusion-ai.css">
+  <style>
+    .dep-filter-card { padding: 16px 24px; }
+    .dep-filter-card .filter-actions {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(140px, 1fr)) auto;
+      gap: 16px;
+      align-items: end;
+    }
+    .dep-toolbar { padding: 16px 24px 0; margin-bottom: 12px; }
+    .dep-toolbar .btn,
+    .dep-toolbar a.btn {
+      text-decoration: none !important;
+      border-bottom: 0 !important;
+    }
+    .dep-link {
+      color: var(--primary, #2f6bff);
+      text-decoration: none;
+      cursor: pointer;
+      background: none;
+      border: 0;
+      padding: 0;
+      font: inherit;
+    }
+    .dep-link:hover { text-decoration: underline; }
+    .dep-actions { white-space: nowrap; }
+    .dep-actions .table-action,
+    .dep-actions a.table-action {
+      margin-right: 14px;
+      text-decoration: none !important;
+      border-bottom: 0 !important;
+    }
+    .dep-actions .table-action:last-child { margin-right: 0; }
+    /* 宽屏铺满主内容区，避免右侧留白；宽表仅在表格区域横向滚动 */
+    body[data-menu-key="intrusion-alarm.deployments"] .main {
+      overflow-x: hidden;
+      min-width: 0;
+    }
+    body[data-menu-key="intrusion-alarm.deployments"] .screen-frame {
+      overflow-x: hidden;
+      min-width: 0;
+      max-width: none;
+      width: 100%;
+      margin: 0;
+    }
+    .dep-list-card,
+    .dep-filter-card {
+      overflow: hidden;
+      min-width: 0;
+      width: 100%;
+      max-width: none;
+    }
+    .dep-list-card .table-wrap {
+      overflow-x: auto;
+      overflow-y: visible;
+      width: 100%;
+      max-width: 100%;
+      -webkit-overflow-scrolling: touch;
+    }
+    .dep-list-table {
+      min-width: 1280px;
+      width: 100%;
+      table-layout: auto;
+    }
+  </style>
+</head>
+<body class="environment-page" data-menu-key="intrusion-alarm.deployments" data-page-section="入侵报警系统" data-page-title="布控管理">
+  <div class="app-shell">
+    <aside id="app-sidebar" class="sidebar"></aside>
+    <header id="app-header" class="header"></header>
+    <main class="main">
+      <div class="screen-frame stack">
+        <section class="card dep-filter-card">
+          <div class="filter-actions">
+            <label class="form-field"><span class="form-label">布控编号</span><input class="form-control" data-filter="code" placeholder="请输入布控编号"></label>
+            <label class="form-field"><span class="form-label">算法</span>
+              <select class="form-control" data-filter="algorithmId" id="filterAlgo"></select>
+            </label>
+            <label class="form-field"><span class="form-label">布控状态</span>
+              <select class="form-control" data-filter="runStatus">
+                <option value="">全部状态</option>
+                <option value="running">布控中</option>
+                <option value="cancelled">未布控</option>
+              </select>
+            </label>
+            <label class="form-field"><span class="form-label">视频状态</span>
+              <select class="form-control" data-filter="videoStatus">
+                <option value="">全部</option>
+                <option value="online">在线</option>
+                <option value="offline">离线</option>
+              </select>
+            </label>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-secondary" type="button" data-action="reset">重置</button>
+              <button class="btn btn-primary" type="button" data-action="search">搜索</button>
+            </div>
+          </div>
+        </section>
+        <section class="card dep-list-card">
+          <div class="card-title-row dep-toolbar">
+            <h1 class="card-title">布控管理</h1>
+            <div class="btn-row">
+              <a class="btn btn-primary" href="intrusion-deployment-form.html"><i class="fa-solid fa-plus"></i> 新增</a>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="table dep-list-table table-actions-sticky" aria-label="布控列表">
+              <thead>
+                <tr>
+                  <th>布控编号</th>
+                  <th>视频流</th>
+                  <th>算法流</th>
+                  <th>视频状态</th>
+                  <th>算法</th>
+                  <th>fps</th>
+                  <th>布控状态</th>
+                  <th>添加时间</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="depBody"></tbody>
+            </table>
+          </div>
+          <div class="pagination" style="padding:12px 24px 16px">
+            <span>共 <strong id="depCount">0</strong> 条，每页显示 10 条</span>
+            <span class="page-item active">1</span>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+  <script src="../../../app/config/menu.js?v=nav-hide-1"></script>
+  <script src="../../../app/components/sidebar.js?v=nav-home-1"></script>
+  <script src="../../../app/components/header.js?v=nav-home-1"></script>
+  <script src="../../../app/components/drawer.js"></script>
+  <script src="../../../app/components/requirement.js"></script>
+  <script src="../../../app/data/intrusion-ai-data.js"></script>
+  <script>
+    (function () {
+      const DEPS = window.AI_DEPLOYMENTS || [];
+      const ALGOS = window.AI_ALGORITHMS || [];
+
+      function esc(value) {
+        return String(value ?? "").replace(/[&<>"']/g, (ch) => ({
+          "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+        }[ch]));
+      }
+      function algoName(id) {
+        return ALGOS.find((a) => a.id === id)?.name || id || "-";
+      }
+      function streamPath(d) {
+        if (d.playUrl) {
+          const m = String(d.playUrl).match(/analyzer\/[^/?#]+/);
+          if (m) return m[0];
+        }
+        return d.code ? `analyzer/${d.code}` : "-";
+      }
+      function videoStatusOf(d) {
+        return d.videoStatus || "online";
+      }
+      function fpsOf(d) {
+        if (typeof d.fps === "number") return d.fps;
+        return d.runStatus === "running" ? (20 + Math.random() * 8).toFixed(2) : "0";
+      }
+      function videoTag(status) {
+        const online = status === "online";
+        return `<span class="dep-status-tag ${online ? "is-online" : "is-offline"}">${online ? "在线" : "离线"}</span>`;
+      }
+      function runTag(status) {
+        const running = status === "running";
+        return `<span class="dep-status-tag ${running ? "is-running" : "is-idle"}">${running ? "布控中" : "未布控"}</span>`;
+      }
+
+      const algoSelect = document.getElementById("filterAlgo");
+      algoSelect.innerHTML = `<option value="">全部算法</option>` + ALGOS.map((a) => `<option value="${esc(a.id)}">${esc(a.name)}</option>`).join("");
+
+      function filtered() {
+        const code = (document.querySelector('[data-filter="code"]')?.value || "").trim();
+        const algorithmId = document.querySelector('[data-filter="algorithmId"]')?.value || "";
+        const runStatus = document.querySelector('[data-filter="runStatus"]')?.value || "";
+        const videoStatus = document.querySelector('[data-filter="videoStatus"]')?.value || "";
+        return DEPS.filter((d) =>
+          (!code || (d.code || "").includes(code) || streamPath(d).includes(code)) &&
+          (!algorithmId || d.algorithmId === algorithmId) &&
+          (!runStatus || d.runStatus === runStatus) &&
+          (!videoStatus || videoStatusOf(d) === videoStatus)
+        );
+      }
+
+      function render() {
+        const list = filtered();
+        document.getElementById("depBody").innerHTML = list.map((d) => {
+          const path = streamPath(d);
+          const fps = d.runStatus === "running" ? (d.fps ?? fpsOf(d)) : (d.fps ?? 0);
+          if (d.runStatus === "running" && d.fps == null) d.fps = Number(fps);
+          return `<tr>
+            <td>${esc(d.code || d.id)}</td>
+            <td><a class="dep-link" href="intrusion-deployment-player.html?id=${encodeURIComponent(d.id)}">${esc(path)}</a></td>
+            <td><a class="dep-link" href="intrusion-deployment-player.html?id=${encodeURIComponent(d.id)}&mode=algo">播放算法流</a></td>
+            <td>${videoTag(videoStatusOf(d))}</td>
+            <td>${esc(algoName(d.algorithmId))}</td>
+            <td>${esc(fps)}</td>
+            <td>${runTag(d.runStatus)}</td>
+            <td>${esc((d.createdAt || "").slice(0, 16))}</td>
+            <td class="dep-actions">
+              <a class="table-action" href="intrusion-deployment-form.html?id=${encodeURIComponent(d.id)}">编辑</a>
+              <button class="table-action status-danger" type="button" data-action="delete" data-id="${esc(d.id)}">删除</button>
+              <button class="table-action" type="button" data-action="toggle-run" data-id="${esc(d.id)}">${d.runStatus === "running" ? "取消布控" : "执行布控"}</button>
+            </td>
+          </tr>`;
+        }).join("") || `<tr><td colspan="9">暂无数据</td></tr>`;
+        document.getElementById("depCount").textContent = list.length;
+      }
+
+      function tip(message) {
+        if (typeof window.openAppConfirm === "function") {
+          window.openAppConfirm({ title: "提示", message, confirmText: "知道了" });
+          return;
+        }
+        alert(message);
+      }
+
+      document.addEventListener("click", (e) => {
+        const btn = e.target.closest("[data-action]");
+        if (!btn) return;
+        const action = btn.getAttribute("data-action");
+        const id = btn.getAttribute("data-id");
+        if (action === "delete") {
+          const row = DEPS.find((d) => d.id === id);
+          if (!row) return;
+          window.openAppConfirm({
+            title: "删除布控",
+            message: `确认删除布控「${row.code || row.name}」吗？`,
+            confirmText: "确认删除",
+            onConfirm: () => {
+              const i = DEPS.findIndex((d) => d.id === id);
+              if (i >= 0) DEPS.splice(i, 1);
+              render();
+            },
+          });
+        }
+        if (action === "toggle-run") {
+          const row = DEPS.find((d) => d.id === id);
+          if (!row) return;
+          const next = row.runStatus === "running" ? "cancelled" : "running";
+          const title = next === "running" ? "执行布控" : "取消布控";
+          const message = next === "running"
+            ? `确认对「${row.code || row.name}」执行布控吗？`
+            : `确认取消「${row.code || row.name}」的布控吗？`;
+          window.openAppConfirm({
+            title,
+            message,
+            confirmText: "确认",
+            okClass: "btn-primary",
+            onConfirm: () => {
+              row.runStatus = next;
+              row.fps = next === "running" ? Number((22 + Math.random() * 6).toFixed(2)) : 0;
+              render();
+            },
+          });
+        }
+        if (action === "search" || action === "reset") {
+          if (action === "reset") {
+            document.querySelectorAll("[data-filter]").forEach((el) => { el.value = ""; });
+          }
+          render();
+        }
+      });
+
+      render();
+    })();
+  </script>
+</body>
+</html>

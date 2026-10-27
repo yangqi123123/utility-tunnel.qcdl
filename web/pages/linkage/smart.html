@@ -1,0 +1,988 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>智能联动 - 联动管理系统 - 科学岛管廊监控中心</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/tob-ui.css">
+  <link rel="stylesheet" href="../../assets/css/alarm-center.css">
+  <style>
+    .alarm-detail-grid .info-item { border-bottom: 0; }
+    .drawer:has(.alarm-wizard) { width: min(1120px, calc(100vw - 48px)); }
+    .sl-cascade-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+      align-items: start;
+    }
+    /* 预留校验文案高度，避免报错时级联/结果行错位 */
+    .alarm-wizard .form-field {
+      position: relative;
+      padding-bottom: 18px;
+      box-sizing: border-box;
+      align-content: start;
+    }
+    .alarm-wizard .form-field > .form-error {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      margin-top: 0;
+      grid-column: auto;
+      line-height: 18px;
+    }
+    .alarm-wizard .form-item { margin-bottom: 0; }
+    .alarm-wizard .form-grid-2 { gap: 12px 16px; }
+    .alarm-wizard .form-field:has(> .sl-cascade-grid),
+    .alarm-wizard .form-field:has(> .textarea) { padding-bottom: 0; }
+    .sl-cascade-grid .form-field { padding-bottom: 18px; margin-bottom: 0; }
+    .sl-duration-wrap {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 8px;
+      align-items: center;
+    }
+    .sl-duration-wrap.is-custom {
+      grid-template-columns: minmax(0, 1fr) minmax(96px, 120px);
+    }
+    .sl-custom-duration {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 6px;
+      align-items: center;
+      min-width: 0;
+    }
+    .sl-duration-wrap:not(.is-custom) .sl-custom-duration { display: none; }
+    .sl-duration-unit {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 32px;
+      min-width: 40px;
+      padding: 0 8px;
+      color: var(--text-secondary);
+      font-size: 13px;
+      background: #eef1f6;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+    .sl-block {
+      margin-top: 16px;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 1px 2px rgba(26, 28, 31, 0.04);
+    }
+    .sl-block-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .sl-block-head strong {
+      color: var(--text-title);
+      font-size: 14px;
+    }
+    .sl-block-head .sl-block-index {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      margin-right: 8px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #fff;
+      font-size: 12px;
+    }
+    .sl-result-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr)) 32px;
+      gap: 12px;
+      align-items: start;
+      margin-bottom: 12px;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: #f7f9fc;
+    }
+    .sl-result-row > .alarm-condition-remove {
+      margin-top: 30px;
+      justify-self: center;
+    }
+    .sl-mode-row {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-top: 8px;
+    }
+    .sl-section-title {
+      margin: 20px 0 12px;
+      color: var(--text-title);
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .alarm-wizard-steps.steps-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    @media (max-width: 1100px) {
+      .sl-cascade-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .sl-result-row { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body class="alarm-page alarm-rule-page" data-menu-key="linkage.smart" data-page-section="联动管理系统" data-page-title="智能联动">
+  <div class="app-shell">
+    <aside id="app-sidebar" class="sidebar"></aside>
+    <header id="app-header" class="header"></header>
+    <main class="main">
+      <div class="screen-frame stack">
+        <section class="card alarm-filter-card">
+          <div class="filter-actions alarm-rule-filter-row">
+            <label class="form-field"><span class="form-label">规则名称</span><input class="form-control" data-filter="name" placeholder="请输入规则名称"></label>
+            <label class="form-field"><span class="form-label">执行模式</span><select class="form-control" data-filter="mode"><option value="">请选择</option><option>自动执行</option><option>手动执行</option></select></label>
+            <label class="form-field"><span class="form-label">启用状态</span><select class="form-control" data-filter="status"><option value="">请选择</option><option>启用</option><option>停用</option></select></label>
+            <button class="btn btn-secondary" type="button" data-action="reset">重置</button>
+            <button class="btn btn-primary" type="button" data-action="search">搜索</button>
+          </div>
+        </section>
+        <section class="card alarm-list-card">
+          <div class="card-title-row alarm-toolbar">
+            <h1 class="card-title">智能联动规则</h1>
+            <button class="btn btn-primary" type="button" data-action="create"><i class="fa-solid fa-plus"></i>新增</button>
+          </div>
+          <div class="table-wrap">
+            <table class="table alarm-rule-table">
+              <thead>
+                <tr>
+                  <th>序号</th>
+                  <th>规则名称</th>
+                  <th>触发条件</th>
+                  <th>联动系统</th>
+                  <th>联动设备</th>
+                  <th>执行动作</th>
+                  <th>执行模式</th>
+                  <th>启用状态</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="ruleBody"></tbody>
+            </table>
+          </div>
+          <div class="pagination"><span>共 <strong id="ruleCount">0</strong> 条，每页 10 条</span><span class="page-item active">1</span></div>
+        </section>
+      </div>
+    </main>
+  </div>
+  <script src="../../../app/config/menu.js?v=nav-hide-1"></script>
+  <script src="../../../app/components/sidebar.js?v=nav-home-1"></script>
+  <script src="../../../app/components/header.js?v=nav-home-1"></script>
+  <script src="../../../app/components/drawer.js"></script>
+  <script src="../../../app/components/requirement.js"></script>
+  <script src="../../../app/data/smart-linkage-data.js"></script>
+  <script>
+(function () {
+  const DATA = window.SMART_LINKAGE_DATA || {};
+  const TREE = DATA.spatialTree || [];
+  const CATALOG = DATA.deviceCatalog || [];
+  const rules = [...(DATA.linkageRules || [])];
+  const SYSTEMS = ["环境与设备监控", "入侵报警系统", "门禁系统", "智能井盖系统", "电力监测系统", "通信系统", "火灾报警系统", "消防监控系统", "视频监控系统"];
+  const OPERATORS = ["等于", "大于", "大于等于", "小于", "小于等于"];
+  const EXEC_DURATIONS = ["30 秒", "1 分钟", "5 分钟", "10 分钟", "持续至触发条件解除"];
+  const bodyEl = document.getElementById("ruleBody");
+
+  function emptyCondition() { return { property: "", operator: "", threshold: "" }; }
+  function emptyTrigger() {
+    return { system: "", device: "", monitorRule: "any", conditions: [emptyCondition()] };
+  }
+  function emptyResult() { return { system: "", device: "", action: "", execTime: "持续至触发条件解除" }; }
+
+  function parseExecDuration(execTime) {
+    if (execTime === "自定义") return { preset: "自定义", customValue: "" };
+    if (!execTime || EXEC_DURATIONS.includes(execTime)) {
+      return { preset: execTime || "", customValue: "" };
+    }
+    const matched = String(execTime).match(/^(\d+)\s*(min|分钟|秒)$/i);
+    if (matched) return { preset: "自定义", customValue: matched[1] };
+    return { preset: "自定义", customValue: String(execTime).replace(/[^\d]/g, "") };
+  }
+
+  function resolveExecTime(preset, customValue) {
+    if (preset !== "自定义") return preset || "";
+    const value = String(customValue || "").trim();
+    return value ? `${value} min` : "自定义";
+  }
+
+  function availableProperties(trigger, conditionIndex) {
+    const all = propertiesFor(trigger.system, trigger.device);
+    const used = new Set(
+      (trigger.conditions || [])
+        .map((item, index) => (index === conditionIndex ? "" : item.property))
+        .filter(Boolean)
+    );
+    return all.filter((item) => !used.has(item));
+  }
+
+  let wizardState = {
+    step: 1,
+    mode: "create",
+    rule: null,
+    location: { project: "", corridor: "", cabin: "", section: "", pipeline: "" },
+    triggers: [emptyTrigger()],
+    results: [emptyResult()],
+    draft: null,
+  };
+
+  function ruleById(id) {
+    return rules.find((item) => String(item.id) === String(id)) || rules[0];
+  }
+
+  function persist() {
+    DATA.linkageRules = rules;
+    try { sessionStorage.setItem("SMART_LINKAGE_RULES", JSON.stringify(rules)); } catch (_) {}
+  }
+
+  function loadPersisted() {
+    try {
+      const saved = JSON.parse(sessionStorage.getItem("SMART_LINKAGE_RULES") || "null");
+      if (Array.isArray(saved) && saved.length) {
+        rules.splice(0, rules.length, ...saved);
+        DATA.linkageRules = rules;
+      }
+    } catch (_) {}
+  }
+
+  function findProject(name) { return TREE.find((p) => p.name === name); }
+  function findCorridor(project, name) { return findProject(project)?.corridors?.find((c) => c.name === name); }
+  function findCabin(project, corridor, name) { return findCorridor(project, corridor)?.cabins?.find((b) => b.name === name); }
+  function findSection(project, corridor, cabin, name) {
+    return findCabin(project, corridor, cabin)?.sections?.find((s) => (typeof s === "string" ? s : s.name) === name);
+  }
+
+  function sectionName(s) { return typeof s === "string" ? s : s.name; }
+  function sectionPipelines(s) { return typeof s === "string" ? [] : (s.pipelines || []); }
+
+  function optionsHtml(list, selected, placeholder) {
+    return `<option value="">${placeholder}</option>` + list.map((v) => `<option value="${v}" ${selected === v ? "selected" : ""}>${v}</option>`).join("");
+  }
+
+  function cascadeMarkup(loc) {
+    const projects = TREE.map((p) => p.name);
+    const corridors = findProject(loc.project)?.corridors?.map((c) => c.name) || [];
+    const cabins = findCorridor(loc.project, loc.corridor)?.cabins?.map((b) => b.name) || [];
+    const sections = (findCabin(loc.project, loc.corridor, loc.cabin)?.sections || []).map(sectionName);
+    const pipelines = sectionPipelines(findSection(loc.project, loc.corridor, loc.cabin, loc.section) || {});
+    return `<div class="sl-cascade-grid">
+      <label class="form-field form-item"><span class="form-label form-required">项目</span>
+        <select class="form-control" data-cascade="project">${optionsHtml(projects, loc.project, "请选择项目")}</select></label>
+      <label class="form-field form-item"><span class="form-label">管廊</span>
+        <select class="form-control" data-cascade="corridor">${optionsHtml(corridors, loc.corridor, "请选择管廊")}</select></label>
+      <label class="form-field form-item"><span class="form-label">舱室</span>
+        <select class="form-control" data-cascade="cabin">${optionsHtml(cabins, loc.cabin, "请选择舱室")}</select></label>
+      <label class="form-field form-item"><span class="form-label">区段</span>
+        <select class="form-control" data-cascade="section">${optionsHtml(sections, loc.section, "请选择区段")}</select></label>
+      <label class="form-field form-item"><span class="form-label">管线</span>
+        <select class="form-control" data-cascade="pipeline">${optionsHtml(pipelines, loc.pipeline, "请选择管线")}</select></label>
+    </div>`;
+  }
+
+  function devicesFor(system, loc) {
+    let list = CATALOG.filter((d) => !system || d.system === system);
+    const scope = loc || wizardState.location || {};
+    ["project", "corridor", "cabin", "section", "pipeline"].forEach((dim) => {
+      if (!scope[dim]) return;
+      const narrowed = list.filter((d) => d[dim] === scope[dim]);
+      if (narrowed.length) list = narrowed;
+    });
+    return list;
+  }
+
+  function findDevice(system, deviceName) {
+    return CATALOG.find((d) => d.system === system && d.name === deviceName);
+  }
+
+  function propertiesFor(system, deviceName) {
+    return findDevice(system, deviceName)?.properties || ["运行状态", "温度", "液位高度", "甲烷浓度", "电流"];
+  }
+
+  function actionsFor(system, deviceName) {
+    return findDevice(system, deviceName)?.actions || [];
+  }
+
+  function conditionRowsMarkup(trigger, triggerIndex) {
+    return (trigger.conditions || []).map((condition, index) => {
+      const props = availableProperties(trigger, index);
+      const propertyOptions = condition.property && !props.includes(condition.property)
+        ? [condition.property, ...props]
+        : props;
+      return `<div class="alarm-condition" data-condition-index="${index}">
+        <span class="alarm-condition-label">条件${index + 1}：</span>
+        <select class="form-control" data-condition-field="property" aria-label="条件${index + 1}属性">
+          <option value="">请选择属性</option>
+          ${propertyOptions.map((p) => `<option value="${p}" ${condition.property === p ? "selected" : ""}>${p}</option>`).join("")}
+        </select>
+        <select class="form-control" data-condition-field="operator" aria-label="条件${index + 1}运算符">
+          <option value="">请选择运算符</option>
+          ${OPERATORS.map((op) => `<option value="${op}" ${condition.operator === op ? "selected" : ""}>${op}</option>`).join("")}
+        </select>
+        <input class="form-control" data-condition-field="threshold" value="${condition.threshold || ""}" placeholder="请输入阈值" aria-label="条件${index + 1}阈值">
+        <button class="alarm-condition-remove" type="button" data-trigger-cond="remove" data-trigger-index="${triggerIndex}" data-condition-index="${index}" aria-label="删除条件"><i class="fa-solid fa-circle-minus"></i></button>
+      </div>`;
+    }).join("");
+  }
+
+  function triggerBlocksMarkup() {
+    return wizardState.triggers.map((trigger, index) => {
+      const deviceList = devicesFor(trigger.system, wizardState.location);
+      return `<div class="sl-block" data-trigger-block="${index}">
+        <div class="sl-block-head">
+          <strong><span class="sl-block-index">${index + 1}</span>触发源</strong>
+          <button class="table-action status-danger" type="button" data-trigger-action="remove" data-trigger-index="${index}" ${wizardState.triggers.length <= 1 ? "disabled" : ""}>删除</button>
+        </div>
+        <div class="alarm-field-group">
+          <div class="form-grid-2">
+            <label class="form-field"><span class="form-label form-required">选择系统</span>
+              <select class="form-control" data-trigger-field="system">
+                <option value="">请选择系统</option>
+                ${SYSTEMS.map((s) => `<option value="${s}" ${trigger.system === s ? "selected" : ""}>${s}</option>`).join("")}
+              </select>
+            </label>
+            <label class="form-field"><span class="form-label form-required">选择设备</span>
+              <select class="form-control" data-trigger-field="device">
+                <option value="">请选择设备</option>
+                ${deviceList.map((d) => `<option value="${d.name}" ${trigger.device === d.name ? "selected" : ""}>${d.name}</option>`).join("")}
+              </select>
+            </label>
+          </div>
+          <div class="alarm-choice-row alarm-trigger-rule-row">
+            <span class="form-label form-required">监测规则</span>
+            <label class="alarm-choice"><input type="radio" name="monitor-rule-${index}" value="any" ${trigger.monitorRule !== "all" ? "checked" : ""}>满足以下任一条件</label>
+            <label class="alarm-choice"><input type="radio" name="monitor-rule-${index}" value="all" ${trigger.monitorRule === "all" ? "checked" : ""}>满足以下全部条件</label>
+          </div>
+        </div>
+        <div class="alarm-condition-toolbar">
+          <span class="form-label">条件列表：</span>
+          <button class="alarm-link" type="button" data-trigger-cond="add" data-trigger-index="${index}"><i class="fa-solid fa-circle-plus"></i>添加条件</button>
+          <button class="alarm-link" type="button" data-trigger-cond="clear" data-trigger-index="${index}"><i class="fa-solid fa-circle-xmark"></i>清空列表</button>
+        </div>
+        <div class="alarm-condition-list" data-condition-list="${index}">${conditionRowsMarkup(trigger, index)}</div>
+      </div>`;
+    }).join("");
+  }
+
+  function resultRowsMarkup() {
+    return wizardState.results.map((row, index) => {
+      const deviceList = devicesFor(row.system, wizardState.location);
+      const actionList = row.device ? actionsFor(row.system, row.device) : [];
+      const hasDevice = Boolean(row.device);
+      const duration = parseExecDuration(row.execTime);
+      const showCustom = hasDevice && duration.preset === "自定义";
+      return `<div class="sl-result-row" data-result-index="${index}">
+        <label class="form-field"><span class="form-label form-required">联动系统</span>
+          <select class="form-control" data-result-field="system">
+            <option value="">请选择</option>
+            ${SYSTEMS.map((s) => `<option value="${s}" ${row.system === s ? "selected" : ""}>${s}</option>`).join("")}
+          </select>
+        </label>
+        <label class="form-field"><span class="form-label form-required">联动设备</span>
+          <select class="form-control" data-result-field="device" ${row.system ? "" : "disabled"}>
+            <option value="">${row.system ? (deviceList.length ? "请选择" : "该区域暂无设备") : "请先选择系统"}</option>
+            ${deviceList.map((d) => `<option value="${d.name}" ${row.device === d.name ? "selected" : ""}>${d.name}</option>`).join("")}
+          </select>
+        </label>
+        <label class="form-field"><span class="form-label form-required">执行动作</span>
+          <select class="form-control" data-result-field="action" ${hasDevice ? "" : "disabled"}>
+            <option value="">${hasDevice ? "请选择" : "请先选择设备"}</option>
+            ${actionList.map((a) => `<option value="${a}" ${row.action === a ? "selected" : ""}>${a}</option>`).join("")}
+          </select>
+        </label>
+        <label class="form-field"><span class="form-label form-required">执行时长</span>
+          <div class="sl-duration-wrap${showCustom ? " is-custom" : ""}">
+            <select class="form-control" data-result-field="execTimePreset" ${hasDevice ? "" : "disabled"}>
+              <option value="">${hasDevice ? "请选择" : "请先选择设备"}</option>
+              ${EXEC_DURATIONS.map((t) => `<option value="${t}" ${duration.preset === t ? "selected" : ""}>${t}</option>`).join("")}
+              <option value="自定义" ${duration.preset === "自定义" ? "selected" : ""}>自定义</option>
+            </select>
+            <div class="sl-custom-duration">
+              <input class="form-control" type="number" min="1" step="1" data-result-field="customDurationValue" value="${duration.customValue}" placeholder="时长" aria-label="自定义时长">
+              <span class="sl-duration-unit">min</span>
+            </div>
+          </div>
+        </label>
+        <button class="alarm-condition-remove" type="button" data-result-action="remove" ${wizardState.results.length <= 1 ? "disabled" : ""} aria-label="删除联动结果"><i class="fa-solid fa-circle-minus"></i></button>
+      </div>`;
+    }).join("");
+  }
+
+  function areaLabel(loc) {
+    return [loc.project, loc.corridor, loc.cabin, loc.section, loc.pipeline].filter(Boolean).join(" / ");
+  }
+
+  function triggerSummaryText(triggers) {
+    return (triggers || []).map((t) => {
+      const cond = (t.conditions || []).map((c) => `${c.property} ${c.operator} ${c.threshold}`).join(t.monitorRule === "all" ? " 且 " : " 或 ");
+      return `${t.device || t.system || "-"}：${cond || "-"}`;
+    }).join("；");
+  }
+
+  function wizardMarkup() {
+    const rule = wizardState.rule || {};
+    return `<div class="alarm-wizard" data-wizard-mode="${wizardState.mode}">
+      <div class="alarm-wizard-steps steps-3">
+        <button class="alarm-wizard-step active" type="button" data-step="1" data-wizard-step="1">基本信息</button>
+        <button class="alarm-wizard-step" type="button" data-step="2" data-wizard-step="2">联动规则</button>
+        <button class="alarm-wizard-step" type="button" data-step="3" data-wizard-step="3">保存预览</button>
+      </div>
+      <div class="alarm-wizard-content">
+        <section data-wizard-panel="1">
+          <div class="alarm-tip">本步定义规则「在什么场景、哪个空间生效」。先填规则名称与场景类型，再选适用区域：项目必填，管廊→舱室→区段→管线可逐级缩小范围。范围越细，下一步可选的触发设备与联动设备越精准。</div>
+          <div class="form-grid-2">
+            <label class="form-field form-item"><span class="form-label form-required">规则名称</span>
+              <input class="form-control" data-wizard-field="name" value="${rule.name || ""}" placeholder="例如：甲烷超标启动排风"></label>
+            <label class="form-field form-item"><span class="form-label form-required">场景类型</span>
+              <select class="form-control" data-wizard-field="scene">
+                <option value="">请选择</option>
+                ${["气体超限", "积水处置", "火灾应急", "入侵处置", "其他"].map((s) => `<option ${rule.scene === s ? "selected" : ""}>${s}</option>`).join("")}
+              </select>
+            </label>
+            <div class="form-field form-item form-span-2"><span class="form-label form-required">适用区域</span>${cascadeMarkup(wizardState.location)}</div>
+            <label class="form-field form-item form-span-2"><span class="form-label">规则说明</span>
+              <textarea class="form-control textarea" data-wizard-field="description" placeholder="请输入规则说明">${rule.description || ""}</textarea></label>
+          </div>
+        </section>
+        <section class="hidden" data-wizard-panel="2">
+          <div class="alarm-tip">本步配置「什么条件触发、联动做什么」。先选触发系统与设备并设置监测条件（可多触发源；单源内条件至多可添加五项，且属性不可重复），再按系统选择联动设备，选定设备后配置执行动作与执行时长。自动执行满足条件即下发；手动执行需值班员在联动执行台确认。</div>
+          <div class="sl-section-title">触发条件</div>
+          <div class="alarm-condition-toolbar" style="margin-top:0">
+            <button class="alarm-link" type="button" data-trigger-action="add"><i class="fa-solid fa-circle-plus"></i>添加触发条件</button>
+          </div>
+          <div id="triggerList">${triggerBlocksMarkup()}</div>
+          <div class="sl-section-title">执行模式</div>
+          <div class="sl-mode-row">
+            <label class="alarm-choice"><input type="radio" name="exec-mode" value="自动执行" ${(rule.mode || "自动执行") === "自动执行" ? "checked" : ""}>自动执行</label>
+            <label class="alarm-choice"><input type="radio" name="exec-mode" value="手动执行" ${rule.mode === "手动执行" ? "checked" : ""}>手动执行</label>
+          </div>
+          <div class="sl-section-title">联动结果</div>
+          <div class="alarm-condition-toolbar" style="margin-top:0">
+            <button class="alarm-link" type="button" data-result-action="add"><i class="fa-solid fa-circle-plus"></i>添加联动结果</button>
+          </div>
+          <div id="resultList">${resultRowsMarkup()}</div>
+        </section>
+        <section class="hidden" data-wizard-panel="3">
+          <div class="alarm-tip">请核对规则信息后保存。自动执行规则满足条件后直接下发；手动执行规则需在列表点击「执行」进入联动执行台确认。</div>
+          <div class="alarm-summary-section"><h3 class="alarm-summary-title">基本信息</h3>
+            <table class="alarm-summary-table"><tbody>
+              <tr><th class="summary-label">规则名称</th><td data-summary="name">-</td><th class="summary-label">场景类型</th><td data-summary="scene">-</td></tr>
+              <tr><th class="summary-label">适用区域</th><td colspan="3" data-summary="area">-</td></tr>
+              <tr><th class="summary-label">规则说明</th><td colspan="3" data-summary="description">-</td></tr>
+            </tbody></table>
+          </div>
+          <div class="alarm-summary-section"><h3 class="alarm-summary-title">联动规则</h3>
+            <table class="alarm-summary-table"><tbody>
+              <tr><th class="summary-label">触发条件</th><td colspan="3" data-summary="trigger">-</td></tr>
+              <tr><th class="summary-label">执行模式</th><td data-summary="mode">-</td><th class="summary-label">联动结果</th><td data-summary="results">-</td></tr>
+            </tbody></table>
+          </div>
+        </section>
+      </div>
+    </div>`;
+  }
+
+  function captureWizardState() {
+    const body = document.getElementById("drawerBody");
+    if (!body) return;
+    const get = (key) => body.querySelector(`[data-wizard-field="${key}"]`)?.value || "";
+    wizardState.location = {
+      project: body.querySelector('[data-cascade="project"]')?.value || "",
+      corridor: body.querySelector('[data-cascade="corridor"]')?.value || "",
+      cabin: body.querySelector('[data-cascade="cabin"]')?.value || "",
+      section: body.querySelector('[data-cascade="section"]')?.value || "",
+      pipeline: body.querySelector('[data-cascade="pipeline"]')?.value || "",
+    };
+    wizardState.draft = {
+      name: get("name"),
+      scene: get("scene"),
+      description: get("description"),
+      mode: body.querySelector('input[name="exec-mode"]:checked')?.value || "自动执行",
+    };
+    wizardState.triggers = [...body.querySelectorAll("[data-trigger-block]")].map((block, index) => ({
+      system: block.querySelector('[data-trigger-field="system"]')?.value || "",
+      device: block.querySelector('[data-trigger-field="device"]')?.value || "",
+      monitorRule: block.querySelector(`input[name="monitor-rule-${index}"]:checked`)?.value || "any",
+      conditions: [...block.querySelectorAll(".alarm-condition")].map((row) => ({
+        property: row.querySelector('[data-condition-field="property"]')?.value || "",
+        operator: row.querySelector('[data-condition-field="operator"]')?.value || "",
+        threshold: row.querySelector('[data-condition-field="threshold"]')?.value.trim() || "",
+      })),
+    }));
+    wizardState.results = [...body.querySelectorAll(".sl-result-row")].map((row) => ({
+      system: row.querySelector('[data-result-field="system"]')?.value || "",
+      device: row.querySelector('[data-result-field="device"]')?.value || "",
+      action: row.querySelector('[data-result-field="action"]')?.value || "",
+      execTime: resolveExecTime(
+        row.querySelector('[data-result-field="execTimePreset"]')?.value || "",
+        row.querySelector('[data-result-field="customDurationValue"]')?.value || ""
+      ),
+    }));
+  }
+
+  function refreshCascadeSelects() {
+    const body = document.getElementById("drawerBody");
+    if (!body) return;
+    const host = body.querySelector(".sl-cascade-grid")?.parentElement;
+    if (!host) return;
+    const label = host.querySelector(".form-label");
+    host.innerHTML = "";
+    if (label) host.appendChild(label);
+    const wrap = document.createElement("div");
+    wrap.innerHTML = cascadeMarkup(wizardState.location);
+    host.appendChild(wrap.firstElementChild);
+  }
+
+  function refreshStep2Lists() {
+    const triggerList = document.getElementById("triggerList");
+    const resultList = document.getElementById("resultList");
+    if (triggerList) triggerList.innerHTML = triggerBlocksMarkup();
+    if (resultList) resultList.innerHTML = resultRowsMarkup();
+  }
+
+  function updateSummary() {
+    const body = document.getElementById("drawerBody");
+    if (!body) return;
+    captureWizardState();
+    const d = wizardState.draft || {};
+    const set = (key, value) => { const el = body.querySelector(`[data-summary="${key}"]`); if (el) el.textContent = value || "-"; };
+    set("name", d.name);
+    set("scene", d.scene);
+    set("area", areaLabel(wizardState.location));
+    set("description", d.description);
+    set("trigger", triggerSummaryText(wizardState.triggers));
+    set("mode", d.mode);
+    set("results", wizardState.results.map((r) => `${r.system}/${r.device}/${r.action}/${r.execTime}`).join("；"));
+  }
+
+  function clearValidation(panel) {
+    panel.querySelectorAll(".error").forEach((item) => item.classList.remove("error"));
+    panel.querySelectorAll(".form-error").forEach((item) => item.remove());
+  }
+
+  function markValidation(field, message) {
+    if (!field) return;
+    field.classList.add("error");
+    const host = field.closest(".form-field") || field.parentElement;
+    if (!host || host.querySelector(".form-error")) return;
+    const error = document.createElement("span");
+    error.className = "form-error";
+    error.textContent = message;
+    host.appendChild(error);
+  }
+
+  function validateStep(step) {
+    const body = document.getElementById("drawerBody");
+    const panel = body?.querySelector(`[data-wizard-panel="${step}"]`);
+    if (!panel) return true;
+    captureWizardState();
+    clearValidation(panel);
+    let valid = true;
+    const required = (field, message) => {
+      if (!field || !String(field.value || "").trim()) { markValidation(field, message); valid = false; }
+    };
+    if (step === 1) {
+      required(panel.querySelector('[data-wizard-field="name"]'), "请输入规则名称");
+      required(panel.querySelector('[data-wizard-field="scene"]'), "请选择场景类型");
+      required(panel.querySelector('[data-cascade="project"]'), "请选择项目");
+    }
+    if (step === 2) {
+      if (!panel.querySelector('input[name="exec-mode"]:checked')) {
+        markValidation(panel.querySelector('input[name="exec-mode"]'), "请选择执行模式");
+        valid = false;
+      }
+      panel.querySelectorAll("[data-trigger-block]").forEach((block, index) => {
+        required(block.querySelector('[data-trigger-field="system"]'), "请选择系统");
+        required(block.querySelector('[data-trigger-field="device"]'), "请选择设备");
+        if (!block.querySelector(`input[name="monitor-rule-${index}"]:checked`)) {
+          markValidation(block.querySelector(`input[name="monitor-rule-${index}"]`), "请选择监测规则");
+          valid = false;
+        }
+        const conditions = block.querySelectorAll(".alarm-condition");
+        if (!conditions.length) {
+          markValidation(block.querySelector("[data-condition-list]") || block, "请至少保留一条条件");
+          valid = false;
+        }
+        conditions.forEach((row) => {
+          required(row.querySelector('[data-condition-field="property"]'), "请选择属性");
+          required(row.querySelector('[data-condition-field="operator"]'), "请选择运算符");
+          required(row.querySelector('[data-condition-field="threshold"]'), "请输入阈值");
+        });
+      });
+      panel.querySelectorAll(".sl-result-row").forEach((row) => {
+        required(row.querySelector('[data-result-field="system"]'), "请选择联动系统");
+        required(row.querySelector('[data-result-field="device"]'), "请选择联动设备");
+        required(row.querySelector('[data-result-field="action"]'), "请选择执行动作");
+        const presetField = row.querySelector('[data-result-field="execTimePreset"]');
+        required(presetField, "请选择执行时长");
+        if (presetField?.value === "自定义") {
+          const customValue = row.querySelector('[data-result-field="customDurationValue"]');
+          if (!customValue?.value.trim() || Number(customValue.value) <= 0) {
+            markValidation(customValue || presetField, "请输入自定义时长（min）");
+            valid = false;
+          }
+        }
+      });
+    }
+    return valid;
+  }
+
+  function syncWizard() {
+    const body = document.getElementById("drawerBody");
+    if (!body) return;
+    body.querySelectorAll("[data-wizard-step]").forEach((item) => {
+      const step = Number(item.dataset.wizardStep);
+      item.classList.toggle("active", step === wizardState.step);
+      item.classList.toggle("done", step < wizardState.step);
+    });
+    body.querySelectorAll("[data-wizard-panel]").forEach((panel) => {
+      panel.classList.toggle("hidden", Number(panel.dataset.wizardPanel) !== wizardState.step);
+    });
+    const footer = document.getElementById("drawerFooter");
+    if (footer) {
+      footer.innerHTML = `${wizardState.step > 1 ? '<button class="btn btn-secondary" type="button" data-wizard-action="prev">上一步</button>' : ""}<button class="btn btn-primary" type="button" data-wizard-action="${wizardState.step === 3 ? "save" : "next"}">${wizardState.step === 3 ? "保存" : "下一步"}</button><button class="btn btn-secondary" type="button" data-drawer-close>取消</button>`;
+      footer.querySelectorAll("[data-drawer-close]").forEach((item) => item.addEventListener("click", window.closeAppDrawer));
+    }
+    if (wizardState.step === 2) refreshStep2Lists();
+    if (wizardState.step === 3) updateSummary();
+  }
+
+  function openWizard(mode, rule = null) {
+    wizardState = {
+      step: 1,
+      mode,
+      rule,
+      location: {
+        project: rule?.project || "",
+        corridor: rule?.corridor || "",
+        cabin: rule?.cabin || "",
+        section: rule?.section || "",
+        pipeline: rule?.pipeline || "",
+      },
+      triggers: rule?.triggers?.length
+        ? rule.triggers.map((t) => ({
+            system: t.system || "",
+            device: t.device || "",
+            monitorRule: t.monitorRule || "any",
+            conditions: (t.conditions || [emptyCondition()]).map((c) => ({ ...c })),
+          }))
+        : [emptyTrigger()],
+      results: rule?.results?.length
+        ? rule.results.map((r) => ({
+            system: r.system || "",
+            device: r.device || "",
+            action: r.action || "",
+            execTime: r.execTime || "持续至触发条件解除",
+          }))
+        : rule
+          ? [{
+              system: rule.system || "",
+              device: (rule.device || "").split(" / ")[0] || "",
+              action: rule.action || "",
+              execTime: rule.execTime || "持续至触发条件解除",
+            }]
+          : [emptyResult()],
+      draft: null,
+    };
+    window.openAppDrawer({
+      title: mode === "edit" ? "编辑智能联动规则" : "新增智能联动规则",
+      subtitle: "联动管理系统 · 智能联动",
+      body: wizardMarkup(),
+      footer: "",
+    });
+    syncWizard();
+  }
+
+  function openDetail(item) {
+    window.openAppDrawer({
+      title: "智能联动规则详情",
+      subtitle: "联动管理系统 · 智能联动",
+      body: `<section class="detail-section"><h3 class="detail-title">基本信息</h3><div class="detail-grid alarm-detail-grid">
+        <div class="info-item"><span class="info-label">规则名称</span><span class="info-value">${item.name}</span></div>
+        <div class="info-item"><span class="info-label">场景类型</span><span class="info-value">${item.scene || "-"}</span></div>
+        <div class="info-item"><span class="info-label">适用区域</span><span class="info-value">${item.area || "-"}</span></div>
+        <div class="info-item"><span class="info-label">启用状态</span><span class="info-value">${item.status}</span></div>
+        <div class="info-item"><span class="info-label">规则说明</span><span class="info-value">${item.description || "-"}</span></div>
+      </div></section>
+      <section class="detail-section"><h3 class="detail-title">联动规则</h3><div class="detail-grid alarm-detail-grid">
+        <div class="info-item"><span class="info-label">触发条件</span><span class="info-value">${item.trigger}</span></div>
+        <div class="info-item"><span class="info-label">执行模式</span><span class="info-value">${item.mode}</span></div>
+        <div class="info-item"><span class="info-label">联动系统</span><span class="info-value">${item.system}</span></div>
+        <div class="info-item"><span class="info-label">联动设备</span><span class="info-value">${item.device}</span></div>
+        <div class="info-item"><span class="info-label">执行动作</span><span class="info-value">${item.action}</span></div>
+        <div class="info-item"><span class="info-label">执行时长</span><span class="info-value">${item.execTime || "-"}</span></div>
+      </div></section>`,
+      footer: '<button class="btn btn-secondary" type="button" data-drawer-close>关闭</button>',
+    });
+  }
+
+  function saveWizard() {
+    captureWizardState();
+    const d = wizardState.draft || {};
+    const primary = wizardState.results[0] || emptyResult();
+    const payload = {
+      id: wizardState.mode === "edit" && wizardState.rule ? wizardState.rule.id : `LR-${Date.now()}`,
+      name: d.name,
+      scene: d.scene,
+      description: d.description,
+      mode: d.mode,
+      project: wizardState.location.project,
+      corridor: wizardState.location.corridor,
+      cabin: wizardState.location.cabin,
+      section: wizardState.location.section,
+      pipeline: wizardState.location.pipeline,
+      area: areaLabel(wizardState.location),
+      triggers: wizardState.triggers,
+      trigger: triggerSummaryText(wizardState.triggers),
+      system: primary.system,
+      device: wizardState.results.map((r) => r.device).filter(Boolean).join(" / "),
+      action: primary.action,
+      execTime: primary.execTime,
+      results: wizardState.results.map((r) => ({
+        system: r.system,
+        device: r.device,
+        action: r.action,
+        execTime: r.execTime,
+      })),
+      status: wizardState.rule?.status || "启用",
+      planTemplateId: wizardState.rule?.planTemplateId || (d.scene === "火灾应急" ? "PLAN-FIRE-CROSS" : "PLAN-ENV-GAS"),
+    };
+    if (wizardState.mode === "edit" && wizardState.rule) Object.assign(wizardState.rule, payload);
+    else rules.unshift(payload);
+    persist();
+    renderRules();
+    window.closeAppDrawer();
+  }
+
+  function renderRules(list = rules) {
+    bodyEl.innerHTML = list.map((item, index) => {
+      const execBtn = item.mode === "手动执行"
+        ? `<button class="table-action" type="button" data-rule-action="execute" data-rule-id="${item.id}">执行</button>`
+        : "";
+      return `<tr data-rule-id="${item.id}">
+        <td>${index + 1}</td>
+        <td>${item.name}</td>
+        <td title="${item.trigger || ""}">${item.trigger || "-"}</td>
+        <td>${item.system}</td>
+        <td title="${item.device}">${item.device}</td>
+        <td>${item.action}</td>
+        <td>${item.mode}</td>
+        <td><label class="alarm-rule-switch" data-rule-status="${item.id}"><input type="checkbox" ${item.status === "启用" ? "checked" : ""} aria-label="${item.name}"><span class="alarm-rule-switch-track"></span></label></td>
+        <td>
+          <button class="table-action" type="button" data-rule-action="detail" data-rule-id="${item.id}">详情</button>
+          <button class="table-action" type="button" data-rule-action="edit" data-rule-id="${item.id}">编辑</button>
+          ${execBtn}
+          <button class="table-action status-danger" type="button" data-rule-action="delete" data-rule-id="${item.id}">删除</button>
+        </td>
+      </tr>`;
+    }).join("");
+    document.getElementById("ruleCount").textContent = String(list.length);
+  }
+
+  function filterRules() {
+    const filters = Object.fromEntries([...document.querySelectorAll("[data-filter]")].map((input) => [input.dataset.filter, input.value.trim()]));
+    renderRules(rules.filter((item) =>
+      (!filters.name || item.name.includes(filters.name)) &&
+      (!filters.mode || item.mode === filters.mode) &&
+      (!filters.status || item.status === filters.status)
+    ));
+  }
+
+  document.addEventListener("click", (event) => {
+    const action = event.target.closest("[data-action]")?.dataset.action;
+    if (action === "create") openWizard("create");
+    if (action === "search") filterRules();
+    if (action === "reset") {
+      document.querySelectorAll("[data-filter]").forEach((input) => { input.value = ""; });
+      renderRules();
+    }
+
+    const rowAction = event.target.closest("[data-rule-action]");
+    if (rowAction) {
+      const rule = ruleById(rowAction.dataset.ruleId);
+      const kind = rowAction.dataset.ruleAction;
+      if (kind === "detail") openDetail(rule);
+      if (kind === "edit") openWizard("edit", rule);
+      if (kind === "execute") {
+        const qs = new URLSearchParams({ ruleId: rule.id, templateId: rule.planTemplateId || "PLAN-FIRE-CROSS" });
+        location.href = `../smart-linkage/execute.html?${qs.toString()}`;
+      }
+      if (kind === "delete") {
+        window.openAppConfirm({
+          title: "提示",
+          message: `确认删除智能联动规则「${rule.name}」吗？`,
+          onConfirm: () => {
+            const index = rules.findIndex((item) => item.id === rule.id);
+            if (index >= 0) rules.splice(index, 1);
+            persist();
+            renderRules();
+          },
+        });
+      }
+    }
+
+    const status = event.target.closest("[data-rule-status]");
+    if (status && event.target.matches("input")) {
+      const rule = ruleById(status.dataset.ruleStatus);
+      rule.status = event.target.checked ? "启用" : "停用";
+      persist();
+    }
+
+    const wizardAction = event.target.closest("[data-wizard-action]")?.dataset.wizardAction;
+    if (wizardAction === "prev") { captureWizardState(); wizardState.step = Math.max(1, wizardState.step - 1); syncWizard(); }
+    if (wizardAction === "next") { if (!validateStep(wizardState.step)) return; captureWizardState(); wizardState.step = Math.min(3, wizardState.step + 1); syncWizard(); }
+    if (wizardAction === "save") { if (!validateStep(2)) { wizardState.step = 2; syncWizard(); return; } saveWizard(); }
+
+    const stepBtn = event.target.closest("[data-wizard-step]");
+    if (stepBtn && Number(stepBtn.dataset.wizardStep) <= wizardState.step) {
+      captureWizardState();
+      wizardState.step = Number(stepBtn.dataset.wizardStep);
+      syncWizard();
+    }
+
+    if (event.target.closest("[data-trigger-action='add']")) {
+      captureWizardState();
+      if (wizardState.triggers.length < 5) wizardState.triggers.push(emptyTrigger());
+      refreshStep2Lists();
+    }
+    const removeTrigger = event.target.closest("[data-trigger-action='remove']");
+    if (removeTrigger) {
+      captureWizardState();
+      const idx = Number(removeTrigger.dataset.triggerIndex);
+      if (wizardState.triggers.length > 1) wizardState.triggers.splice(idx, 1);
+      refreshStep2Lists();
+    }
+
+    const condAction = event.target.closest("[data-trigger-cond]");
+    if (condAction) {
+      captureWizardState();
+      const tIdx = Number(condAction.dataset.triggerIndex);
+      const trigger = wizardState.triggers[tIdx];
+      if (!trigger) return;
+      const kind = condAction.dataset.triggerCond;
+      if (kind === "add" && trigger.conditions.length < 5) trigger.conditions.push(emptyCondition());
+      if (kind === "clear") trigger.conditions = [];
+      if (kind === "remove" && trigger.conditions.length > 1) {
+        trigger.conditions.splice(Number(condAction.dataset.conditionIndex), 1);
+      }
+      refreshStep2Lists();
+    }
+
+    if (event.target.closest("[data-result-action='add']")) {
+      event.preventDefault();
+      captureWizardState();
+      if (wizardState.results.length < 5) wizardState.results.push(emptyResult());
+      refreshStep2Lists();
+      return;
+    }
+    const removeResult = event.target.closest("[data-result-action='remove']");
+    if (removeResult) {
+      event.preventDefault();
+      captureWizardState();
+      const row = removeResult.closest(".sl-result-row");
+      const idx = Number(row?.dataset.resultIndex);
+      if (!Number.isNaN(idx) && wizardState.results.length > 1) wizardState.results.splice(idx, 1);
+      refreshStep2Lists();
+      return;
+    }
+  });
+
+  document.addEventListener("change", (event) => {
+    const cascade = event.target.closest("[data-cascade]");
+    if (cascade) {
+      captureWizardState();
+      const level = cascade.dataset.cascade;
+      const loc = wizardState.location;
+      if (level === "project") { loc.corridor = ""; loc.cabin = ""; loc.section = ""; loc.pipeline = ""; }
+      if (level === "corridor") { loc.cabin = ""; loc.section = ""; loc.pipeline = ""; }
+      if (level === "cabin") { loc.section = ""; loc.pipeline = ""; }
+      if (level === "section") { loc.pipeline = ""; }
+      refreshCascadeSelects();
+      return;
+    }
+
+    const triggerSystem = event.target.closest('[data-trigger-field="system"]');
+    if (triggerSystem) {
+      captureWizardState();
+      const block = triggerSystem.closest("[data-trigger-block]");
+      const idx = Number(block?.dataset.triggerBlock);
+      if (!Number.isNaN(idx) && wizardState.triggers[idx]) {
+        wizardState.triggers[idx].device = "";
+        wizardState.triggers[idx].conditions = wizardState.triggers[idx].conditions.map(() => emptyCondition());
+      }
+      refreshStep2Lists();
+      return;
+    }
+
+    const triggerDevice = event.target.closest('[data-trigger-field="device"]');
+    if (triggerDevice) {
+      captureWizardState();
+      refreshStep2Lists();
+      return;
+    }
+
+    const resultSystem = event.target.closest('[data-result-field="system"]');
+    if (resultSystem) {
+      captureWizardState();
+      const row = resultSystem.closest(".sl-result-row");
+      const idx = Number(row?.dataset.resultIndex);
+      if (!Number.isNaN(idx) && wizardState.results[idx]) {
+        wizardState.results[idx].device = "";
+        wizardState.results[idx].action = "";
+        wizardState.results[idx].execTime = "持续至触发条件解除";
+      }
+      refreshStep2Lists();
+      return;
+    }
+
+    const resultDevice = event.target.closest('[data-result-field="device"]');
+    if (resultDevice) {
+      captureWizardState();
+      const row = resultDevice.closest(".sl-result-row");
+      const idx = Number(row?.dataset.resultIndex);
+      if (!Number.isNaN(idx) && wizardState.results[idx]) {
+        const item = wizardState.results[idx];
+        const allowed = actionsFor(item.system, item.device);
+        if (!allowed.includes(item.action)) item.action = "";
+        if (!item.device) item.execTime = "持续至触发条件解除";
+      }
+      refreshStep2Lists();
+      return;
+    }
+
+    const resultPreset = event.target.closest('[data-result-field="execTimePreset"]');
+    if (resultPreset) {
+      captureWizardState();
+      const row = resultPreset.closest(".sl-result-row");
+      const idx = Number(row?.dataset.resultIndex);
+      if (!Number.isNaN(idx) && wizardState.results[idx]) {
+        // 选自定义时保留标记，避免空值被收成空串后输入框消失
+        if (resultPreset.value === "自定义") wizardState.results[idx].execTime = "自定义";
+      }
+      refreshStep2Lists();
+      const customInput = document.querySelector(`.sl-result-row[data-result-index="${idx}"] [data-result-field="customDurationValue"]`);
+      if (customInput) customInput.focus();
+      return;
+    }
+
+    const propertyField = event.target.closest('[data-condition-field="property"]');
+    if (propertyField) {
+      captureWizardState();
+      refreshStep2Lists();
+    }
+  });
+
+  loadPersisted();
+  renderRules();
+})();
+  </script>
+</body>
+</html>

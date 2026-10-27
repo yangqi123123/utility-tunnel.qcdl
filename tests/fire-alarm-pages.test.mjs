@@ -13,16 +13,23 @@ const exists = async (path) => {
   }
 };
 
-test("一级菜单火灾报警系统在通信下方、消防监控上方且含两个二级入口", async () => {
+test("一级菜单火灾报警系统在通信下方、消防监控上方且含二级入口", async () => {
   const menu = await read("app/config/menu.js");
   assert.match(menu, /key:\s*"fire-alarm"/);
   assert.match(menu, /label:\s*"火灾报警系统"/);
   assert.match(menu, /fire-alarm\.monitor/);
   assert.match(menu, /label:\s*"火灾报警监测"/);
+  assert.match(menu, /fire-alarm\.control/);
+  assert.match(menu, /label:\s*"火灾设备控制"/);
   assert.match(menu, /fire-alarm\.alarms/);
   assert.match(menu, /label:\s*"火灾报警记录"/);
   assert.match(menu, /fire-monitor\.html/);
+  assert.match(menu, /fire-alarm-device-control\.html/);
   assert.match(menu, /fire-alarms\.html/);
+  const monitorIdx = menu.indexOf("fire-alarm.monitor");
+  const controlIdx = menu.indexOf("fire-alarm.control");
+  const alarmsIdx = menu.indexOf("fire-alarm.alarms");
+  assert.ok(monitorIdx >= 0 && controlIdx > monitorIdx && alarmsIdx > controlIdx);
 
   const commIdx = menu.indexOf('key: "communication-system"');
   const fireIdx = menu.indexOf('key: "fire-alarm"');
@@ -61,6 +68,13 @@ test("监测页支持地图列表切换与视频内嵌", async () => {
   assert.match(page, /火灾报警/);
   assert.match(page, /视频监控系统/);
   assert.match(page, /embedded=panel/);
+  assert.match(page, /data-eq-filter="category"/);
+  assert.match(page, /data-eq-filter="name"/);
+  assert.match(page, /data-eq-filter="code"/);
+  assert.match(page, /data-eq-filter="from"/);
+  assert.match(page, /data-eq-filter="to"/);
+  assert.match(page, /data-ias-mode="system"/);
+  assert.match(page, /data-ias-mode="space"/);
   assert.doesNotMatch(page, /INTRUSION_ALARM_DATA/);
 });
 

@@ -29,17 +29,68 @@
       flex: 1 1 auto;
       min-height: 0;
       width: 100%;
-      background: #06101f;
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr);
+      gap: 14px;
+      padding: 0 12px 12px;
+      background: #f5f7fc;
+      box-sizing: border-box;
     }
     .ias-panorama-view[hidden],
     .ias-panorama-view.ias-view-hidden { display: none !important; }
-    .ias-panorama-view iframe {
+    .pwr-pano-side {
+      background: #fff;
+      border: 1px solid #e6ebf2;
+      border-radius: 4px;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .pwr-pano-side-head {
+      height: 54px;
+      padding: 0 16px;
+      border-bottom: 1px solid #e6ebf2;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex: none;
+    }
+    .pwr-pano-side-head h2 { margin: 0; font-size: 14px; color: #192435; }
+    .pwr-pano-side-body { padding: 14px; overflow: auto; flex: 1; }
+    .pwr-screen-list { display: grid; gap: 8px; }
+    .pwr-screen-item {
+      width: 100%;
+      text-align: left;
+      border: 1px solid #e6ebf2;
+      background: #fff;
+      border-radius: 3px;
+      padding: 12px;
+      cursor: pointer;
+    }
+    .pwr-screen-item.active { border-color: #135afa; background: #eef3ff; }
+    .pwr-screen-item strong { display: block; font-size: 13px; color: #192435; }
+    .pwr-screen-item small { display: block; margin-top: 6px; font-size: 11px; color: #758297; }
+    .pwr-pano-stage {
+      position: relative;
+      min-width: 0;
+      min-height: 0;
+      background: #06101f;
+      border: 1px solid #e6ebf2;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .pwr-pano-stage iframe {
       position: absolute;
       inset: 0;
       width: 100%;
       height: 100%;
       border: 0;
       background: #06101f;
+    }
+    @media (max-width: 900px) {
+      .ias-panorama-view { grid-template-columns: 1fr; overflow: auto; }
+      .pwr-pano-stage { min-height: 480px; }
     }
   </style>
 </head>
@@ -58,7 +109,15 @@
     </div>
 
     <div id="iasPanoramaView" class="ias-panorama-view">
-      <iframe title="电力监测组态图" src="../network/configuration.html?embed=power"></iframe>
+      <aside class="pwr-pano-side" aria-label="电力监测切换">
+        <div class="pwr-pano-side-head"><h2>组态图列表</h2></div>
+        <div class="pwr-pano-side-body">
+          <div class="pwr-screen-list" id="pwrScreenList" role="listbox" aria-label="电力监测路段"></div>
+        </div>
+      </aside>
+      <div class="pwr-pano-stage">
+        <iframe id="pwrPanoFrame" title="电力监测组态图" src="../network/configuration.html?embed=power&screen=power-wl1"></iframe>
+      </div>
     </div>
 
     <!-- 地图视图：严格对齐 home.html（dm-metrics + dm-stage） -->
@@ -175,6 +234,16 @@
               <div class="env-quality-scope-path" id="eqScopePath"></div>
               <div class="env-quality-scope-filters" id="eqScopeFilters">
                 <label class="form-field">
+                  <span class="form-label">设备分类</span>
+                  <select class="form-control" data-eq-filter="category">
+                    <option value="">全部</option>
+                    <option value="UPS">UPS</option>
+                    <option value="配电柜">配电柜</option>
+                    <option value="变压器">变压器</option>
+                    <option value="电表">电表</option>
+                  </select>
+                </label>
+                <label class="form-field">
                   <span class="form-label">设备名称</span>
                   <input class="form-control" data-eq-filter="name" placeholder="请输入设备名称">
                 </label>
@@ -240,7 +309,9 @@
   <script src="../../../app/components/sidebar.js?v=nav-home-1"></script>
   <script src="../../../app/components/header.js?v=nav-home-1"></script>
   <script src="../../../app/components/drawer.js"></script>
+  <script src="../../../app/components/requirement.js"></script>
   <script src="../../../app/data/power-monitor-data.js"></script>
+  <script src="../../../app/data/configuration-data.js?v=config-hmi-6"></script>
   <script>
 (function () {
   "use strict";
@@ -389,7 +460,7 @@
     status: "all",
     spacePath: { project: "", corridor: "", room: "", section: "" },
     collapsed: {},
-    filters: { name: "", code: "", from: "", to: "" },
+    filters: { category: "", name: "", code: "", from: "", to: "" },
     detailTab: "info",
     detailId: "",
     historyPeriod: "today",
@@ -868,9 +939,11 @@
   function listVisible() {
     var nameQ = listState.filters.name.toLowerCase();
     var codeQ = listState.filters.code.toLowerCase();
+    var category = listState.filters.category || "";
     return DEVICES.filter(function (item) {
       if (listState.status !== "all" && listChipStatus(item) !== listState.status) return false;
       if (listState.mode === "space" && !matchSpacePath(item, listState.spacePath)) return false;
+      if (category && item.type !== category) return false;
       if (nameQ && !(item.name || "").toLowerCase().includes(nameQ)) return false;
       if (codeQ && !(item.code || "").toLowerCase().includes(codeQ)) return false;
       var day = (item.time || "").slice(0, 10);
@@ -1386,7 +1459,7 @@
       renderListView();
     });
     document.querySelector("[data-eq-action='reset']").addEventListener("click", function () {
-      listState.filters = { name: "", code: "", from: "", to: "" };
+      listState.filters = { category: "", name: "", code: "", from: "", to: "" };
       listState.status = "all";
       document.querySelectorAll("[data-eq-filter]").forEach(function (field) { field.value = ""; });
       renderListView();
@@ -1431,7 +1504,41 @@
     }
   }
 
+  function initPowerPanoList() {
+    var list = el("pwrScreenList");
+    var frame = el("pwrPanoFrame");
+    if (!list || !frame) return;
+    var screens = ((window.ConfigurationData && window.ConfigurationData.hmiScreens) || []).filter(function (s) {
+      return s.kind === "power";
+    });
+    if (!screens.length) {
+      screens = [
+        { id: "power-wl1", name: "未来一路电力监测", hint: "高压进线 · 变压器 · 低压出线" },
+        { id: "power-gx7", name: "高新七路电力监测", hint: "高压进线 · 变压器 · 低压出线" },
+        { id: "power-cg", name: "春光路电力监测", hint: "高压进线 · 变压器 · 低压出线" }
+      ];
+    }
+    var activeId = screens[0].id;
+    function renderList() {
+      list.innerHTML = screens.map(function (s) {
+        return '<button type="button" class="pwr-screen-item' + (s.id === activeId ? " active" : "") + '" data-pwr-screen="' + s.id + '" role="option" aria-selected="' + (s.id === activeId ? "true" : "false") + '"><strong>' + s.name + "</strong><small>" + (s.hint || "") + "</small></button>";
+      }).join("");
+    }
+    function setScreen(id) {
+      if (!screens.some(function (s) { return s.id === id; })) return;
+      activeId = id;
+      frame.src = "../network/configuration.html?embed=power&screen=" + encodeURIComponent(id);
+      renderList();
+    }
+    list.addEventListener("click", function (event) {
+      var btn = event.target.closest("[data-pwr-screen]");
+      if (btn) setScreen(btn.dataset.pwrScreen);
+    });
+    renderList();
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
+    initPowerPanoList();
     initMap();
     bindEvents();
     renderAll();

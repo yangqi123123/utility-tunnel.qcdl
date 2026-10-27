@@ -1,0 +1,465 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>布控表单 - 入侵报警系统 - 科学岛管廊监控中心</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/tob-ui.css">
+  <link rel="stylesheet" href="../../assets/css/environment-monitor.css">
+  <link rel="stylesheet" href="../../assets/css/intrusion-ai.css">
+</head>
+<body class="environment-page deploy-form-page" data-menu-key="intrusion-alarm.deployments" data-page-section="入侵报警系统" data-page-title="布控管理">
+  <div class="app-shell">
+    <aside id="app-sidebar" class="sidebar"></aside>
+    <header id="app-header" class="header"></header>
+    <main class="main">
+      <div class="screen-frame">
+        <section class="card deploy-form-card">
+          <div class="card-title-row" style="padding:16px 24px 12px;flex-shrink:0">
+            <h1 class="card-title" id="formTitle">添加布控</h1>
+          </div>
+          <div class="deploy-form-layout">
+            <div class="deploy-video-pane">
+              <div class="deploy-video-stage ai-region-stage" data-region-stage>
+                <div class="deploy-video-empty" data-video-empty>
+                  <i class="fa-solid fa-video-slash" aria-hidden="true"></i>
+                  <span>暂无视频，请选择视频流</span>
+                </div>
+                <div class="deploy-video-media hidden" data-video-media>
+                  <img class="stage-bg" src="../../assets/images/corridor-monitor.jpg" alt="管廊视频预览">
+                  <svg class="ai-region-svg" data-region-svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+                    <polygon class="ai-region-poly is-alarm" data-region-poly points="" hidden></polygon>
+                    <polyline class="ai-region-poly is-draft" data-region-line points="" hidden></polyline>
+                  </svg>
+                  <div class="ai-region-vertices" data-region-vertices></div>
+                </div>
+              </div>
+              <div class="deploy-video-tools">
+                <button class="btn btn-secondary" type="button" data-action="draw-region">框选布防区域</button>
+                <button class="btn btn-secondary" type="button" data-action="align-region">区域对齐</button>
+                <button class="btn btn-danger-outline" type="button" data-action="clear-region">清空算法识别区域</button>
+              </div>
+            </div>
+            <div class="deploy-form-pane">
+              <div class="deploy-form-scroll">
+                <div class="deploy-form-row">
+                  <span class="form-label">布控编号</span>
+                  <input class="form-control" data-field="code" readonly>
+                </div>
+                <div class="deploy-form-row camera-search">
+                  <span class="form-label form-required">选择视频流</span>
+                  <div style="position:relative;width:100%">
+                    <input class="form-control" data-camera-search placeholder="搜索并选择摄像机" autocomplete="off">
+                    <input type="hidden" data-field="cameraId">
+                    <input type="hidden" data-field="cameraName">
+                    <div class="camera-search-panel hidden" data-camera-panel></div>
+                  </div>
+                </div>
+                <div class="deploy-form-row">
+                  <span class="form-label">视频信息</span>
+                  <input class="form-control" data-field="videoInfo" readonly placeholder="选择视频流后自动带出">
+                </div>
+                <div class="deploy-form-row">
+                  <span class="form-label">音频信息</span>
+                  <input class="form-control" data-field="audioInfo" readonly placeholder="选择视频流后自动带出">
+                </div>
+                <div class="deploy-form-row">
+                  <span class="form-label">播放地址</span>
+                  <input class="form-control" data-field="playUrl" readonly placeholder="选择视频流后自动带出">
+                </div>
+                <div class="deploy-play-actions">
+                  <button class="btn btn-secondary" type="button" data-action="play-preview"><i class="fa-solid fa-play"></i> 播放视频</button>
+                  <button class="btn btn-secondary" type="button" data-action="stop-preview"><i class="fa-solid fa-stop"></i> 停止播放</button>
+                </div>
+                <div class="deploy-form-divider"></div>
+                <div class="deploy-form-row">
+                  <span class="form-label form-required">选择算法</span>
+                  <select class="form-control" data-field="algorithmId" id="algoSelect"></select>
+                </div>
+                <div class="deploy-form-row">
+                  <span class="form-label form-required">选择目标</span>
+                  <select class="form-control" data-field="target" id="targetSelect" disabled>
+                    <option value="">请先选择算法</option>
+                  </select>
+                </div>
+                <div class="deploy-form-row">
+                  <span class="form-label">是否推流</span>
+                  <div class="deploy-radio-row">
+                    <label><input type="radio" name="pushStream" value="0" data-field-push="0"> 算法处理的视频不推流</label>
+                    <label><input type="radio" name="pushStream" value="1" data-field-push="1" checked> 算法处理的视频推流</label>
+                  </div>
+                </div>
+                <div class="deploy-form-row">
+                  <span class="form-label form-required">报警间隔(秒)</span>
+                  <input class="form-control" type="number" min="1" data-field="alarmInterval" value="180">
+                </div>
+                <div class="deploy-form-row">
+                  <span class="form-label">备注</span>
+                  <textarea class="form-control textarea" data-field="remark" rows="3" placeholder="请输入备注"></textarea>
+                </div>
+              </div>
+              <div class="deploy-form-actions">
+                <a class="btn btn-secondary" href="intrusion-deployments.html">取消</a>
+                <button class="btn btn-primary" type="button" data-action="save">保存</button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+  <script src="../../../app/config/menu.js?v=nav-hide-1"></script>
+  <script src="../../../app/components/sidebar.js?v=nav-home-1"></script>
+  <script src="../../../app/components/header.js?v=nav-home-1"></script>
+  <script src="../../../app/components/drawer.js"></script>
+  <script src="../../../app/components/requirement.js"></script>
+  <script src="../../../app/data/intrusion-alarm-data.js"></script>
+  <script src="../../../app/data/intrusion-ai-data.js"></script>
+  <script>
+    (function () {
+      const DEPS = window.AI_DEPLOYMENTS || [];
+      const CLIPS = window.AI_ALARM_CLIPS || [];
+      const ALL_ALGOS = window.AI_ALGORITHMS || [];
+      const ALGOS = ALL_ALGOS.filter((a) => a.status === "enabled");
+      const cameras = (window.INTRUSION_AI_DATA?.listCameras?.() || []);
+      const KEYFRAME = "../../assets/images/corridor-monitor.jpg";
+      const editId = new URLSearchParams(location.search).get("id");
+      const existing = editId ? DEPS.find((d) => d.id === editId) : null;
+      let drawMode = false;
+      let points = [];
+      let closed = false;
+
+      function normalizeRegion(region) {
+        if (!region) return [];
+        if (Array.isArray(region.points)) return region.points.map((p) => ({ x: p.x, y: p.y }));
+        if (Array.isArray(region)) return region.map((p) => ({ x: p.x, y: p.y }));
+        if (region.w > 0 && region.h > 0) {
+          return [
+            { x: region.x, y: region.y },
+            { x: region.x + region.w, y: region.y },
+            { x: region.x + region.w, y: region.y + region.h },
+            { x: region.x, y: region.y + region.h },
+          ];
+        }
+        return [];
+      }
+      points = normalizeRegion(existing?.region);
+      closed = points.length >= 3;
+      function regionPayload() {
+        return closed && points.length >= 3 ? { points: points.map((p) => ({ ...p })) } : null;
+      }
+
+      function genCode() {
+        const hex = Math.random().toString(16).slice(2, 14);
+        return `control${hex}`;
+      }
+      function streamMeta(cameraId, code) {
+        return {
+          videoInfo: "h264/25/1920x1080",
+          audioInfo: "mpeg4-generic/1/8000/16",
+          playUrl: `ws://192.168.110.112:9002/analyzer/${code || cameraId || "stream"}`,
+        };
+      }
+      function tip(message) {
+        if (typeof window.openAppConfirm === "function") {
+          window.openAppConfirm({ title: "提示", message, confirmText: "知道了" });
+          return;
+        }
+        alert(message);
+      }
+      function setVideoSelected(hasStream) {
+        document.querySelector("[data-video-empty]")?.classList.toggle("hidden", !!hasStream);
+        document.querySelector("[data-video-media]")?.classList.toggle("hidden", !hasStream);
+      }
+      function setDrawMode(on) {
+        drawMode = !!on;
+        document.querySelector("[data-region-stage]")?.classList.toggle("is-draw-mode", drawMode);
+        document.querySelector('[data-action="draw-region"]')?.classList.toggle("is-active", drawMode);
+      }
+      function toSvgPoints(list) {
+        return list.map((p) => `${(p.x * 100).toFixed(2)},${(p.y * 100).toFixed(2)}`).join(" ");
+      }
+      function renderRegion() {
+        const poly = document.querySelector("[data-region-poly]");
+        const line = document.querySelector("[data-region-line]");
+        const verts = document.querySelector("[data-region-vertices]");
+        if (!poly || !line || !verts) return;
+        verts.innerHTML = points.map((p, idx) =>
+          `<span class="ai-region-vertex" data-vertex-index="${idx}" style="left:${p.x * 100}%;top:${p.y * 100}%"></span>`
+        ).join("");
+        if (closed && points.length >= 3) {
+          poly.hidden = false;
+          line.hidden = true;
+          poly.setAttribute("points", toSvgPoints(points));
+          line.setAttribute("points", "");
+          return;
+        }
+        poly.hidden = true;
+        poly.setAttribute("points", "");
+        if (points.length) {
+          line.hidden = false;
+          line.setAttribute("points", toSvgPoints(points));
+        } else {
+          line.hidden = true;
+          line.setAttribute("points", "");
+        }
+      }
+      function clearRegion() {
+        points = [];
+        closed = false;
+        renderRegion();
+        setDrawMode(false);
+      }
+      function nearFirst(pt) {
+        if (points.length < 3) return false;
+        const first = points[0];
+        const dx = pt.x - first.x;
+        const dy = pt.y - first.y;
+        return Math.sqrt(dx * dx + dy * dy) < 0.03;
+      }
+      function fillTargets(algorithmId, selected) {
+        const select = document.getElementById("targetSelect");
+        const algo = ALL_ALGOS.find((a) => a.id === algorithmId);
+        const cats = Array.isArray(algo?.categories) ? algo.categories : [];
+        if (!algorithmId || !cats.length) {
+          select.disabled = true;
+          select.innerHTML = `<option value="">请先选择算法</option>`;
+          return;
+        }
+        select.disabled = false;
+        select.innerHTML = `<option value="">请选择目标</option>` +
+          cats.map((c) => `<option value="${c}" ${selected === c ? "selected" : ""}>${c}</option>`).join("");
+      }
+      function applyCamera(cameraId, cameraName, opts = {}) {
+        const { clearRegion = true } = opts;
+        const code = document.querySelector('[data-field="code"]').value || genCode();
+        const meta = streamMeta(cameraId, code);
+        document.querySelector('[data-field="cameraId"]').value = cameraId || "";
+        document.querySelector('[data-field="cameraName"]').value = cameraName || "";
+        document.querySelector("[data-camera-search]").value = cameraName || "";
+        document.querySelector('[data-field="videoInfo"]').value = cameraId ? meta.videoInfo : "";
+        document.querySelector('[data-field="audioInfo"]').value = cameraId ? meta.audioInfo : "";
+        document.querySelector('[data-field="playUrl"]').value = cameraId ? meta.playUrl : "";
+        setVideoSelected(!!cameraId);
+        if (!cameraId && clearRegion) clearRegion();
+      }
+
+      document.getElementById("formTitle").textContent = existing ? "编辑布控" : "添加布控";
+      document.getElementById("algoSelect").innerHTML =
+        `<option value="">请选择算法</option>` +
+        ALGOS.map((a) => `<option value="${a.id}">${a.name}</option>`).join("");
+
+      document.querySelector('[data-field="code"]').value = existing?.code || genCode();
+
+      if (existing) {
+        document.querySelector('[data-field="algorithmId"]').value = existing.algorithmId || "";
+        fillTargets(existing.algorithmId, existing.target || "");
+        document.querySelector('[data-field="alarmInterval"]').value = existing.alarmInterval ?? 180;
+        document.querySelector('[data-field="remark"]').value = existing.remark || "";
+        const push = existing.pushStream !== false;
+        document.querySelector(`[data-field-push="${push ? "1" : "0"}"]`).checked = true;
+        applyCamera(existing.cameraId, existing.cameraName, { clearRegion: false });
+        if (existing.videoInfo) document.querySelector('[data-field="videoInfo"]').value = existing.videoInfo;
+        if (existing.audioInfo) document.querySelector('[data-field="audioInfo"]').value = existing.audioInfo;
+        if (existing.playUrl) document.querySelector('[data-field="playUrl"]').value = existing.playUrl;
+        renderRegion();
+      } else {
+        fillTargets("", "");
+        setVideoSelected(false);
+        renderRegion();
+      }
+
+      document.getElementById("algoSelect").addEventListener("change", (e) => {
+        fillTargets(e.target.value, "");
+      });
+
+      const searchInput = document.querySelector("[data-camera-search]");
+      const panel = document.querySelector("[data-camera-panel]");
+      function renderCameraOptions(keyword) {
+        const kw = (keyword || "").trim().toLowerCase();
+        const list = cameras.filter((c) => !kw || String(c.name || "").toLowerCase().includes(kw));
+        panel.classList.remove("hidden");
+        panel.innerHTML = list.length
+          ? list.map((c) => `<button type="button" data-cam-id="${c.id}" data-cam-name="${c.name}">${c.name}${c.status ? `（${c.status}）` : ""}</button>`).join("")
+          : `<button type="button" disabled>无匹配摄像机</button>`;
+      }
+      /* 再次打开时展示全部列表，不按已选名称过滤为空 */
+      searchInput.addEventListener("focus", () => renderCameraOptions(""));
+      searchInput.addEventListener("click", () => renderCameraOptions(""));
+      searchInput.addEventListener("input", () => {
+        const kw = searchInput.value.trim();
+        const currentName = document.querySelector('[data-field="cameraName"]').value;
+        if (kw !== currentName) {
+          document.querySelector('[data-field="cameraId"]').value = "";
+          document.querySelector('[data-field="cameraName"]').value = "";
+          document.querySelector('[data-field="videoInfo"]').value = "";
+          document.querySelector('[data-field="audioInfo"]').value = "";
+          document.querySelector('[data-field="playUrl"]').value = "";
+          setVideoSelected(false);
+        }
+        renderCameraOptions(kw);
+      });
+      panel.addEventListener("click", (e) => {
+        const btn = e.target.closest("[data-cam-id]");
+        if (!btn) return;
+        applyCamera(btn.dataset.camId, btn.dataset.camName, { clearRegion: false });
+        panel.classList.add("hidden");
+      });
+      document.addEventListener("click", (e) => {
+        if (!e.target.closest(".camera-search")) panel.classList.add("hidden");
+      });
+
+      const stage = document.querySelector("[data-region-stage]");
+      function pct(ev) {
+        const rect = stage.getBoundingClientRect();
+        return {
+          x: Math.min(1, Math.max(0, (ev.clientX - rect.left) / rect.width)),
+          y: Math.min(1, Math.max(0, (ev.clientY - rect.top) / rect.height)),
+        };
+      }
+      function hasCamera() {
+        return !!document.querySelector('[data-field="cameraId"]').value;
+      }
+      stage.addEventListener("click", (ev) => {
+        if (ev.target.closest("[data-action]")) return;
+        if (!hasCamera()) { tip("请先选择视频流"); return; }
+        if (!drawMode) {
+          tip("请先点击「框选布防区域」，再依次点击多个点连成面；双击或点击起点可闭合");
+          return;
+        }
+        const pt = pct(ev);
+        if (nearFirst(pt)) {
+          closed = true;
+          setDrawMode(false);
+          renderRegion();
+          return;
+        }
+        if (closed) {
+          points = [];
+          closed = false;
+        }
+        points.push(pt);
+        renderRegion();
+      });
+      stage.addEventListener("dblclick", (ev) => {
+        ev.preventDefault();
+        if (!drawMode || points.length < 3) return;
+        closed = true;
+        setDrawMode(false);
+        renderRegion();
+      });
+
+      document.addEventListener("click", (e) => {
+        const action = e.target.closest("[data-action]")?.dataset.action;
+        if (!action) return;
+        if (action === "draw-region") {
+          if (!hasCamera()) { tip("请先选择视频流"); return; }
+          if (!drawMode) {
+            closed = false;
+            if (points.length && closed === false) {
+              /* keep unfinished points */
+            }
+          }
+          setDrawMode(!drawMode);
+          return;
+        }
+        if (action === "align-region") {
+          if (!hasCamera()) { tip("请先选择视频流"); return; }
+          points = [
+            { x: 0.22, y: 0.2 },
+            { x: 0.72, y: 0.2 },
+            { x: 0.72, y: 0.68 },
+            { x: 0.22, y: 0.68 },
+          ];
+          closed = true;
+          renderRegion();
+          setDrawMode(false);
+        }
+        if (action === "clear-region") {
+          clearRegion();
+        }
+        if (action === "play-preview") {
+          if (!hasCamera()) { tip("请先选择视频流"); return; }
+          setVideoSelected(true);
+        }
+        if (action === "stop-preview") {
+          /* keep selected stream preview image */
+        }
+        if (action === "save") {
+          const code = document.querySelector('[data-field="code"]').value.trim();
+          const algorithmId = document.querySelector('[data-field="algorithmId"]').value;
+          const target = document.querySelector('[data-field="target"]').value;
+          const cameraId = document.querySelector('[data-field="cameraId"]').value;
+          const cameraName = document.querySelector('[data-field="cameraName"]').value;
+          const videoInfo = document.querySelector('[data-field="videoInfo"]').value;
+          const audioInfo = document.querySelector('[data-field="audioInfo"]').value;
+          const playUrl = document.querySelector('[data-field="playUrl"]').value;
+          const alarmInterval = Number(document.querySelector('[data-field="alarmInterval"]').value || 0);
+          const remark = document.querySelector('[data-field="remark"]').value.trim();
+          const pushStream = document.querySelector('[data-field-push="1"]')?.checked === true;
+          if (!cameraId || !cameraName) { tip("请选择视频流"); return; }
+          if (!algorithmId) { tip("请选择算法"); return; }
+          if (!target) { tip("请选择目标"); return; }
+          if (!alarmInterval || alarmInterval < 1) { tip("请填写有效的报警间隔"); return; }
+          const algoName = ALL_ALGOS.find((a) => a.id === algorithmId)?.name || "";
+          const payload = {
+            code,
+            name: `${cameraName}-${algoName || "布控"}`,
+            algorithmId,
+            target,
+            cameraId,
+            cameraName,
+            videoInfo,
+            audioInfo,
+            playUrl,
+            pushStream,
+            alarmInterval,
+            region: regionPayload(),
+            remark,
+            videoStatus: "online",
+            fps: 0,
+          };
+          let savedId = existing?.id;
+          if (existing) {
+            Object.assign(existing, payload);
+            if (existing.runStatus === "running") existing.fps = existing.fps || 24.5;
+          } else {
+            savedId = `dep-${Date.now()}`;
+            DEPS.unshift({
+              id: savedId,
+              ...payload,
+              runStatus: "cancelled",
+              createdAt: new Date().toISOString().slice(0, 19).replace("T", " "),
+            });
+          }
+          if (payload.region && payload.region.points?.length >= 3) {
+            const now = new Date().toISOString().slice(0, 19).replace("T", " ");
+            CLIPS.unshift({
+              id: Date.now(),
+              device: cameraName,
+              deviceCode: cameraId.toUpperCase(),
+              system: "入侵报警",
+              category: "视频监控",
+              type: "设备属性",
+              message: `${cameraName} 布控区域检测到目标「${target}」进入`,
+              level: "告警",
+              time: now,
+              status: "未处理",
+              location: cameraName,
+              property: cameraName,
+              deploymentId: savedId,
+              cameraName,
+              keyframeUrl: KEYFRAME,
+              clipUrl: "",
+              images: [KEYFRAME],
+              history: [{ time: now, operator: "系统", action: "创建报警（区域入侵 Mock）" }],
+            });
+          }
+          location.href = "intrusion-deployments.html";
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

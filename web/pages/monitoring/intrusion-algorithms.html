@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>算法管理 - 入侵报警系统 - 科学岛管廊监控中心</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/tob-ui.css">
+  <link rel="stylesheet" href="../../assets/css/environment-monitor.css">
+  <link rel="stylesheet" href="../../assets/css/intrusion-ai.css">
+  <style>
+    .algo-filter-card { padding: 16px 24px; }
+    .algo-filter-card .filter-actions {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(150px, 1fr)) auto;
+      gap: 16px;
+      align-items: end;
+    }
+    .algo-toolbar { padding: 16px 24px 0; margin-bottom: 12px; }
+  </style>
+</head>
+<body class="environment-page" data-menu-key="intrusion-alarm.algorithms" data-page-section="入侵报警系统" data-page-title="算法管理">
+  <div class="app-shell">
+    <aside id="app-sidebar" class="sidebar"></aside>
+    <header id="app-header" class="header"></header>
+    <main class="main">
+      <div class="screen-frame stack">
+        <section class="card algo-filter-card">
+          <div class="filter-actions">
+            <label class="form-field"><span class="form-label">算法编号</span><input class="form-control" data-filter="code" placeholder="请输入算法编号"></label>
+            <label class="form-field"><span class="form-label">算法名称</span><input class="form-control" data-filter="name" placeholder="请输入算法名称"></label>
+            <label class="form-field"><span class="form-label">状态</span>
+              <select class="form-control" data-filter="status">
+                <option value="">全部状态</option>
+                <option value="enabled">启用</option>
+                <option value="disabled">禁用</option>
+              </select>
+            </label>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-secondary" type="button" data-action="reset">重置</button>
+              <button class="btn btn-primary" type="button" data-action="search">搜索</button>
+            </div>
+          </div>
+        </section>
+        <section class="card">
+          <div class="card-title-row algo-toolbar">
+            <h1 class="card-title">算法管理</h1>
+            <div class="btn-row">
+              <button class="btn btn-primary" type="button" data-action="create"><i class="fa-solid fa-plus"></i> 新增算法</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="table" aria-label="算法列表">
+              <thead>
+                <tr>
+                  <th>算法编号</th>
+                  <th>算法名称</th>
+                  <th>分类数量</th>
+                  <th>算法分类</th>
+                  <th>算法备注</th>
+                  <th>状态</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="algoBody"></tbody>
+            </table>
+          </div>
+          <div class="pagination" style="padding:12px 24px 16px">
+            <span>共 <strong id="algoCount">0</strong> 条，每页显示 10 条</span>
+            <span class="page-item active">1</span>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+  <script src="../../../app/config/menu.js?v=nav-hide-1"></script>
+  <script src="../../../app/components/sidebar.js?v=nav-home-1"></script>
+  <script src="../../../app/components/header.js?v=nav-home-1"></script>
+  <script src="../../../app/components/drawer.js"></script>
+  <script src="../../../app/components/requirement.js"></script>
+  <script src="../../../app/data/intrusion-ai-data.js"></script>
+  <script>
+    (function () {
+      const ALGOS = window.AI_ALGORITHMS || [];
+      const DEPS = window.AI_DEPLOYMENTS || [];
+      const PRESETS = window.AI_CATEGORY_PRESETS || ["person", "bicycle", "car"];
+      const DEFAULT_TAGS = ["person", "bicycle"];
+      let draftTags = [];
+      let tagInputOpen = false;
+
+      function esc(value) {
+        return String(value ?? "").replace(/[&<>"']/g, (ch) => ({
+          "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+        }[ch]));
+      }
+      function statusLabel(s) { return s === "enabled" ? "启用" : "禁用"; }
+      function catsOf(a) { return Array.isArray(a.categories) ? a.categories : []; }
+      function isReferenced(algoId) {
+        return DEPS.some((d) => d.algorithmId === algoId);
+      }
+      function showTip(message) {
+        if (typeof window.openAppConfirm === "function") {
+          window.openAppConfirm({ title: "提示", message, confirmText: "知道了" });
+          return;
+        }
+        alert(message);
+      }
+      function filtered() {
+        const code = (document.querySelector('[data-filter="code"]')?.value || "").trim();
+        const name = (document.querySelector('[data-filter="name"]')?.value || "").trim();
+        const status = document.querySelector('[data-filter="status"]')?.value || "";
+        return ALGOS.filter((a) =>
+          (!code || (a.code || "").includes(code)) &&
+          (!name || (a.name || "").includes(name)) &&
+          (!status || a.status === status)
+        );
+      }
+      function render() {
+        const list = filtered();
+        document.getElementById("algoBody").innerHTML = list.map((a) => {
+          const cats = catsOf(a);
+          const catText = cats.join("、") || "-";
+          return `<tr>
+            <td>${esc(a.code || "-")}</td>
+            <td><button class="table-action" type="button" data-action="edit" data-id="${esc(a.id)}">${esc(a.name)}</button></td>
+            <td>${cats.length}</td>
+            <td class="algo-cats-cell" title="${esc(catText)}">${esc(catText)}</td>
+            <td class="algo-desc-cell" title="${esc(a.remark || "")}">${esc((a.remark || "").slice(0, 24))}${(a.remark || "").length > 24 ? "…" : ""}</td>
+            <td><button type="button" class="table-action" data-action="toggle-status" data-id="${esc(a.id)}">${statusLabel(a.status)}</button></td>
+            <td>
+              <button class="table-action" type="button" data-action="edit" data-id="${esc(a.id)}">编辑</button>
+              <button class="table-action status-danger" type="button" data-action="delete" data-id="${esc(a.id)}">删除</button>
+            </td>
+          </tr>`;
+        }).join("") || `<tr><td colspan="7">暂无数据</td></tr>`;
+        document.getElementById("algoCount").textContent = list.length;
+      }
+
+      function tagEditorMarkup() {
+        const chips = draftTags.map((tag, idx) =>
+          `<span class="algo-tag">${esc(tag)}<button type="button" class="algo-tag-remove" data-tag-remove="${idx}" aria-label="移除">×</button></span>`
+        ).join("");
+        const addBtn = tagInputOpen
+          ? `<div class="algo-tag-input-wrap">
+              <input class="form-control" data-tag-input placeholder="请选择目标" autocomplete="off">
+              <div class="algo-tag-suggest" data-tag-suggest>
+                <div class="suggest-head">请选择目标</div>
+                ${PRESETS.filter((p) => !draftTags.includes(p)).map((p) =>
+                  `<button type="button" data-tag-pick="${esc(p)}">${esc(p)}</button>`
+                ).join("") || `<button type="button" disabled>无可选项</button>`}
+              </div>
+            </div>`
+          : `<button type="button" class="algo-tag-add" data-tag-add>+ New Tag</button>`;
+        return `<div class="algo-tag-editor" data-tag-editor>${chips}${addBtn}</div>`;
+      }
+
+      function refreshTagEditor() {
+        const host = document.querySelector("[data-tag-editor]");
+        if (!host) return;
+        host.outerHTML = tagEditorMarkup();
+        if (tagInputOpen) {
+          const input = document.querySelector("[data-tag-input]");
+          input?.focus();
+          input?.addEventListener("keydown", (ev) => {
+            if (ev.key === "Enter") {
+              ev.preventDefault();
+              addTag(input.value);
+            } else if (ev.key === "Escape") {
+              tagInputOpen = false;
+              refreshTagEditor();
+            }
+          });
+          input?.addEventListener("input", () => {
+            const kw = input.value.trim().toLowerCase();
+            const panel = document.querySelector("[data-tag-suggest]");
+            if (!panel) return;
+            const options = PRESETS.filter((p) => !draftTags.includes(p) && (!kw || p.toLowerCase().includes(kw)));
+            panel.innerHTML = `<div class="suggest-head">请选择目标</div>` +
+              (options.map((p) => `<button type="button" data-tag-pick="${esc(p)}">${esc(p)}</button>`).join("") ||
+                (kw ? `<button type="button" data-tag-pick="${esc(input.value.trim())}">添加「${esc(input.value.trim())}」</button>` : `<button type="button" disabled>无可选项</button>`));
+          });
+        }
+      }
+
+      function addTag(raw) {
+        const tag = String(raw || "").trim();
+        if (!tag) return;
+        if (!draftTags.includes(tag)) draftTags.push(tag);
+        tagInputOpen = false;
+        refreshTagEditor();
+      }
+
+      function openAlgoDrawer(item) {
+        const isEdit = !!item;
+        draftTags = isEdit ? [...catsOf(item)] : [...DEFAULT_TAGS];
+        tagInputOpen = false;
+        window.openAppDrawer({
+          title: isEdit ? "编辑算法" : "新增算法",
+          subtitle: "入侵报警系统 · 算法管理",
+          body: `
+            <div class="algo-form-stack">
+              <label class="form-field form-item">
+                <span class="form-label form-required">算法编号</span>
+                <input class="form-control" data-algo-field="code" value="${esc(item?.code || "")}" placeholder="请输入算法编号">
+              </label>
+              <label class="form-field form-item">
+                <span class="form-label form-required">算法名称</span>
+                <input class="form-control" data-algo-field="name" value="${esc(item?.name || "")}" placeholder="请输入算法名称">
+              </label>
+              <label class="form-field form-item">
+                <span class="form-label form-required">API请求地址</span>
+                <input class="form-control" data-algo-field="apiUrl" value="${esc(item?.apiUrl || "")}" placeholder="请输入 API 请求地址">
+              </label>
+              <label class="form-field form-item">
+                <span class="form-label form-required">API Key</span>
+                <input class="form-control" data-algo-field="apiKey" value="${esc(item?.apiKey || "")}" placeholder="请输入 API Key">
+              </label>
+              <div class="form-field form-item">
+                <span class="form-label form-required">算法分类</span>
+                ${tagEditorMarkup()}
+              </div>
+              <label class="form-field form-item">
+                <span class="form-label">算法备注</span>
+                <textarea class="form-control textarea" data-algo-field="remark" placeholder="请输入算法备注">${esc(item?.remark || "")}</textarea>
+              </label>
+              <label class="form-field form-item">
+                <span class="form-label form-required">状态</span>
+                <select class="form-control" data-algo-field="status">
+                  <option value="enabled" ${!item || item.status === "enabled" ? "selected" : ""}>启用</option>
+                  <option value="disabled" ${item?.status === "disabled" ? "selected" : ""}>禁用</option>
+                </select>
+              </label>
+            </div>`,
+          footer: `<button class="btn btn-secondary" type="button" data-drawer-close>取消</button>
+            <button class="btn btn-primary" type="button" data-algo-save="${esc(item?.id || "")}">保存</button>`,
+        });
+      }
+
+      function requestDelete(id) {
+        const row = ALGOS.find((a) => a.id === id);
+        if (!row) return;
+        if (isReferenced(id)) {
+          showTip(`算法「${row.name}」已被布控管理引用，无法删除。`);
+          return;
+        }
+        window.openAppConfirm({
+          title: "删除算法",
+          message: `确认删除算法「${row.name}」吗？`,
+          confirmText: "确认删除",
+          onConfirm: () => {
+            const i = ALGOS.findIndex((a) => a.id === id);
+            if (i >= 0) ALGOS.splice(i, 1);
+            render();
+          },
+        });
+      }
+
+      document.addEventListener("click", (e) => {
+        if (e.target.closest("[data-tag-add]")) {
+          tagInputOpen = true;
+          refreshTagEditor();
+          return;
+        }
+        const pick = e.target.closest("[data-tag-pick]");
+        if (pick) {
+          addTag(pick.getAttribute("data-tag-pick"));
+          return;
+        }
+        const remove = e.target.closest("[data-tag-remove]");
+        if (remove) {
+          const idx = Number(remove.getAttribute("data-tag-remove"));
+          if (!Number.isNaN(idx)) draftTags.splice(idx, 1);
+          refreshTagEditor();
+          return;
+        }
+        if (tagInputOpen && !e.target.closest("[data-tag-editor]") && !e.target.closest("[data-tag-add]")) {
+          const input = document.querySelector("[data-tag-input]");
+          if (input?.value.trim()) addTag(input.value);
+          else {
+            tagInputOpen = false;
+            refreshTagEditor();
+          }
+        }
+
+        const saveBtn = e.target.closest("[data-algo-save]");
+        if (saveBtn) {
+          const id = saveBtn.getAttribute("data-algo-save");
+          const read = (f) => document.querySelector(`[data-algo-field="${f}"]`)?.value?.trim() || "";
+          const code = read("code");
+          const name = read("name");
+          const apiUrl = read("apiUrl");
+          const apiKey = read("apiKey");
+          const status = read("status") || "enabled";
+          const remark = read("remark");
+          if (!code) { showTip("请填写算法编号"); return; }
+          if (!name) { showTip("请填写算法名称"); return; }
+          if (!apiUrl) { showTip("请填写 API 请求地址"); return; }
+          if (!apiKey) { showTip("请填写 API Key"); return; }
+          if (!draftTags.length) { showTip("请至少添加一个算法分类"); return; }
+          const payload = {
+            code,
+            name,
+            apiUrl,
+            apiKey,
+            categories: [...draftTags],
+            remark,
+            status,
+            updatedAt: new Date().toISOString().slice(0, 19).replace("T", " "),
+          };
+          if (id) {
+            const row = ALGOS.find((a) => a.id === id);
+            if (row) Object.assign(row, payload);
+          } else {
+            ALGOS.unshift({ id: `alg-${Date.now()}`, ...payload });
+          }
+          window.closeAppDrawer?.();
+          render();
+          return;
+        }
+
+        const btn = e.target.closest("[data-action]");
+        if (!btn) return;
+        const action = btn.getAttribute("data-action");
+        const id = btn.getAttribute("data-id");
+        if (action === "create") openAlgoDrawer(null);
+        if (action === "edit") openAlgoDrawer(ALGOS.find((a) => a.id === id));
+        if (action === "delete") requestDelete(id);
+        if (action === "toggle-status") {
+          const row = ALGOS.find((a) => a.id === id);
+          if (row) row.status = row.status === "enabled" ? "disabled" : "enabled";
+          render();
+        }
+        if (action === "search" || action === "reset") {
+          if (action === "reset") {
+            document.querySelectorAll("[data-filter]").forEach((el) => { el.value = ""; });
+          }
+          render();
+        }
+      });
+
+      render();
+    })();
+  </script>
+</body>
+</html>

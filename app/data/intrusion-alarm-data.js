@@ -510,6 +510,39 @@
     { name: "投料口枪式摄像机 04", status: "在线", corridor: "科学岛大道综合管廊", cabin: "综合舱", section: "出入口" },
   ];
 
+  const controlRecords = [
+    {
+      id: 1,
+      operator: "值班员甲",
+      time: "2026-10-26 09:30:11",
+      action: "主机布防",
+      system: "入侵报警",
+      category: "报警主机",
+      device: "振动光纤主机-02",
+      deviceCode: "IAS-HOST-02",
+    },
+    {
+      id: 2,
+      operator: "值班员乙",
+      time: "2026-10-26 08:55:22",
+      action: "防区撤防",
+      system: "入侵报警",
+      category: "防区",
+      device: "防区 03-电力舱",
+      deviceCode: "IAS-ZONE-02",
+    },
+    {
+      id: 3,
+      operator: "管理员",
+      time: "2026-10-25 17:40:03",
+      action: "消警复位",
+      system: "入侵报警",
+      category: "报警主机",
+      device: "入侵报警主机-01",
+      deviceCode: "IAS-HOST-01",
+    },
+  ];
+
   global.INTRUSION_ALARM_DATA = {
     spatialTree,
     monitorDevices,
@@ -517,5 +550,6 @@
     linkageRecords,
     alarms,
     cameras,
+    controlRecords,
   };
 })(window);

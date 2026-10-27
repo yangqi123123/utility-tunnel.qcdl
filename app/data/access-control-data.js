@@ -232,6 +232,38 @@
       { id:"AC-A-20261012-017", type:"无权限通行", level:"预警", person:"未识别人员", device:"B2 消防门5号", location:"B2 生活水泵房", time:"2026-10-12 15:39:44", status:"已确认", camera:"B2 水泵房摄像机 02", detail:"未识别人脸尝试通行，系统已拒绝" },
       { id:"AC-A-20261012-016", type:"门超时未关", level:"告警", person:"-", device:"电力舱检修口", location:"F0203 电力舱", time:"2026-10-12 15:32:10", status:"处理中", camera:"电力舱摄像机 06", detail:"门状态持续开启超过 120 秒" },
       { id:"AC-A-20261012-015", type:"设备离线", level:"预警", person:"-", device:"通信舱东侧门禁", location:"F0302 通信舱", time:"2026-10-12 15:04:22", status:"已处理", camera:"通信舱摄像机 03", detail:"门禁控制器连续 3 次心跳超时" }
-    ]
+    ],
+    controlRecords: [
+      {
+        id: 1,
+        operator: "值班员甲",
+        time: "2026-10-26 09:40:11",
+        action: "远程开门",
+        system: "门禁系统",
+        category: "门禁控制器",
+        device: "北区主入口门禁",
+        deviceCode: "ACS-F0101-01",
+      },
+      {
+        id: 2,
+        operator: "值班员乙",
+        time: "2026-10-26 09:12:22",
+        action: "常开",
+        system: "门禁系统",
+        category: "门禁控制器",
+        device: "电力舱检修口",
+        deviceCode: "ACS-F0203-02",
+      },
+      {
+        id: 3,
+        operator: "管理员",
+        time: "2026-10-25 18:05:03",
+        action: "锁定",
+        system: "门禁系统",
+        category: "门禁控制器",
+        device: "南区主入口门禁",
+        deviceCode: "ACS-F0101-02",
+      },
+    ],
   };
 })();

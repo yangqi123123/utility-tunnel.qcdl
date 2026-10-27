@@ -112,20 +112,32 @@
         <section class="env-quality-kpi-grid" id="qualityKpis" aria-label="环境质量设备概览"></section>
 
         <section class="env-quality-workspace">
-          <aside class="dm-panel dm-left env-quality-side" aria-label="空间类型筛选">
+          <aside class="dm-panel dm-left env-quality-side" aria-label="系统类型 / 空间类型筛选">
             <div class="dm-statusbar" id="eqStatusBar">
               <button class="dm-chip is-active" type="button" data-eq-status="all"><i></i>全部</button>
               <button class="dm-chip" type="button" data-eq-status="online"><i></i>在线</button>
               <button class="dm-chip" type="button" data-eq-status="offline"><i></i>离线</button>
               <button class="dm-chip" type="button" data-eq-status="warn"><i></i>预警</button>
             </div>
-            <div class="dm-tree" id="eqTree" role="tree" aria-label="空间类型"></div>
+            <div class="dm-tabs">
+              <button class="dm-tab is-active" type="button" data-ias-mode="system">系统类型</button>
+              <button class="dm-tab" type="button" data-ias-mode="space">空间类型</button>
+            </div>
+            <div class="dm-tree" id="eqTree" role="tree" aria-label="系统类型 / 空间类型"></div>
           </aside>
 
           <div class="env-quality-main">
             <section class="env-quality-scope-bar" id="eqScopeBar">
               <div class="env-quality-scope-path" id="eqScopePath"></div>
-              <div class="env-quality-scope-filters">
+              <div class="env-quality-scope-filters" id="eqScopeFilters">
+                <label class="form-field">
+                  <span class="form-label">设备分类</span>
+                  <select class="form-control" data-eq-filter="category">
+                    <option value="">全部</option>
+                    <option value="室内环境传感器">室内环境传感器</option>
+                    <option value="枪式摄像机">枪式摄像机</option>
+                  </select>
+                </label>
                 <label class="form-field">
                   <span class="form-label">设备名称</span>
                   <input class="form-control" data-eq-filter="name" placeholder="请输入设备名称">
@@ -217,10 +229,12 @@
         "枪式摄像机": { color: "#135AFA", icon: "fa-video" },
       };
       const state = {
+        mode: "system",
+        system: "环境与设备监控",
         status: "all",
         spacePath: emptyPath(),
         collapsed: {},
-        filters: { name: "", code: "", from: "", to: "" },
+        filters: { category: "", name: "", code: "", from: "", to: "" },
         detailTab: "info",
         detailId: "",
         historyPeriod: "today",
@@ -289,7 +303,10 @@
         const statusList = STATUS_CHIP[state.status];
         const status = deviceStatus(device);
         if (statusList && !statusList.includes(status)) return false;
-        if (!matchSpacePath(device, state.spacePath)) return false;
+        if (state.mode === "system" && state.system && device.system !== state.system) return false;
+        if (state.mode === "space" && !matchSpacePath(device, state.spacePath)) return false;
+        const category = state.filters.category || "";
+        if (category && device.type !== category) return false;
         const nameQ = state.filters.name.toLowerCase();
         const codeQ = state.filters.code.toLowerCase();
         if (nameQ && !(device.name || "").toLowerCase().includes(nameQ)) return false;
@@ -344,9 +361,24 @@
         return `<div class="dm-tree-row${active ? " is-active" : ""}" data-eq-project="${esc(path.project || "")}" data-eq-corridor="${esc(path.corridor || "")}" data-eq-room="${esc(path.room || "")}" data-eq-section="${esc(path.section || "")}" role="treeitem" style="padding-left:${level * 14 + 6}px">${toggle}<span class="dm-tree-name" title="${esc(name)}">${esc(name)}</span><span class="dm-tree-count">${count}</span></div>`;
       }
 
+      function listSystemNames() {
+        const names = [];
+        devices.forEach((d) => {
+          if (d.system && names.indexOf(d.system) < 0) names.push(d.system);
+        });
+        return names;
+      }
+
       function renderTree() {
         const host = document.getElementById("eqTree");
         if (!host) return;
+        if (state.mode === "system") {
+          host.innerHTML = listSystemNames().map((name) => {
+            const count = devices.filter((d) => d.system === name).length;
+            return `<div class="dm-tree-row${state.system === name ? " is-active" : ""}" data-ias-system="${esc(name)}" role="treeitem" style="padding-left:6px"><button class="dm-tree-toggle is-leaf" type="button" tabindex="-1" aria-hidden="true"></button><span class="dm-tree-name">${esc(name)}</span><span class="dm-tree-count">${count}</span></div>`;
+          }).join("") || `<div class="dm-tree-empty">暂无系统</div>`;
+          return;
+        }
         let html = "";
         spatialTree.forEach((project) => {
           const projectPath = { project: project.name, corridor: "", room: "", section: "" };
@@ -374,6 +406,7 @@
       }
 
       function scopeLabel() {
+        if (state.mode === "system") return state.system || "全部系统";
         const path = state.spacePath;
         if (!path.project) return "全部空间";
         const parts = [path.project, path.corridor, path.room, path.section].filter(Boolean);
@@ -635,6 +668,9 @@
       }
 
       function render() {
+        document.querySelectorAll("[data-ias-mode]").forEach((tab) => {
+          tab.classList.toggle("is-active", tab.dataset.iasMode === state.mode);
+        });
         renderKpis();
         renderTree();
         renderScopeBar();
@@ -918,6 +954,14 @@
           return;
         }
 
+        const modeTab = event.target.closest("[data-ias-mode]");
+        if (modeTab && modeTab.closest("#eqListView")) {
+          state.mode = modeTab.dataset.iasMode;
+          if (state.mode === "space") state.spacePath = emptyPath();
+          render();
+          return;
+        }
+
         const statusBtn = event.target.closest("[data-eq-status]");
         if (statusBtn) {
           state.status = statusBtn.dataset.eqStatus;
@@ -935,8 +979,15 @@
           return;
         }
 
+        const systemRow = event.target.closest("[data-ias-system]");
+        if (systemRow && systemRow.closest("#eqTree")) {
+          state.system = systemRow.dataset.iasSystem;
+          render();
+          return;
+        }
+
         const row = event.target.closest("[data-eq-project]");
-        if (row && row.closest("#eqTree")) {
+        if (row && row.closest("#eqTree") && state.mode === "space") {
           const next = {
             project: row.dataset.eqProject || "",
             corridor: row.dataset.eqCorridor || "",
@@ -950,15 +1001,15 @@
 
         const action = event.target.closest("[data-eq-action]")?.dataset.eqAction;
         if (action === "search") {
-          document.querySelectorAll("[data-eq-filter]").forEach((field) => {
+          document.querySelectorAll("#eqScopeFilters [data-eq-filter]").forEach((field) => {
             state.filters[field.dataset.eqFilter] = field.value.trim();
           });
           renderCards();
           return;
         }
         if (action === "reset") {
-          state.filters = { name: "", code: "", from: "", to: "" };
-          document.querySelectorAll("[data-eq-filter]").forEach((field) => { field.value = ""; });
+          state.filters = { category: "", name: "", code: "", from: "", to: "" };
+          document.querySelectorAll("#eqScopeFilters [data-eq-filter]").forEach((field) => { field.value = ""; });
           renderCards();
           return;
         }

@@ -52,7 +52,8 @@
     body.configuration-embed .sidebar,
     body.configuration-embed .header,
     body.configuration-embed .config-tabs,
-    body.configuration-embed .config-grid > aside{display:none !important}
+    body.configuration-embed .config-grid > aside,
+    body.configuration-embed .requirement-fab{display:none !important}
     body.configuration-embed .app-shell{
       display:block !important;
       width:100% !important;
@@ -136,7 +137,7 @@
     </section>
   </div></main></div>
   <script src="../../../app/config/menu.js?v=nav-hide-1"></script>
-  <script src="../../../app/data/configuration-data.js?v=config-topo-5"></script>
+  <script src="../../../app/data/configuration-data.js?v=config-hmi-6"></script>
   <script src="../../../app/components/sidebar.js?v=nav-home-1"></script>
   <script src="../../../app/components/header.js?v=nav-home-1"></script>
   <script src="../../../app/components/drawer.js"></script>
@@ -144,9 +145,13 @@
   <script>
     const D = window.ConfigurationData;
     const { servers, workstations, gatewayTopo, hmiScreens, powerHmi, fireHmi } = D;
-    const embedPower = new URLSearchParams(location.search).get("embed") === "power";
+    const qs = new URLSearchParams(location.search);
+    const embedPower = qs.get("embed") === "power";
+    const screenParam = qs.get("screen");
+    const defaultPowerId = (hmiScreens.find((s) => s.kind === "power") || hmiScreens[0]).id;
+    const initialScreenId = screenParam && hmiScreens.some((s) => s.id === screenParam) ? screenParam : defaultPowerId;
     if (embedPower) document.body.classList.add("configuration-embed");
-    const state = { tab: embedPower ? "hmi" : "gateway", screenId: "power", scale: 1 };
+    const state = { tab: embedPower ? "hmi" : "gateway", screenId: initialScreenId, scale: 1 };
 
     const SRV_SHORT = {
       "通用业务服务器": "通用业务",
@@ -289,8 +294,10 @@
       </g>`;
     }
 
-    function renderPowerHmi() {
+    function renderPowerHmi(screen) {
       const p = powerHmi;
+      const corridor = screen?.corridor || "管廊";
+      const title = `${corridor}配电全链路`;
       const outs = p.lvOut.map((o, i) => {
         const y = 110 + i * 105;
         const warn = o.status === "warn";
@@ -311,13 +318,15 @@
         ${metricBox(370, 460, 200, 96, p.transformers[1].name, [{ k: "U", v: p.transformers[1].u }, { k: "I", v: p.transformers[1].i }, { k: "P", v: p.transformers[1].p }], true)}
         ${metricBox(580, 60, 170, 84, p.lvBus.name, [{ k: "U", v: p.lvBus.u }, { k: "I", v: p.lvBus.i }, { k: "P", v: p.lvBus.p }])}
         ${outs}
-        <g><rect class="summary-panel" x="820" y="18" width="250" height="80" rx="8"/><text class="t-cap" x="838" y="44">${p.summary.title}</text>
+        <g><rect class="summary-panel" x="820" y="18" width="250" height="80" rx="8"/><text class="t-cap" x="838" y="44">${title}</text>
           <text class="t-met" x="838" y="66">总负荷 ${p.summary.loadKw} kW</text><text class="t-sub" x="838" y="84">功率因数 ${p.summary.pf} · ${p.summary.status}</text></g>
       </svg>`;
     }
 
-    function renderFireHmi() {
+    function renderFireHmi(screen) {
       const f = fireHmi;
+      const corridor = screen?.corridor || "管廊";
+      const title = `${corridor}火灾自动报警`;
       const loops = f.loops.map((l, i) => {
         const y = 90 + i * 105;
         const warn = l.status === "warn";
@@ -335,10 +344,10 @@
         <defs><radialGradient id="bgF" cx="45%" cy="40%" r="65%"><stop offset="0%" stop-color="#2a1830"/><stop offset="100%" stop-color="#06101f"/></radialGradient></defs>
         <rect width="1100" height="620" fill="url(#bgF)"/>
         <path class="flow-line red" d="M290 290 H410"/>
-        ${deviceTank(290, 200, f.controller.name, f.controller.zone, "fire")}
+        ${deviceTank(290, 200, f.controller.name, corridor, "fire")}
         ${metricBox(240, 60, 220, 96, "控制器状态", [{ k: "回路在线", v: f.controller.loopsOnline }, { k: "电源", v: f.controller.power }, { k: "模式", v: "自动监视" }])}
         ${loops}${pts}
-        <g><rect class="summary-panel" x="820" y="18" width="250" height="90" rx="8"/><text class="t-cap" x="838" y="44">${f.summary.title}</text>
+        <g><rect class="summary-panel" x="820" y="18" width="250" height="90" rx="8"/><text class="t-cap" x="838" y="44">${title}</text>
           <text class="t-met warn" x="838" y="68">回路 ${f.summary.loops} · 设备 ${f.summary.devices}</text>
           <text class="t-sub" x="838" y="88">${f.summary.status}</text></g>
       </svg>`;
@@ -373,9 +382,12 @@
 
     function renderDiagram() {
       const zoom = document.getElementById("diagramZoom");
-      zoom.innerHTML = isHmi()
-        ? (state.screenId === "fire" ? renderFireHmi() : renderPowerHmi())
-        : renderGatewayDiagram();
+      if (!isHmi()) {
+        zoom.innerHTML = renderGatewayDiagram();
+      } else {
+        const s = currentScreen();
+        zoom.innerHTML = s.kind === "fire" ? renderFireHmi(s) : renderPowerHmi(s);
+      }
       applyZoom();
     }
 

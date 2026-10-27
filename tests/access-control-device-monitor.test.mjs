@@ -46,4 +46,11 @@ test("devices page has map/list view switch like intrusion-monitor", async () =>
   assert.match(page, /门禁设备明细/);
   assert.match(page, /env-quality-kpi-grid/);
   assert.match(page, /qualityKpis/);
+  assert.match(page, /data-eq-filter="category"/);
+  assert.match(page, /data-eq-filter="name"/);
+  assert.match(page, /data-eq-filter="code"/);
+  assert.match(page, /data-eq-filter="from"/);
+  assert.match(page, /data-eq-filter="to"/);
+  assert.match(page, /data-ias-mode="system"/);
+  assert.match(page, /data-ias-mode="space"/);
 });

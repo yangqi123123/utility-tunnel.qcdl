@@ -45,8 +45,12 @@
   };
 
   const hmiScreens = [
-    { id: "power", name: "电力监测组态图", hint: "高压进线 · 变压器 · 低压出线" },
-    { id: "fire", name: "火灾报警组态图", hint: "控制器 · 探测回路 · 联动设备" },
+    { id: "power-wl1", name: "未来一路电力监测", hint: "高压进线 · 变压器 · 低压出线", kind: "power", corridor: "未来一路" },
+    { id: "power-gx7", name: "高新七路电力监测", hint: "高压进线 · 变压器 · 低压出线", kind: "power", corridor: "高新七路" },
+    { id: "power-cg", name: "春光路电力监测", hint: "高压进线 · 变压器 · 低压出线", kind: "power", corridor: "春光路" },
+    { id: "fire-wl1", name: "未来一路火灾监测", hint: "控制器 · 探测回路 · 联动设备", kind: "fire", corridor: "未来一路" },
+    { id: "fire-gx7", name: "高新七路火灾监测", hint: "控制器 · 探测回路 · 联动设备", kind: "fire", corridor: "高新七路" },
+    { id: "fire-cg", name: "春光路火灾监测", hint: "控制器 · 探测回路 · 联动设备", kind: "fire", corridor: "春光路" },
   ];
 
   const powerHmi = {

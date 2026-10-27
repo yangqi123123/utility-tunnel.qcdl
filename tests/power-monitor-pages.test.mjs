@@ -26,17 +26,23 @@ test("共享电力监测数据文件存在且含关键字段", async () => {
   assert.match(data, /envIndex|upsVoltage|upsCurrent|alarmTrend/);
 });
 
-test("一级菜单电力监测系统在井盖下方且含三个二级入口", async () => {
+test("一级菜单电力监测系统在井盖下方且含二级入口", async () => {
   const menu = await read("app/config/menu.js");
   assert.match(menu, /key:\s*"power-monitor"/);
   assert.match(menu, /label:\s*"电力监测系统"/);
   assert.match(menu, /power-monitor\.realtime/);
   assert.match(menu, /label:\s*"电力实时监测"/);
+  assert.match(menu, /label:\s*"电力设备控制"/);
   assert.match(menu, /label:\s*"电力状态监测"/);
   assert.match(menu, /label:\s*"电力报警记录"/);
   assert.match(menu, /power-realtime\.html/);
+  assert.match(menu, /power-device-control\.html/);
   assert.match(menu, /power-status\.html/);
   assert.match(menu, /power-alarms\.html/);
+  const realtimeIdx = menu.indexOf("power-monitor.realtime");
+  const controlIdx = menu.indexOf("power-monitor.control");
+  const statusIdx = menu.indexOf("power-monitor.status");
+  assert.ok(realtimeIdx >= 0 && controlIdx > realtimeIdx && statusIdx > controlIdx);
   const mhcIdx = menu.indexOf('key: "manhole-cover"');
   const pwrIdx = menu.indexOf('key: "power-monitor"');
   const commIdx = menu.indexOf('key: "communication-system"');
@@ -54,12 +60,24 @@ test("电力实时监测页复用井盖/入侵监测结构且文案电力化", a
   assert.match(page, /data-ias-view="panorama"/);
   assert.match(page, /全景可视化监测/);
   assert.match(page, /configuration\.html\?embed=power/);
+  assert.match(page, /pwr-screen-list|pwrScreenList/);
+  assert.match(page, /未来一路电力监测/);
+  assert.match(page, /高新七路电力监测/);
+  assert.match(page, /春光路电力监测/);
+  assert.match(page, /initPowerPanoList/);
   assert.match(page, /data-ias-view="map"/);
   assert.match(page, /data-ias-view="list"/);
   assert.match(page, /电力监测/);
   assert.match(page, /视频监控系统/);
   assert.match(page, /embedded=panel/);
   assert.match(page, /UPS|配电柜|变压器|电表/);
+  assert.match(page, /data-eq-filter="category"/);
+  assert.match(page, /data-eq-filter="name"/);
+  assert.match(page, /data-eq-filter="code"/);
+  assert.match(page, /data-eq-filter="from"/);
+  assert.match(page, /data-eq-filter="to"/);
+  assert.match(page, /data-ias-mode="system"/);
+  assert.match(page, /data-ias-mode="space"/);
   assert.doesNotMatch(page, /INTRUSION_ALARM_DATA/);
   assert.doesNotMatch(page, /MANHOLE_COVER_DATA/);
   assert.doesNotMatch(page, /data-menu-key="manhole-cover/);

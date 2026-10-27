@@ -248,10 +248,44 @@
     { name: "投料口枪式摄像机 04", status: "在线", corridor: "科学岛大道综合管廊", cabin: "综合舱", section: "出入口" },
   ];
 
+  const controlRecords = [
+    {
+      id: 1,
+      operator: "值班员甲",
+      time: "2026-10-23 14:20:11",
+      action: "关闭防火门",
+      system: "消防监控",
+      category: "防火门",
+      device: "防火门-01",
+      deviceCode: "FM-DOOR-01",
+    },
+    {
+      id: 2,
+      operator: "值班员乙",
+      time: "2026-10-23 13:05:42",
+      action: "启动消防电源",
+      system: "消防监控",
+      category: "消防电源",
+      device: "排烟风机电源-01",
+      deviceCode: "FM-PWR-02",
+    },
+    {
+      id: 3,
+      operator: "管理员",
+      time: "2026-10-22 18:40:03",
+      action: "点亮应急照明",
+      system: "消防监控",
+      category: "应急照明",
+      device: "应急照明-02",
+      deviceCode: "FM-LIGHT-02",
+    },
+  ];
+
   global.FIRE_MONITOR_DATA = {
     spatialTree,
     monitorDevices,
     alarms,
     cameras,
+    controlRecords,
   };
 })(window);

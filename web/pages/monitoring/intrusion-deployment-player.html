@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>视频流播放 - 入侵报警系统 - 科学岛管廊监控中心</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/tob-ui.css">
+  <link rel="stylesheet" href="../../assets/css/environment-monitor.css">
+  <link rel="stylesheet" href="../../assets/css/intrusion-ai.css">
+</head>
+<body class="environment-page deploy-player-page" data-menu-key="intrusion-alarm.deployments" data-page-section="入侵报警系统" data-page-title="布控管理">
+  <div class="app-shell">
+    <aside id="app-sidebar" class="sidebar"></aside>
+    <header id="app-header" class="header"></header>
+    <main class="main">
+      <div class="screen-frame stack">
+        <section class="card player-card">
+          <div class="card-title-row">
+            <h1 class="card-title" id="playerTitle">视频流播放</h1>
+            <div class="btn-row">
+              <a class="btn btn-secondary" href="intrusion-deployments.html">返回列表</a>
+            </div>
+          </div>
+          <div class="player-stream-bar">
+            <input class="form-control" id="streamUrl" readonly>
+            <button class="btn btn-primary" type="button" data-action="play"><i class="fa-solid fa-play"></i> 播放</button>
+            <button class="btn btn-secondary" type="button" data-action="stop"><i class="fa-solid fa-stop"></i> 停止</button>
+          </div>
+          <div class="player-stage ai-region-stage" id="playerStage">
+            <div class="player-stage-fit">
+              <img class="stage-bg" src="../../assets/images/corridor-monitor.jpg" alt="管廊视频画面">
+              <div class="player-algo-meta" id="algoMeta"></div>
+              <svg class="ai-region-svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+                <polygon class="ai-region-poly is-alarm" data-region-poly points="" hidden></polygon>
+              </svg>
+              <div class="ai-region-overlay is-alarm" data-region-overlay hidden></div>
+              <div data-det-boxes></div>
+            </div>
+          </div>
+          <div class="player-protocol">
+            <strong>视频流支持的所有转发协议</strong>
+            <div id="protocolList"></div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+  <script src="../../../app/config/menu.js?v=nav-hide-1"></script>
+  <script src="../../../app/components/sidebar.js?v=nav-home-1"></script>
+  <script src="../../../app/components/header.js?v=nav-home-1"></script>
+  <script src="../../../app/components/drawer.js"></script>
+  <script src="../../../app/components/requirement.js"></script>
+  <script src="../../../app/data/intrusion-ai-data.js"></script>
+  <script>
+    (function () {
+      const params = new URLSearchParams(location.search);
+      const id = params.get("id");
+      const mode = params.get("mode") || "video";
+      const dep = (window.AI_DEPLOYMENTS || []).find((d) => d.id === id);
+      if (!dep) {
+        if (typeof window.openAppConfirm === "function") {
+          window.openAppConfirm({ title: "提示", message: "未找到布控记录", confirmText: "知道了", onConfirm: () => { location.href = "intrusion-deployments.html"; } });
+        } else {
+          alert("未找到布控记录");
+          location.href = "intrusion-deployments.html";
+        }
+        return;
+      }
+      const algo = (window.AI_ALGORITHMS || []).find((a) => a.id === dep.algorithmId);
+      const stream = dep.playUrl || `ws://127.0.0.1:9002/analyzer/${dep.code || dep.id}.live.mp4`;
+      document.getElementById("playerTitle").textContent = mode === "algo" ? "算法流播放" : "视频流播放";
+      document.getElementById("streamUrl").value = stream;
+      document.getElementById("algoMeta").textContent = `${algo?.name || dep.algorithmId || "算法"}  check_fps: ${dep.fps || (dep.runStatus === "running" ? "24.90" : "0")}`;
+      document.getElementById("protocolList").innerHTML =
+        `<div>${stream.replace(/\.live\.\w+$/, "")}.live.mp4</div>` +
+        `<div>${stream.replace(/\.live\.\w+$/, "")}.live.flv</div>`;
+
+      function normalizeRegion(region) {
+        if (!region) return [];
+        if (Array.isArray(region.points)) return region.points;
+        if (region.w > 0 && region.h > 0) {
+          return [
+            { x: region.x, y: region.y },
+            { x: region.x + region.w, y: region.y },
+            { x: region.x + region.w, y: region.y + region.h },
+            { x: region.x, y: region.y + region.h },
+          ];
+        }
+        return [
+          { x: 0.22, y: 0.2 },
+          { x: 0.7, y: 0.2 },
+          { x: 0.7, y: 0.7 },
+          { x: 0.22, y: 0.7 },
+        ];
+      }
+      const polyPts = normalizeRegion(dep.region);
+      const poly = document.querySelector("[data-region-poly]");
+      if (poly && polyPts.length >= 3) {
+        poly.hidden = false;
+        poly.setAttribute("points", polyPts.map((p) => `${p.x * 100},${p.y * 100}`).join(" "));
+      }
+
+      /* 红框：闯入布防区；绿框：安全区域目标 */
+      const boxes = [
+        { x: 0.28, y: 0.34, w: 0.1, h: 0.28, label: "person:0.82", danger: true },
+        { x: 0.42, y: 0.38, w: 0.09, h: 0.24, label: "person:0.71", danger: true },
+        { x: 0.08, y: 0.42, w: 0.08, h: 0.22, label: "person:0.66", danger: false },
+        { x: 0.78, y: 0.4, w: 0.09, h: 0.26, label: "person:0.58", danger: false },
+      ];
+      const host = document.querySelector("[data-det-boxes]");
+      host.innerHTML = boxes.map((b) =>
+        `<div class="det-box ${b.danger ? "is-danger" : "is-safe"}" style="left:${b.x * 100}%;top:${b.y * 100}%;width:${b.w * 100}%;height:${b.h * 100}%">
+          <span>${b.label}</span>
+        </div>`
+      ).join("");
+
+      document.addEventListener("click", (e) => {
+        const action = e.target.closest("[data-action]")?.dataset.action;
+        if (action === "play") document.getElementById("playerStage")?.classList.remove("is-stopped");
+        if (action === "stop") document.getElementById("playerStage")?.classList.add("is-stopped");
+      });
+    })();
+  </script>
+</body>
+</html>

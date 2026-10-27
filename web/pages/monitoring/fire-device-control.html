@@ -1,0 +1,943 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>消防设备控制 - 消防监控系统 - 科学岛管廊监控中心</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/tob-ui.css">
+  <link rel="stylesheet" href="../../assets/css/home-monitor.css?v=5">
+  <link rel="stylesheet" href="../../assets/css/environment-monitor.css">
+  <link rel="stylesheet" href="../../assets/css/intrusion-monitor.css">
+  <link rel="stylesheet" href="../../assets/css/alarm-center.css">
+  <link rel="stylesheet" href="../../assets/css/fire-graphic-monitor.css">
+  <style>
+    .fdc-page { display: flex; flex-direction: column; gap: 12px; padding: 12px 16px 24px; min-height: 0; }
+    .fdc-tab-panel[hidden] { display: none !important; }
+    /* 对齐联动管理系统-联动记录 linkage-tabs */
+    .fdc-tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 4px;
+      border-bottom: 1px solid #e6ebf2;
+      background: transparent;
+      padding: 0;
+    }
+    .fdc-tabs .tab {
+      border: 0;
+      background: transparent;
+      padding: 12px 22px;
+      color: #758297;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      line-height: 1.2;
+    }
+    .fdc-tabs .tab.active {
+      color: #135afa;
+      border-bottom-color: #135afa;
+    }
+    .fdc-records .alarm-filter-card { margin-bottom: 0; padding: 16px 24px; }
+    .fdc-records .fdc-filter-row {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr)) auto;
+      gap: 16px;
+      align-items: end;
+    }
+    .fdc-records .fdc-filter-actions {
+      display: flex;
+      align-items: end;
+      justify-content: flex-start;
+      gap: 8px;
+      min-height: 32px;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+    /* 设备详情：4 个 tab（信息 / 实时 / 历史 / 控制） */
+    .fdc-detail .env-detail-tabs {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      margin: 0 0 18px;
+    }
+    .fdc-detail-control {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .fdc-detail-control-hint {
+      margin: 0;
+      color: var(--text-secondary);
+      font-size: 13px;
+    }
+    .fdc-detail-control-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .fdc-detail-control-empty {
+      padding: 36px 12px;
+      text-align: center;
+      color: var(--text-secondary);
+    }
+  </style>
+</head>
+<body class="fdc-body" data-menu-key="fire-monitor.control" data-page-section="消防监控系统" data-page-title="消防设备控制">
+<div class="app-shell">
+  <aside id="app-sidebar" class="sidebar"></aside>
+  <header id="app-header" class="header"></header>
+  <main class="main">
+    <div class="fdc-page">
+      <nav class="fdc-tabs" role="tablist" aria-label="消防设备控制">
+        <button class="tab active" type="button" role="tab" aria-selected="true" data-fdc-tab="smart">设备智能控制</button>
+        <button class="tab" type="button" role="tab" aria-selected="false" data-fdc-tab="records">设备控制记录</button>
+      </nav>
+
+      <div id="fdcSmartPanel" class="fdc-tab-panel fm-graphic" data-fdc-panel="smart">
+        <div class="fm-graphic-filters env-quality-scope-filters" id="fmGraphicFilters">
+          <label class="form-field">
+            <span class="form-label">设备分类</span>
+            <select class="form-control" data-fm-filter="category">
+              <option value="">全部</option>
+              <option value="感烟">感烟</option>
+              <option value="感温">感温</option>
+              <option value="手动报警器">手动报警器</option>
+              <option value="防火门">防火门</option>
+              <option value="消防电源">消防电源</option>
+              <option value="电气火灾">电气火灾</option>
+              <option value="应急照明">应急照明</option>
+              <option value="感温光纤">感温光纤</option>
+            </select>
+          </label>
+          <label class="form-field">
+            <span class="form-label">设备名称</span>
+            <input class="form-control" data-fm-filter="name" placeholder="请输入设备名称">
+          </label>
+          <label class="form-field">
+            <span class="form-label">设备编码</span>
+            <input class="form-control" data-fm-filter="code" placeholder="请输入设备编码">
+          </label>
+          <label class="form-field">
+            <span class="form-label">开始时间</span>
+            <input class="form-control" type="date" data-fm-filter="from">
+          </label>
+          <label class="form-field">
+            <span class="form-label">结束时间</span>
+            <input class="form-control" type="date" data-fm-filter="to">
+          </label>
+          <div class="env-quality-scope-actions">
+            <button class="btn btn-primary" type="button" data-fm-action="search">搜索</button>
+            <button class="btn btn-secondary" type="button" data-fm-action="reset">重置</button>
+          </div>
+        </div>
+        <div class="fm-graphic-toolbar">
+          <label><input type="checkbox" id="fmSelectAll" data-fm-select-all> 全选</label>
+          <span>已选 <strong id="fmSelectedCount">0</strong></span>
+          <div class="btn-row" id="fmBatchActions"></div>
+        </div>
+        <div class="fm-graphic-grid" id="fmGraphicGrid" aria-label="设备智能控制面板"></div>
+      </div>
+
+      <div id="fdcRecordsPanel" class="fdc-tab-panel fdc-records" data-fdc-panel="records" hidden>
+        <div class="screen-frame stack">
+          <section class="card alarm-filter-card">
+            <div class="fdc-filter-row">
+              <label class="form-field">
+                <span class="form-label">设备分类</span>
+                <select class="form-control" data-rec-filter="category">
+                  <option value="">全部</option>
+                  <option value="防火门">防火门</option>
+                  <option value="消防电源">消防电源</option>
+                  <option value="应急照明">应急照明</option>
+                </select>
+              </label>
+              <label class="form-field">
+                <span class="form-label">设备名称</span>
+                <input class="form-control" data-rec-filter="device" placeholder="请输入设备名称">
+              </label>
+              <label class="form-field">
+                <span class="form-label">设备编码</span>
+                <input class="form-control" data-rec-filter="deviceCode" placeholder="请输入设备编码">
+              </label>
+              <label class="form-field">
+                <span class="form-label">开始时间</span>
+                <input class="form-control" type="date" data-rec-filter="from">
+              </label>
+              <label class="form-field">
+                <span class="form-label">结束时间</span>
+                <input class="form-control" type="date" data-rec-filter="to">
+              </label>
+              <div class="fdc-filter-actions">
+                <button class="btn btn-secondary" type="button" data-rec-action="reset">重置</button>
+                <button class="btn btn-primary" type="button" data-rec-action="search">搜索</button>
+              </div>
+            </div>
+          </section>
+          <section class="card alarm-list-card">
+            <div class="card-title-row alarm-toolbar">
+              <h1 class="card-title">设备控制记录</h1>
+              <div class="btn-row">
+                <button class="btn btn-secondary" type="button" data-rec-action="export"><i class="fa-solid fa-download"></i>导出</button>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table class="table alarm-table">
+                <thead>
+                  <tr>
+                    <th>序号</th>
+                    <th>操作人</th>
+                    <th>操作时间</th>
+                    <th>执行动作</th>
+                    <th>所属系统</th>
+                    <th>设备分类</th>
+                    <th>设备名称</th>
+                    <th>设备编码</th>
+                  </tr>
+                </thead>
+                <tbody id="fdcRecordBody"></tbody>
+              </table>
+            </div>
+            <div class="pagination"><span>共 <strong id="fdcRecordCount">0</strong> 条</span></div>
+          </section>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="../../../app/config/menu.js?v=nav-hide-1"></script>
+<script src="../../../app/components/sidebar.js?v=nav-home-1"></script>
+<script src="../../../app/components/header.js?v=nav-home-1"></script>
+<script src="../../../app/components/drawer.js"></script>
+<script src="../../../app/components/requirement.js"></script>
+<script src="../../../app/components/device-detail-info.js"></script>
+<script src="../../../app/data/fire-monitor-data.js"></script>
+<script>
+(function () {
+  "use strict";
+  var RAW = window.FIRE_MONITOR_DATA || {};
+  var KIND_TYPE = {
+    smoke: "感烟", heat: "感温", manual: "手动报警器", door: "防火门",
+    power: "消防电源", elec: "电气火灾", light: "应急照明", fiber: "感温光纤"
+  };
+  var KIND_ICON = {
+    smoke: "fa-smog", heat: "fa-temperature-half", manual: "fa-hand-pointer", door: "fa-door-closed",
+    power: "fa-plug", elec: "fa-bolt", light: "fa-lightbulb", fiber: "fa-temperature-high"
+  };
+  var KIND_COLOR = {
+    smoke: "#D94F4F", heat: "#E0743C", manual: "#F7BA1E", door: "#9359E3",
+    power: "#135AFA", elec: "#F53F57", light: "#14C9BA", fiber: "#2E9BD6"
+  };
+  var CONTROLLABLE_TYPES = ["防火门", "消防电源", "应急照明"];
+  var FM_ACTION_LABEL = {
+    "close-door": "关闭防火门",
+    "reset-door": "复位常开",
+    "lock-door": "强制闭锁",
+    "unlock-door": "解除闭锁",
+    "power-on": "启动消防电源",
+    "power-off": "停止消防电源",
+    "light-on": "点亮应急照明",
+    "light-off": "熄灭应急照明"
+  };
+  var FM_BATCH_TYPE = {
+    "close-door": "防火门",
+    "lock-door": "防火门",
+    "unlock-door": "防火门",
+    "power-on": "消防电源",
+    "power-off": "消防电源",
+    "light-on": "应急照明",
+    "light-off": "应急照明"
+  };
+  var CHART_COLORS = ["#135afa", "#14c9ba", "#f7ba1e", "#f53f57"];
+  var PAGE_SIZE = 10;
+
+  function mapStatus(raw) {
+    if (raw === "online") return "online";
+    if (raw === "alarm") return "fault";
+    if (raw === "warn") return "warn";
+    if (raw === "fault") return "fault";
+    if (raw === "offline") return "offline";
+    return "online";
+  }
+
+  var DEVICES = (RAW.monitorDevices || []).map(function (item) {
+    var type = KIND_TYPE[item.kind] || item.kind;
+    return {
+      id: item.id,
+      name: item.name,
+      code: item.code,
+      kind: item.kind,
+      system: "消防监控",
+      type: type,
+      status: mapStatus(item.status),
+      rawStatus: item.status,
+      statusLabel: item.statusLabel || "",
+      isAlarm: item.status === "alarm",
+      color: KIND_COLOR[item.kind] || "#6B7B8C",
+      icon: KIND_ICON[item.kind] || "fa-location-dot",
+      project: item.project || "",
+      corridor: item.corridor || "",
+      room: item.room || "",
+      section: item.section || "",
+      lat: item.lat,
+      lng: item.lng,
+      longitude: item.lng,
+      latitude: item.lat,
+      lastSeen: item.lastSeen || "",
+      time: item.lastSeen || "",
+      metrics: (item.metrics || []).map(function (m) {
+        return {
+          name: m.name,
+          value: m.value,
+          unit: m.unit || "",
+          status: m.status || "normal",
+          decimals: typeof m.value === "number" ? 1 : 0
+        };
+      }),
+      brand: item.brand || "海湾",
+      model: item.model || "FAS-MCP",
+      location: [item.corridor, item.room, item.section].filter(Boolean).join(" / ") || "—",
+      pipeline: item.pipeline || "消防管线",
+      vendor: item.vendor || "海湾安全技术有限公司",
+      supplierPhone: item.supplierPhone || "400-820-4800",
+      manufacturer: item.manufacturer || "GST",
+      manufactureDate: item.manufactureDate || "2026-05-12",
+      deliveryDate: item.deliveryDate || "2026-06-01",
+      installDate: item.installDate || "2026-06-18",
+      acceptDate: item.acceptDate || "2026-06-25",
+      scrapDate: item.scrapDate || "—",
+      factoryCode: item.factoryCode || "—",
+      cadCode: item.cadCode || ("CAD-" + (item.code || item.id)),
+      sourceModule: item.sourceModule || "消防监控系统",
+      service: item.service || "消防设备控制",
+      remark: item.remark || "",
+      smart: "是",
+      createdAt: item.lastSeen || "—"
+    };
+  });
+
+  var controlRecords = (RAW.controlRecords || []).map(function (r) { return Object.assign({}, r); });
+  var nextRecordId = controlRecords.reduce(function (max, r) { return Math.max(max, Number(r.id) || 0); }, 0) + 1;
+
+  var graphicState = {
+    selected: {},
+    filters: { category: "", name: "", code: "", from: "", to: "" }
+  };
+  var recordFilters = { category: "", device: "", deviceCode: "", from: "", to: "" };
+  var detailState = { id: "", tab: "info", historyPage: 1, historyPeriod: "today" };
+  var pageTab = "smart";
+
+  var el = function (id) { return document.getElementById(id); };
+  var esc = function (v) {
+    return String(v == null ? "" : v)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  };
+  var STATUS_SHORT = { online: "在线", warn: "预警", fault: "故障", offline: "离线" };
+
+  function metricDisplay(m) {
+    if (typeof m.value === "number") return Number(m.value).toFixed(m.decimals == null ? 1 : m.decimals);
+    return String(m.value == null ? "—" : m.value);
+  }
+  function displayStatus(d) {
+    if (d.isAlarm) return { key: "fault", text: "报警" };
+    return { key: d.status, text: STATUS_SHORT[d.status] || d.statusLabel || d.status };
+  }
+  function isControllable(device) {
+    return CONTROLLABLE_TYPES.indexOf(device.type) >= 0 && device.status !== "offline";
+  }
+  function nowText() {
+    var d = new Date();
+    var p = function (n) { return String(n).padStart(2, "0"); };
+    return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()) + " "
+      + p(d.getHours()) + ":" + p(d.getMinutes()) + ":" + p(d.getSeconds());
+  }
+
+  function graphicDevices() {
+    var f = graphicState.filters;
+    var nameQ = (f.name || "").toLowerCase();
+    var codeQ = (f.code || "").toLowerCase();
+    return DEVICES.filter(function (d) {
+      if (f.category && d.type !== f.category) return false;
+      if (nameQ && !(d.name || "").toLowerCase().includes(nameQ)) return false;
+      if (codeQ && !(d.code || "").toLowerCase().includes(codeQ)) return false;
+      var day = (d.time || d.lastSeen || "").slice(0, 10);
+      if (f.from && day && day < f.from) return false;
+      if (f.to && day && day > f.to) return false;
+      return true;
+    });
+  }
+  function selectedGraphicIds() {
+    return Object.keys(graphicState.selected).filter(function (id) { return graphicState.selected[id]; });
+  }
+  function updateFmSelectedCount() {
+    var countEl = el("fmSelectedCount");
+    if (countEl) countEl.textContent = String(selectedGraphicIds().length);
+  }
+  function syncGraphicFilterFields() {
+    var host = el("fmGraphicFilters");
+    if (!host) return;
+    host.querySelectorAll("[data-fm-filter]").forEach(function (field) {
+      field.value = graphicState.filters[field.dataset.fmFilter] || "";
+    });
+  }
+  function readGraphicFiltersFromDom() {
+    var host = el("fmGraphicFilters");
+    if (!host) return;
+    host.querySelectorAll("[data-fm-filter]").forEach(function (field) {
+      graphicState.filters[field.dataset.fmFilter] = field.value.trim();
+    });
+  }
+
+  function controlActionDefs(device) {
+    if (!device || CONTROLLABLE_TYPES.indexOf(device.type) < 0) return [];
+    if (device.type === "防火门") {
+      return [
+        { action: "close-door", label: "关闭" },
+        { action: "reset-door", label: "复位常开" },
+        { action: "lock-door", label: "强制闭锁" },
+        { action: "unlock-door", label: "解除闭锁" }
+      ];
+    }
+    if (device.type === "消防电源") {
+      return [
+        { action: "power-on", label: "启动" },
+        { action: "power-off", label: "停止" }
+      ];
+    }
+    if (device.type === "应急照明") {
+      return [
+        { action: "light-on", label: "点亮" },
+        { action: "light-off", label: "熄灭" }
+      ];
+    }
+    return [];
+  }
+
+  function fmCardActionsHtml(device) {
+    var defs = controlActionDefs(device);
+    if (!defs.length) return "";
+    var offline = device.status === "offline";
+    var dis = offline ? " disabled" : "";
+    var id = esc(device.id);
+    var btns = defs.map(function (def) {
+      return '<button class="btn btn-secondary" type="button" data-fm-ctrl="' + esc(def.action)
+        + '" data-fm-id="' + id + '"' + dis + ">" + esc(def.label) + "</button>";
+    });
+    return '<div class="fm-graphic-actions" data-fm-stop>' + btns.join("") + "</div>";
+  }
+
+  function fmDetailActionsHtml(device) {
+    var defs = controlActionDefs(device);
+    if (!defs.length || device.status === "offline") {
+      return '<div class="fdc-detail-control-empty">该设备暂不支持远程控制'
+        + (device && device.status === "offline" ? "（设备离线）" : "") + "</div>";
+    }
+    var id = esc(device.id);
+    var btns = defs.map(function (def) {
+      return '<button class="btn btn-secondary" type="button" data-fm-ctrl="' + esc(def.action)
+        + '" data-fm-id="' + id + '">' + esc(def.label) + "</button>";
+    });
+    return '<div class="fdc-detail-control">'
+      + '<p class="fdc-detail-control-hint">对「' + esc(device.name) + "」下发控制指令，执行前需确认。</p>"
+      + '<div class="fdc-detail-control-actions">' + btns.join("") + "</div></div>";
+  }
+
+  function renderGraphicGrid() {
+    var host = el("fmGraphicGrid");
+    if (!host) return;
+    var list = graphicDevices();
+    host.innerHTML = list.map(function (device) {
+      var controllable = isControllable(device);
+      var offline = device.status === "offline";
+      var alarm = !!device.isAlarm || device.status === "fault" || device.rawStatus === "warn";
+      var m0 = (device.metrics && device.metrics[0]) || null;
+      var readout = m0 ? metricDisplay(m0) + (m0.unit ? " " + m0.unit : "") : "—";
+      var sub = m0 ? m0.name : (offline ? "离线" : "暂无读数");
+      var st = displayStatus(device);
+      var cls = "fm-graphic-card";
+      if (alarm) cls += " is-alarm";
+      if (offline) cls += " is-offline";
+      if (controllable) cls += " is-controllable";
+      var check = controllable
+        ? '<label class="fm-graphic-check" data-fm-stop><input type="checkbox" data-fm-select="' + esc(device.id) + '"' + (graphicState.selected[device.id] ? " checked" : "") + "></label>"
+        : "";
+      return '<article class="' + cls + '" data-fm-card="' + esc(device.id) + '" role="button" tabindex="0" title="点击查看设备详情">'
+        + check
+        + '<div class="fm-graphic-panel" style="--fm-accent:' + esc(device.color || "#6B7B8C") + '">'
+        + '<i class="fa-solid ' + esc(device.icon || "fa-location-dot") + '" style="color:' + esc(device.color || "#9ca3af") + ';font-size:28px"></i>'
+        + '<div class="fm-readout">' + esc(readout) + "</div>"
+        + '<div class="fm-sub">' + esc(sub) + (offline ? " · 离线" : "") + "</div>"
+        + fmCardActionsHtml(device)
+        + "</div>"
+        + '<div class="fm-graphic-meta"><strong>' + esc(device.name) + "</strong>"
+        + "<span>" + esc(device.code) + " · " + esc(device.type) + "</span></div>"
+        + '<div class="fm-graphic-foot"><span><i class="fa-regular fa-clock"></i> ' + esc(device.lastSeen || device.time || "—") + "</span>"
+        + '<span class="dm-state ' + esc(st.key) + '"><i></i>' + esc(st.text) + "</span></div>"
+        + "</article>";
+    }).join("") || '<div class="fm-graphic-meta">当前筛选条件下暂无设备</div>';
+    updateFmSelectedCount();
+  }
+
+  function renderBatchActions() {
+    var host = el("fmBatchActions");
+    if (!host) return;
+    var ids = selectedGraphicIds();
+    var types = {};
+    ids.forEach(function (id) {
+      var d = DEVICES.find(function (x) { return String(x.id) === String(id); });
+      if (d) types[d.type] = true;
+    });
+    var buttons = [];
+    if (types["防火门"]) buttons.push('<button class="btn btn-secondary" type="button" data-fm-batch="close-door"' + (ids.length ? "" : " disabled") + ">批量关闭防火门</button>");
+    if (types["消防电源"]) {
+      buttons.push('<button class="btn btn-secondary" type="button" data-fm-batch="power-on">批量启动消防电源</button>');
+      buttons.push('<button class="btn btn-secondary" type="button" data-fm-batch="power-off">批量停止消防电源</button>');
+    }
+    if (types["应急照明"]) {
+      buttons.push('<button class="btn btn-secondary" type="button" data-fm-batch="light-on">批量点亮应急照明</button>');
+      buttons.push('<button class="btn btn-secondary" type="button" data-fm-batch="light-off">批量熄灭应急照明</button>');
+    }
+    host.innerHTML = buttons.join("") || '<span class="fm-graphic-meta">勾选可控设备后显示批量操作</span>';
+    updateFmSelectedCount();
+  }
+
+  function applyControl(device, action) {
+    if (!device || !isControllable(device)) return false;
+    if (device.type === "防火门") {
+      if (action === "close-door") {
+        device.status = "online"; device.statusLabel = "在线"; device.isAlarm = false; device.rawStatus = "online";
+        device.metrics = [
+          { name: "开闭状态", value: "关", unit: "", status: "normal", decimals: 0 },
+          { name: "门状态", value: "正常", unit: "", status: "normal", decimals: 0 }
+        ];
+      } else if (action === "reset-door") {
+        device.status = "fault"; device.statusLabel = "报警"; device.isAlarm = true; device.rawStatus = "alarm";
+        device.metrics = [
+          { name: "开闭状态", value: "开", unit: "", status: "danger", decimals: 0 },
+          { name: "门状态", value: "常开", unit: "", status: "danger", decimals: 0 }
+        ];
+      } else if (action === "lock-door") {
+        device.status = "online"; device.statusLabel = "在线"; device.isAlarm = false; device.rawStatus = "online";
+        device.metrics = [
+          { name: "开闭状态", value: "关", unit: "", status: "normal", decimals: 0 },
+          { name: "门状态", value: "强制闭锁", unit: "", status: "normal", decimals: 0 }
+        ];
+      } else if (action === "unlock-door") {
+        device.status = "online"; device.statusLabel = "在线"; device.isAlarm = false; device.rawStatus = "online";
+        device.metrics = [
+          { name: "开闭状态", value: "关", unit: "", status: "normal", decimals: 0 },
+          { name: "门状态", value: "正常", unit: "", status: "normal", decimals: 0 }
+        ];
+      }
+    } else if (device.type === "消防电源") {
+      if (action === "power-on") {
+        device.status = "online"; device.statusLabel = "在线"; device.isAlarm = false; device.rawStatus = "online";
+        device.metrics = [
+          { name: "电源状态", value: "正常", unit: "", status: "normal", decimals: 0 },
+          { name: "监测对象", value: (device.metrics[1] && device.metrics[1].value) || "消防设备", unit: "", status: "normal", decimals: 0 }
+        ];
+      } else if (action === "power-off") {
+        device.status = "fault"; device.statusLabel = "报警"; device.isAlarm = true; device.rawStatus = "alarm";
+        device.metrics = [
+          { name: "电源状态", value: "中断", unit: "", status: "danger", decimals: 0 },
+          { name: "监测对象", value: (device.metrics[1] && device.metrics[1].value) || "消防设备", unit: "", status: "danger", decimals: 0 }
+        ];
+      }
+    } else if (device.type === "应急照明") {
+      if (action === "light-on") {
+        device.status = "online"; device.statusLabel = "在线"; device.isAlarm = false; device.rawStatus = "online";
+        device.metrics = [{ name: "灯具状态", value: "应急点亮", unit: "", status: "normal", decimals: 0 }];
+      } else if (action === "light-off") {
+        device.status = "online"; device.statusLabel = "在线"; device.isAlarm = false; device.rawStatus = "online";
+        device.metrics = [{ name: "灯具状态", value: "熄灭", unit: "", status: "normal", decimals: 0 }];
+      }
+    }
+    return true;
+  }
+
+  function appendControlRecord(device, actionLabel) {
+    var row = {
+      id: nextRecordId++,
+      operator: "值班员甲",
+      time: nowText(),
+      action: actionLabel,
+      system: "消防监控",
+      category: device.type || "",
+      device: device.name,
+      deviceCode: device.code
+    };
+    controlRecords.unshift(row);
+    if (RAW.controlRecords) RAW.controlRecords.unshift(row);
+  }
+
+  function renderGraphicMonitor() {
+    syncGraphicFilterFields();
+    renderGraphicGrid();
+    renderBatchActions();
+    var allBox = el("fmSelectAll");
+    if (allBox) allBox.checked = false;
+  }
+
+  function byId(id) {
+    return DEVICES.find(function (x) { return String(x.id) === String(id); });
+  }
+
+  function decMetric(value, decimals) {
+    return Number(value).toFixed(decimals == null ? 1 : decimals);
+  }
+
+  function metricAlarm(m) {
+    return m && (m.status === "danger" || m.status === "warning" || m.status === "warn");
+  }
+
+  function buildDetailHistory(device) {
+    var rows = [];
+    var hour = 16;
+    for (var i = 0; i < 12; i += 1) {
+      hour -= 1;
+      var minute = String((i * 7) % 60).padStart(2, "0");
+      var values = (device.metrics || []).map(function (m, mi) {
+        if (typeof m.value === "number") {
+          var base = Number(m.value) || 0;
+          var wave = Math.sin((i + mi) / 3) * (base * 0.03 || 0.2);
+          return Number((base + wave).toFixed(m.decimals == null ? 1 : m.decimals));
+        }
+        return m.value;
+      });
+      rows.push({
+        time: "2026-10-14 " + String(Math.max(0, hour)).padStart(2, "0") + ":" + minute + ":00",
+        values: values
+      });
+    }
+    return rows;
+  }
+
+  function renderDetailBody(device) {
+    var tab = detailState.tab || "info";
+    var tabs = '<div class="dm-modal-tabs env-detail-tabs" role="tablist">'
+      + '<button class="dm-modal-tab' + (tab === "info" ? " is-active" : "") + '" type="button" data-fdc-detail-tab="info">设备信息</button>'
+      + '<button class="dm-modal-tab' + (tab === "live" ? " is-active" : "") + '" type="button" data-fdc-detail-tab="live">实时数据</button>'
+      + '<button class="dm-modal-tab' + (tab === "history" ? " is-active" : "") + '" type="button" data-fdc-detail-tab="history">历史数据</button>'
+      + '<button class="dm-modal-tab' + (tab === "control" ? " is-active" : "") + '" type="button" data-fdc-detail-tab="control">设备控制</button>'
+      + "</div>";
+
+    var panel = "";
+    if (tab === "info") {
+      panel = window.DEVICE_DETAIL_INFO && window.DEVICE_DETAIL_INFO.html
+        ? window.DEVICE_DETAIL_INFO.html(device, esc)
+        : '<div class="dm-empty">暂无设备信息</div>';
+    } else if (tab === "live") {
+      var metrics = device.metrics || [];
+      panel = metrics.length
+        ? '<div class="dm-live-grid">' + metrics.map(function (m) {
+          var val = typeof m.value === "number" ? decMetric(m.value, m.decimals) : esc(m.value);
+          return '<div class="dm-live-card' + (metricAlarm(m) ? " is-alarm" : "") + '">'
+            + '<span class="dm-live-name">' + esc(m.name) + "</span>"
+            + '<div class="dm-live-value">' + val + (m.unit ? '<span class="dm-live-unit">' + esc(m.unit) + "</span>" : "") + "</div>"
+            + '<span class="dm-live-time">' + esc(device.time || "—") + "</span></div>";
+        }).join("") + "</div>"
+        : '<div class="fdc-detail-control-empty">暂无实时数据</div>';
+    } else if (tab === "control") {
+      panel = fmDetailActionsHtml(device);
+    } else {
+      var history = buildDetailHistory(device);
+      var start = ((detailState.historyPage || 1) - 1) * PAGE_SIZE;
+      var pageRows = history.slice(start, start + PAGE_SIZE);
+      var pages = Math.max(1, Math.ceil(history.length / PAGE_SIZE));
+      var period = detailState.historyPeriod || "today";
+      panel = '<h3 class="dm-block-title">历史数据</h3>'
+        + '<div class="dm-filter-bar">'
+        + '<span class="dm-filter-label">数据接收时间</span>'
+        + '<input type="date" disabled>'
+        + '<span class="dm-filter-sep">-</span>'
+        + '<input type="date" disabled>'
+        + '<button class="btn btn-primary" type="button" disabled>搜索</button>'
+        + '<button class="btn btn-secondary" type="button" disabled>重置</button>'
+        + "</div>"
+        + '<div class="dm-history-table-wrap"><table class="dm-table dm-history-table"><thead><tr><th>数据接收时间</th>'
+        + (device.metrics || []).map(function (m) { return "<th>" + esc(m.name) + "</th>"; }).join("")
+        + "</tr></thead><tbody>"
+        + (pageRows.map(function (row) {
+          return "<tr><td>" + esc(row.time) + "</td>" + row.values.map(function (v, i) {
+            var m = device.metrics[i];
+            if (typeof v === "number") return "<td>" + decMetric(v, m && m.decimals) + "</td>";
+            return "<td>" + esc(v) + "</td>";
+          }).join("") + "</tr>";
+        }).join("") || ('<tr><td colspan="' + ((device.metrics || []).length + 1) + '" class="dm-empty">暂无历史数据</td></tr>'))
+        + "</tbody></table></div>"
+        + '<div class="dm-pager"><span class="dm-pager-total">共 <b>' + history.length + "</b> 条</span>"
+        + Array.from({ length: pages }, function (_, i) {
+          return '<button class="dm-page-btn' + (detailState.historyPage === i + 1 ? " is-active" : "") + '" type="button" data-fdc-history-page="' + (i + 1) + '">' + (i + 1) + "</button>";
+        }).join("")
+        + "</div>"
+        + '<div class="dm-chart-head"><h3 class="dm-block-title">历史曲线</h3>'
+        + '<div class="dm-period-switch">'
+        + '<button type="button" data-fdc-period="today"' + (period === "today" ? ' class="is-active"' : "") + ">今日</button>"
+        + '<button type="button" data-fdc-period="month"' + (period === "month" ? ' class="is-active"' : "") + ">本月</button>"
+        + '<button type="button" data-fdc-period="year"' + (period === "year" ? ' class="is-active"' : "") + ">本年</button>"
+        + "</div></div>"
+        + '<div class="dm-chart-legend">'
+        + (device.metrics || []).map(function (m, i) {
+          return '<span style="--dm-c:' + CHART_COLORS[i % CHART_COLORS.length] + '"><i></i>' + esc(m.name) + "</span>";
+        }).join("")
+        + "</div>"
+        + '<div class="dm-chart"><svg viewBox="0 0 640 220" preserveAspectRatio="none" aria-label="历史曲线">'
+        + [40, 90, 140, 190].map(function (y) {
+          return '<line x1="20" y1="' + y + '" x2="620" y2="' + y + '" stroke="#EDF1F7"/>';
+        }).join("")
+        + "</svg></div>";
+    }
+    return '<div class="env-device-detail fdc-detail">' + tabs + '<div class="env-detail-panel">' + panel + "</div></div>";
+  }
+
+  function refreshDetail() {
+    var device = byId(detailState.id);
+    var body = document.getElementById("drawerBody");
+    if (!device || !body) return;
+    body.innerHTML = renderDetailBody(device);
+  }
+
+  function openDeviceDetail(id, preferredTab) {
+    var item = byId(id);
+    if (!item || !window.openAppDrawer) return;
+    detailState.id = id;
+    detailState.tab = preferredTab || "info";
+    detailState.historyPage = 1;
+    detailState.historyPeriod = "today";
+    window.openAppDrawer({
+      title: "设备详情",
+      body: renderDetailBody(item),
+      footer: '<button class="btn btn-secondary" type="button" data-drawer-close>关闭</button>'
+    });
+    var drawer = document.getElementById("drawer");
+    if (drawer) drawer.classList.add("is-wide");
+  }
+
+  function confirmAndApplyControl(ids, action) {
+    var typeFilter = FM_BATCH_TYPE[action];
+    var targets = ids.map(function (id) { return byId(id); }).filter(function (d) {
+      if (!d || !isControllable(d)) return false;
+      if (typeFilter && d.type !== typeFilter) return false;
+      return true;
+    });
+    if (!targets.length) return;
+    var label = FM_ACTION_LABEL[action] || action;
+    var nameList = targets.map(function (d) { return d.name; }).join("、");
+    var message = targets.length === 1
+      ? ("确认对「" + esc(nameList) + "」执行「" + esc(label) + "」吗？")
+      : ("确认对以下 " + targets.length + " 台设备执行「" + esc(label) + "」吗？<br><strong>" + esc(nameList) + "</strong>");
+
+    function runApply() {
+      targets.forEach(function (d) {
+        if (applyControl(d, action)) appendControlRecord(d, label);
+      });
+      graphicState.selected = {};
+      renderGraphicMonitor();
+      if (pageTab === "records") renderRecords();
+      if (detailState.id && document.getElementById("drawerBody")) refreshDetail();
+    }
+
+    if (window.openAppConfirm) {
+      window.openAppConfirm({
+        title: "控制确认",
+        message: message,
+        confirmText: "确定",
+        okClass: "btn-primary",
+        onConfirm: runApply
+      });
+      return;
+    }
+    if (window.confirm("确认对 " + targets.length + " 台设备执行「" + label + "」？")) runApply();
+  }
+
+  function filteredRecords() {
+    var f = recordFilters;
+    var deviceQ = (f.device || "").toLowerCase();
+    var codeQ = (f.deviceCode || "").toLowerCase();
+    return controlRecords.filter(function (r) {
+      if (f.category && r.category !== f.category) return false;
+      if (deviceQ && !(r.device || "").toLowerCase().includes(deviceQ)) return false;
+      if (codeQ && !(r.deviceCode || "").toLowerCase().includes(codeQ)) return false;
+      var day = (r.time || "").slice(0, 10);
+      if (f.from && day && day < f.from) return false;
+      if (f.to && day && day > f.to) return false;
+      return true;
+    }).slice().sort(function (a, b) { return String(b.time).localeCompare(String(a.time)); });
+  }
+
+  function renderRecords() {
+    var list = filteredRecords();
+    var body = el("fdcRecordBody");
+    var count = el("fdcRecordCount");
+    if (count) count.textContent = String(list.length);
+    if (!body) return;
+    body.innerHTML = list.length
+      ? list.map(function (r, i) {
+        return "<tr><td>" + (i + 1) + "</td><td>" + esc(r.operator) + "</td><td>" + esc(r.time)
+          + "</td><td>" + esc(r.action) + "</td><td>" + esc(r.system) + "</td><td>" + esc(r.category || "—")
+          + "</td><td>" + esc(r.device) + "</td><td>" + esc(r.deviceCode) + "</td></tr>";
+      }).join("")
+      : '<tr><td colspan="8" class="dm-empty">暂无控制记录</td></tr>';
+  }
+
+  function setPageTab(next) {
+    pageTab = next === "records" ? "records" : "smart";
+    document.querySelectorAll("[data-fdc-tab]").forEach(function (btn) {
+      var active = btn.dataset.fdcTab === pageTab;
+      btn.classList.toggle("active", active);
+      btn.setAttribute("aria-selected", active ? "true" : "false");
+    });
+    var smart = el("fdcSmartPanel");
+    var records = el("fdcRecordsPanel");
+    if (smart) smart.hidden = pageTab !== "smart";
+    if (records) records.hidden = pageTab !== "records";
+    if (pageTab === "smart") renderGraphicMonitor();
+    else renderRecords();
+  }
+
+  function bindEvents() {
+    document.querySelectorAll("[data-fdc-tab]").forEach(function (btn) {
+      btn.addEventListener("click", function () { setPageTab(btn.dataset.fdcTab); });
+    });
+
+    var smart = el("fdcSmartPanel");
+    if (smart) {
+      smart.addEventListener("click", function (event) {
+        if (event.target.closest("[data-fm-action='search']")) {
+          readGraphicFiltersFromDom();
+          graphicState.selected = {};
+          renderGraphicMonitor();
+          return;
+        }
+        if (event.target.closest("[data-fm-action='reset']")) {
+          graphicState.filters = { category: "", name: "", code: "", from: "", to: "" };
+          graphicState.selected = {};
+          renderGraphicMonitor();
+          return;
+        }
+        var ctrlBtn = event.target.closest("[data-fm-ctrl]");
+        if (ctrlBtn && !ctrlBtn.disabled) {
+          event.stopPropagation();
+          confirmAndApplyControl([ctrlBtn.dataset.fmId], ctrlBtn.dataset.fmCtrl);
+          return;
+        }
+        var batchBtn = event.target.closest("[data-fm-batch]");
+        if (batchBtn && !batchBtn.disabled) {
+          confirmAndApplyControl(selectedGraphicIds(), batchBtn.dataset.fmBatch);
+          return;
+        }
+        if (event.target.closest("[data-fm-stop]")) return;
+        var card = event.target.closest("[data-fm-card]");
+        if (card) openDeviceDetail(card.dataset.fmCard);
+      });
+      smart.addEventListener("keydown", function (event) {
+        if (event.key !== "Enter" && event.key !== " ") return;
+        var card = event.target.closest("[data-fm-card]");
+        if (!card || event.target.closest("[data-fm-stop],[data-fm-ctrl]")) return;
+        event.preventDefault();
+        openDeviceDetail(card.dataset.fmCard);
+      });
+      smart.addEventListener("change", function (event) {
+        var selectAll = event.target.closest("[data-fm-select-all]");
+        if (selectAll) {
+          var checked = !!selectAll.checked;
+          graphicDevices().forEach(function (d) {
+            if (!isControllable(d)) return;
+            if (checked) graphicState.selected[d.id] = true;
+            else delete graphicState.selected[d.id];
+          });
+          renderGraphicGrid();
+          renderBatchActions();
+          var allBox = el("fmSelectAll");
+          if (allBox) allBox.checked = checked;
+          return;
+        }
+        var box = event.target.closest("[data-fm-select]");
+        if (box) {
+          var sid = box.dataset.fmSelect;
+          if (box.checked) graphicState.selected[sid] = true;
+          else delete graphicState.selected[sid];
+          renderBatchActions();
+          var visibles = graphicDevices().filter(isControllable);
+          var allOn = visibles.length > 0 && visibles.every(function (d) { return graphicState.selected[d.id]; });
+          var allBox2 = el("fmSelectAll");
+          if (allBox2) allBox2.checked = allOn;
+        }
+      });
+    }
+
+    var records = el("fdcRecordsPanel");
+    if (records) {
+      records.addEventListener("click", function (event) {
+        if (event.target.closest("[data-rec-action='search']")) {
+          records.querySelectorAll("[data-rec-filter]").forEach(function (field) {
+            recordFilters[field.dataset.recFilter] = field.value.trim();
+          });
+          renderRecords();
+          return;
+        }
+        if (event.target.closest("[data-rec-action='reset']")) {
+          recordFilters = { category: "", device: "", deviceCode: "", from: "", to: "" };
+          records.querySelectorAll("[data-rec-filter]").forEach(function (field) { field.value = ""; });
+          renderRecords();
+          return;
+        }
+        if (event.target.closest("[data-rec-action='export']") && window.openAppDrawer) {
+          window.openAppDrawer({
+            title: "导出设备控制记录",
+            subtitle: "消防监控系统 · 消防设备控制",
+            body: "<p>已按当前筛选条件生成设备控制记录文件（演示）。</p>",
+            footer: '<button class="btn btn-secondary" data-drawer-close>取消</button><button class="btn btn-primary" data-drawer-close>确认导出</button>'
+          });
+        }
+      });
+    }
+
+    document.addEventListener("click", function (event) {
+      var detailTab = event.target.closest("[data-fdc-detail-tab]");
+      if (detailTab) {
+        detailState.tab = detailTab.dataset.fdcDetailTab;
+        refreshDetail();
+        return;
+      }
+      var historyPage = event.target.closest("[data-fdc-history-page]");
+      if (historyPage) {
+        detailState.historyPage = Number(historyPage.dataset.fdcHistoryPage);
+        refreshDetail();
+        return;
+      }
+      var period = event.target.closest("[data-fdc-period]");
+      if (period) {
+        detailState.historyPeriod = period.dataset.fdcPeriod;
+        refreshDetail();
+        return;
+      }
+      var drawerCtrl = event.target.closest("#drawerBody [data-fm-ctrl]");
+      if (drawerCtrl && !drawerCtrl.disabled) {
+        confirmAndApplyControl([drawerCtrl.dataset.fmId], drawerCtrl.dataset.fmCtrl);
+        return;
+      }
+      if (event.target.closest("[data-drawer-close]") || event.target.closest(".drawer-close") || event.target.id === "drawerMask") {
+        var drawerEl = document.getElementById("drawer");
+        if (drawerEl) drawerEl.classList.remove("is-wide");
+      }
+    });
+
+    var _closeAppDrawer = window.closeAppDrawer;
+    if (typeof _closeAppDrawer === "function") {
+      window.closeAppDrawer = function () {
+        var drawerEl = document.getElementById("drawer");
+        if (drawerEl) drawerEl.classList.remove("is-wide");
+        return _closeAppDrawer.apply(this, arguments);
+      };
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    bindEvents();
+    setPageTab("smart");
+  });
+})();
+</script>
+</body>
+</html>

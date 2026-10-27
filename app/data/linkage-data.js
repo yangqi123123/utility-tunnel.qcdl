@@ -183,5 +183,74 @@
     }),
   ];
 
-  window.LINKAGE_DATA = { systems: SYSTEMS, records };
+  // 手动执行操作日志（执行台写入 session 后会与此合并展示）
+  const operationLogs = [
+    {
+      id: "OP-DEMO-001",
+      name: "集水坑高水位启泵",
+      code: "LR-002",
+      type: "手动执行",
+      system: "环境与设备监控",
+      device: "出入口排水泵-01",
+      action: "启动",
+      startTime: "2026-10-23 14:20:01",
+      endTime: "2026-10-23 14:20:08",
+      operator: "值班员甲",
+      operateTime: "2026-10-23 14:20:08",
+    },
+    {
+      id: "OP-DEMO-002",
+      name: "火灾确认跨系统处置",
+      code: "LR-003",
+      type: "手动执行",
+      system: "消防监控系统",
+      device: "本区灭火装置",
+      action: "联动启动",
+      startTime: "2026-10-23 09:12:01",
+      endTime: "2026-10-23 09:12:12",
+      operator: "值班员甲",
+      operateTime: "2026-10-23 09:12:12",
+    },
+    {
+      id: "OP-DEMO-003",
+      name: "火灾确认跨系统处置",
+      code: "LR-003",
+      type: "手动执行",
+      system: "环境与设备监控",
+      device: "电力舱排烟风机-01",
+      action: "启动",
+      startTime: "2026-10-23 09:12:01",
+      endTime: "2026-10-23 09:12:28",
+      operator: "值班员甲",
+      operateTime: "2026-10-23 09:12:28",
+    },
+    {
+      id: "OP-DEMO-004",
+      name: "火灾确认跨系统处置",
+      code: "LR-003",
+      type: "手动执行",
+      system: "电力监测系统",
+      device: "非消防电源断路器",
+      action: "切断非消防电源",
+      startTime: "2026-10-23 09:12:01",
+      endTime: "2026-10-23 09:12:45",
+      operator: "值班员甲",
+      operateTime: "2026-10-23 09:12:45",
+    },
+    {
+      id: "OP-DEMO-005",
+      name: "火灾确认跨系统处置",
+      code: "LR-003",
+      type: "手动执行",
+      system: "视频监控系统",
+      device: "综合舱防火分区枪机 01",
+      action: "调取预置位",
+      startTime: "2026-10-23 09:12:01",
+      endTime: "2026-10-23 09:13:02",
+      operator: "值班员甲",
+      operateTime: "2026-10-23 09:13:02",
+    },
+  ];
+
+  window.LINKAGE_DATA = { systems: SYSTEMS, records, operationLogs };
 })();

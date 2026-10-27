@@ -415,6 +415,39 @@
     { name: "出入口枪式摄像机 04", status: "在线", corridor: "高新大道综合管廊", cabin: "综合舱", section: "出入口" },
   ];
 
+  const controlRecords = [
+    {
+      id: 1,
+      operator: "值班员甲",
+      time: "2026-10-26 10:05:11",
+      action: "市电旁路",
+      system: "电力监测",
+      category: "UPS",
+      device: "UPS-电力舱-01",
+      deviceCode: "PWR-UPS-01",
+    },
+    {
+      id: 2,
+      operator: "值班员乙",
+      time: "2026-10-26 09:40:22",
+      action: "合闸",
+      system: "电力监测",
+      category: "配电柜",
+      device: "配电柜-防火分区-01",
+      deviceCode: "PWR-CAB-01",
+    },
+    {
+      id: 3,
+      operator: "管理员",
+      time: "2026-10-25 18:20:03",
+      action: "消警复位",
+      system: "电力监测",
+      category: "UPS",
+      device: "UPS-电力舱-01",
+      deviceCode: "PWR-UPS-01",
+    },
+  ];
+
   global.POWER_MONITOR_DATA = {
     spatialTree,
     monitorDevices,
@@ -422,5 +455,6 @@
     chartSeries,
     alarms,
     cameras,
+    controlRecords,
   };
 })(window);

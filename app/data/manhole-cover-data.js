@@ -385,11 +385,45 @@
     { name: "投料口枪式摄像机 04", status: "在线", corridor: "科学岛大道综合管廊", cabin: "综合舱", section: "出入口" },
   ];
 
+  const controlRecords = [
+    {
+      id: 1,
+      operator: "值班员甲",
+      time: "2026-10-26 09:50:11",
+      action: "远程关闭",
+      system: "智能井盖",
+      category: "智能井盖",
+      device: "智能井盖-防火分区-02",
+      deviceCode: "MHC-COVER-02",
+    },
+    {
+      id: 2,
+      operator: "值班员乙",
+      time: "2026-10-26 09:18:22",
+      action: "锁定",
+      system: "智能井盖",
+      category: "智能井盖",
+      device: "智能井盖-通风口-03",
+      deviceCode: "MHC-COVER-03",
+    },
+    {
+      id: 3,
+      operator: "管理员",
+      time: "2026-10-25 17:55:03",
+      action: "消警复位",
+      system: "智能井盖",
+      category: "智能井盖",
+      device: "智能井盖-出入口-01",
+      deviceCode: "MHC-COVER-01",
+    },
+  ];
+
   global.MANHOLE_COVER_DATA = {
     spatialTree,
     monitorDevices,
     statusDevices,
     alarms,
     cameras,
+    controlRecords,
   };
 })(window);

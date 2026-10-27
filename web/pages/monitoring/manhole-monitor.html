@@ -140,6 +140,14 @@
               <div class="env-quality-scope-path" id="eqScopePath"></div>
               <div class="env-quality-scope-filters" id="eqScopeFilters">
                 <label class="form-field">
+                  <span class="form-label">设备分类</span>
+                  <select class="form-control" data-eq-filter="category">
+                    <option value="">全部</option>
+                    <option value="智能井盖">智能井盖</option>
+                    <option value="井盖网关">井盖网关</option>
+                  </select>
+                </label>
+                <label class="form-field">
                   <span class="form-label">设备名称</span>
                   <input class="form-control" data-eq-filter="name" placeholder="请输入设备名称">
                 </label>
@@ -354,7 +362,7 @@
     status: "all",
     spacePath: { project: "", corridor: "", room: "", section: "" },
     collapsed: {},
-    filters: { name: "", code: "", from: "", to: "" },
+    filters: { category: "", name: "", code: "", from: "", to: "" },
     detailTab: "info",
     detailId: "",
     historyPeriod: "today",
@@ -835,9 +843,11 @@
   function listVisible() {
     var nameQ = listState.filters.name.toLowerCase();
     var codeQ = listState.filters.code.toLowerCase();
+    var category = listState.filters.category || "";
     return DEVICES.filter(function (item) {
       if (listState.status !== "all" && listChipStatus(item) !== listState.status) return false;
       if (listState.mode === "space" && !matchSpacePath(item, listState.spacePath)) return false;
+      if (category && item.type !== category) return false;
       if (nameQ && !(item.name || "").toLowerCase().includes(nameQ)) return false;
       if (codeQ && !(item.code || "").toLowerCase().includes(codeQ)) return false;
       var day = (item.time || "").slice(0, 10);
@@ -1347,7 +1357,7 @@
       renderListView();
     });
     document.querySelector("[data-eq-action='reset']").addEventListener("click", function () {
-      listState.filters = { name: "", code: "", from: "", to: "" };
+      listState.filters = { category: "", name: "", code: "", from: "", to: "" };
       listState.status = "all";
       document.querySelectorAll("[data-eq-filter]").forEach(function (field) { field.value = ""; });
       renderListView();

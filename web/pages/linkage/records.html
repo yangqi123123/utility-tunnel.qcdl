@@ -9,6 +9,31 @@
   <link rel="stylesheet" href="../../assets/css/environment-monitor.css">
   <style>
     .linkage-page .page-head { display: none; }
+    /* 对齐组态系统 config-tabs */
+    .linkage-tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid #e6ebf2;
+      background: transparent;
+      padding: 0;
+    }
+    .linkage-tabs .tab {
+      border: 0;
+      background: transparent;
+      padding: 12px 22px;
+      color: #758297;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      line-height: 1.2;
+    }
+    .linkage-tabs .tab.active {
+      color: #135afa;
+      border-bottom-color: #135afa;
+    }
+    .linkage-tab-panel.hidden { display: none !important; }
     .linkage-filter-card { padding: 16px 24px; }
     .linkage-filter-card .filter-actions {
       display: grid;
@@ -29,8 +54,11 @@
     .linkage-toolbar { padding: 16px 24px 0; margin-bottom: 12px; }
     .linkage-toolbar .btn-row { flex-wrap: wrap; justify-content: flex-end; }
     .linkage-table { min-width: 1280px; }
+    .linkage-oplog-table { min-width: 1400px; }
     .linkage-table th,
-    .linkage-table td { white-space: nowrap; }
+    .linkage-table td,
+    .linkage-oplog-table th,
+    .linkage-oplog-table td { white-space: nowrap; }
     .linkage-name-cell { color: var(--text-title); font-weight: 600; }
     .linkage-devices {
       display: inline-block;
@@ -65,89 +93,155 @@
     <header id="app-header" class="header"></header>
     <main class="main">
       <div class="screen-frame stack">
-        <section class="env-quality-kpi-grid" id="linkageKpis" aria-label="联动记录概览"></section>
+        <nav class="linkage-tabs" role="tablist" aria-label="联动记录分类">
+          <button class="tab active" type="button" role="tab" aria-selected="true" data-linkage-tab="records">联动记录</button>
+          <button class="tab" type="button" role="tab" aria-selected="false" data-linkage-tab="oplog">操作日志</button>
+        </nav>
 
-        <section class="card linkage-filter-card" id="linkageFilterCard">
-          <div class="filter-actions">
-            <label class="form-field">
-              <span class="form-label">联动系统</span>
-              <select class="form-control" data-filter="system">
-                <option value="">全部系统</option>
-              </select>
-            </label>
-            <label class="form-field">
-              <span class="form-label">联动名称</span>
-              <input class="form-control" data-filter="name" placeholder="请输入联动名称">
-            </label>
-            <label class="form-field">
-              <span class="form-label">联动编号</span>
-              <input class="form-control" data-filter="code" placeholder="请输入联动编号">
-            </label>
-            <label class="form-field">
-              <span class="form-label">联动类型</span>
-              <select class="form-control" data-filter="type">
-                <option value="">全部类型</option>
-                <option value="自动处置">自动处置</option>
-                <option value="跨系统协同">跨系统协同</option>
-              </select>
-            </label>
-            <label class="form-field extra-filter" data-filter-extra>
-              <span class="form-label">执行结果</span>
-              <select class="form-control" data-filter="result">
-                <option value="">全部结果</option>
-                <option value="成功">成功</option>
-                <option value="部分成功">部分成功</option>
-                <option value="失败">失败</option>
-              </select>
-            </label>
-            <label class="form-field extra-filter" data-filter-extra>
-              <span class="form-label">开始时间</span>
-              <input class="form-control" type="date" data-filter="from">
-            </label>
-            <label class="form-field extra-filter" data-filter-extra>
-              <span class="form-label">结束时间</span>
-              <input class="form-control" type="date" data-filter="to">
-            </label>
-            <div class="linkage-filter-actions">
-              <button class="btn btn-ghost" type="button" data-action="collapse"><span>展开</span> <i class="fa-solid fa-chevron-down"></i></button>
-              <button class="btn btn-secondary" type="button" data-action="reset">重置</button>
-              <button class="btn btn-primary" type="button" data-action="search">搜索</button>
+        <div class="linkage-tab-panel" data-linkage-panel="records">
+          <section class="card linkage-filter-card" id="linkageFilterCard">
+            <div class="filter-actions">
+              <label class="form-field">
+                <span class="form-label">联动系统</span>
+                <select class="form-control" data-filter="system">
+                  <option value="">全部系统</option>
+                </select>
+              </label>
+              <label class="form-field">
+                <span class="form-label">联动名称</span>
+                <input class="form-control" data-filter="name" placeholder="请输入联动名称">
+              </label>
+              <label class="form-field">
+                <span class="form-label">联动编号</span>
+                <input class="form-control" data-filter="code" placeholder="请输入联动编号">
+              </label>
+              <label class="form-field">
+                <span class="form-label">联动类型</span>
+                <select class="form-control" data-filter="type">
+                  <option value="">全部类型</option>
+                  <option value="自动处置">自动处置</option>
+                  <option value="跨系统协同">跨系统协同</option>
+                </select>
+              </label>
+              <label class="form-field extra-filter" data-filter-extra>
+                <span class="form-label">执行结果</span>
+                <select class="form-control" data-filter="result">
+                  <option value="">全部结果</option>
+                  <option value="成功">成功</option>
+                  <option value="部分成功">部分成功</option>
+                  <option value="失败">失败</option>
+                </select>
+              </label>
+              <label class="form-field extra-filter" data-filter-extra>
+                <span class="form-label">开始时间</span>
+                <input class="form-control" type="date" data-filter="from">
+              </label>
+              <label class="form-field extra-filter" data-filter-extra>
+                <span class="form-label">结束时间</span>
+                <input class="form-control" type="date" data-filter="to">
+              </label>
+              <div class="linkage-filter-actions">
+                <button class="btn btn-ghost" type="button" data-action="collapse"><span>展开</span> <i class="fa-solid fa-chevron-down"></i></button>
+                <button class="btn btn-secondary" type="button" data-action="reset">重置</button>
+                <button class="btn btn-primary" type="button" data-action="search">搜索</button>
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
 
-        <section class="card linkage-list-card">
-          <div class="card-title-row linkage-toolbar">
-            <h1 class="card-title">联动记录</h1>
-            <div class="btn-row">
-              <button class="btn btn-secondary" type="button" data-action="sync-linkage"><i class="fa-solid fa-arrows-rotate"></i> 同步联动记录</button>
-              <button class="btn btn-secondary" type="button" data-action="export"><i class="fa-solid fa-download"></i> 导出联动记录</button>
+          <section class="card linkage-list-card">
+            <div class="card-title-row linkage-toolbar">
+              <h1 class="card-title">联动记录</h1>
+              <div class="btn-row">
+                <button class="btn btn-secondary" type="button" data-action="sync-linkage"><i class="fa-solid fa-arrows-rotate"></i> 同步联动记录</button>
+                <button class="btn btn-secondary" type="button" data-action="export"><i class="fa-solid fa-download"></i> 导出联动记录</button>
+              </div>
             </div>
-          </div>
-          <div class="table-wrap">
-            <table class="table linkage-table" aria-label="联动记录列表">
-              <thead>
-                <tr>
-                  <th>联动名称</th>
-                  <th>联动编号</th>
-                  <th>联动类型</th>
-                  <th>联动系统</th>
-                  <th>联动设备</th>
-                  <th>执行结果</th>
-                  <th>联动开始时间</th>
-                  <th>联动结束时间</th>
-                  <th>发送时间</th>
-                  <th>操作</th>
-                </tr>
-              </thead>
-              <tbody id="linkageTableBody"></tbody>
-            </table>
-          </div>
-          <div class="pagination" style="padding:12px 24px 16px">
-            <span>共 <strong id="recordCount">0</strong> 条，每页显示 10 条</span>
-            <span class="page-item active">1</span>
-          </div>
-        </section>
+            <div class="table-wrap">
+              <table class="table linkage-table" aria-label="联动记录列表">
+                <thead>
+                  <tr>
+                    <th>联动名称</th>
+                    <th>联动编号</th>
+                    <th>联动类型</th>
+                    <th>联动系统</th>
+                    <th>联动设备</th>
+                    <th>执行结果</th>
+                    <th>联动开始时间</th>
+                    <th>联动结束时间</th>
+                    <th>发送时间</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody id="linkageTableBody"></tbody>
+              </table>
+            </div>
+            <div class="pagination" style="padding:12px 24px 16px">
+              <span>共 <strong id="recordCount">0</strong> 条，每页显示 10 条</span>
+              <span class="page-item active">1</span>
+            </div>
+          </section>
+        </div>
+
+        <div class="linkage-tab-panel hidden" data-linkage-panel="oplog">
+          <section class="card linkage-filter-card" id="oplogFilterCard">
+            <div class="filter-actions">
+              <label class="form-field">
+                <span class="form-label">联动名称</span>
+                <input class="form-control" data-oplog-filter="name" placeholder="请输入联动名称">
+              </label>
+              <label class="form-field">
+                <span class="form-label">联动编号</span>
+                <input class="form-control" data-oplog-filter="code" placeholder="请输入联动编号">
+              </label>
+              <label class="form-field">
+                <span class="form-label">联动系统</span>
+                <select class="form-control" data-oplog-filter="system">
+                  <option value="">全部系统</option>
+                </select>
+              </label>
+              <label class="form-field">
+                <span class="form-label">操作人</span>
+                <input class="form-control" data-oplog-filter="operator" placeholder="请输入操作人">
+              </label>
+              <div class="linkage-filter-actions">
+                <button class="btn btn-secondary" type="button" data-oplog-action="reset">重置</button>
+                <button class="btn btn-primary" type="button" data-oplog-action="search">搜索</button>
+              </div>
+            </div>
+          </section>
+
+          <section class="card linkage-list-card">
+            <div class="card-title-row linkage-toolbar">
+              <h1 class="card-title">操作日志</h1>
+              <div class="btn-row">
+                <button class="btn btn-secondary" type="button" data-oplog-action="export"><i class="fa-solid fa-download"></i> 导出操作日志</button>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table class="table linkage-oplog-table" aria-label="操作日志列表">
+                <thead>
+                  <tr>
+                    <th>联动名称</th>
+                    <th>联动编号</th>
+                    <th>联动类型</th>
+                    <th>联动系统</th>
+                    <th>联动设备</th>
+                    <th>执行动作</th>
+                    <th>联动开始时间</th>
+                    <th>联动结束时间</th>
+                    <th>操作人</th>
+                    <th>操作时间</th>
+                  </tr>
+                </thead>
+                <tbody id="oplogTableBody"></tbody>
+              </table>
+            </div>
+            <div class="pagination" style="padding:12px 24px 16px">
+              <span>共 <strong id="oplogCount">0</strong> 条，每页显示 10 条</span>
+              <span class="page-item active">1</span>
+            </div>
+          </section>
+        </div>
       </div>
     </main>
   </div>

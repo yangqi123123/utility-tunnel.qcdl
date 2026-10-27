@@ -13,17 +13,19 @@ const exists = async (path) => {
   }
 };
 
-test("一级菜单入侵报警系统含四个二级入口", async () => {
+test("一级菜单入侵报警系统含原有二级入口", async () => {
   const menu = await read("app/config/menu.js");
   assert.match(menu, /key:\s*"intrusion-alarm"/);
   assert.match(menu, /label:\s*"入侵报警系统"/);
   assert.match(menu, /intrusion-alarm\.monitor/);
   assert.match(menu, /label:\s*"入侵报警监测"/);
   assert.match(menu, /label:\s*"入侵设备状态"/);
+  assert.match(menu, /label:\s*"入侵设备控制"/);
   assert.match(menu, /label:\s*"入侵联动记录"/);
   assert.match(menu, /label:\s*"入侵报警记录"/);
   assert.match(menu, /intrusion-monitor\.html/);
   assert.match(menu, /intrusion-devices\.html/);
+  assert.match(menu, /intrusion-device-control\.html/);
   assert.match(menu, /intrusion-linkage\.html/);
   assert.match(menu, /intrusion-alarms\.html/);
   const videoIdx = menu.indexOf('key: "video-monitoring"');
@@ -82,6 +84,13 @@ test("监测页支持地图列表切换与视频内嵌", async () => {
   assert.match(page, /data-eq-detail-tab="live"/);
   assert.match(page, /data-eq-detail-tab="history"/);
   assert.match(page, /renderListDetailBody/);
+  assert.match(page, /data-eq-filter="category"/);
+  assert.match(page, /data-eq-filter="name"/);
+  assert.match(page, /data-eq-filter="code"/);
+  assert.match(page, /data-eq-filter="from"/);
+  assert.match(page, /data-eq-filter="to"/);
+  assert.match(page, /data-ias-mode="system"/);
+  assert.match(page, /data-ias-mode="space"/);
 });
 
 test("列表模式右侧主区滚动而非整页或仅卡片格", async () => {
@@ -112,9 +121,9 @@ test("报警记录页具备处置能力且 system 为入侵报警", async () => 
   assert.match(page, /误报/);
   assert.match(page, /转工单/);
   assert.match(page, /入侵报警/);
-  assert.match(page, /<th>图片<\/th>/);
-  assert.match(page, /listImageMarkup|detailImagesMarkup|alarmImages/);
-  assert.match(page, /data-alarm-image-preview/);
+  assert.match(page, /<th>视频关键帧<\/th>|<th>图片<\/th>/);
+  assert.match(page, /listImageMarkup|detailImagesMarkup|alarmImages|alarm-keyframe|keyframeUrl/);
+  assert.match(page, /data-alarm-image-preview|data-clip-preview/);
 });
 
 test("入侵报警数据含图片字段", async () => {

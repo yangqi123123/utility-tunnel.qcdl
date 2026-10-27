@@ -120,20 +120,33 @@
         <section class="env-quality-kpi-grid" id="qualityKpis" aria-label="门禁设备概览"></section>
 
         <section class="env-quality-workspace">
-          <aside class="dm-panel dm-left env-quality-side" aria-label="空间类型筛选">
+          <aside class="dm-panel dm-left env-quality-side" aria-label="系统类型 / 空间类型筛选">
             <div class="dm-statusbar" id="eqStatusBar">
               <button class="dm-chip is-active" type="button" data-eq-status="all"><i></i>全部</button>
               <button class="dm-chip" type="button" data-eq-status="online"><i></i>在线</button>
               <button class="dm-chip" type="button" data-eq-status="offline"><i></i>离线</button>
               <button class="dm-chip" type="button" data-eq-status="warn"><i></i>预警</button>
             </div>
-            <div class="dm-tree" id="eqTree" role="tree" aria-label="空间类型"></div>
+            <div class="dm-tabs">
+              <button class="dm-tab is-active" type="button" data-ias-mode="system">系统类型</button>
+              <button class="dm-tab" type="button" data-ias-mode="space">空间类型</button>
+            </div>
+            <div class="dm-tree" id="eqTree" role="tree" aria-label="系统类型 / 空间类型"></div>
           </aside>
 
           <div class="env-quality-main">
             <section class="env-quality-scope-bar" id="eqScopeBar">
               <div class="env-quality-scope-path" id="eqScopePath"></div>
-              <div class="env-quality-scope-filters">
+              <div class="env-quality-scope-filters" id="eqScopeFilters">
+                <label class="form-field">
+                  <span class="form-label">设备分类</span>
+                  <select class="form-control" data-eq-filter="category">
+                    <option value="">全部</option>
+                    <option value="门禁控制器">门禁控制器</option>
+                    <option value="读卡器">读卡器</option>
+                    <option value="枪式摄像机">枪式摄像机</option>
+                  </select>
+                </label>
                 <label class="form-field">
                   <span class="form-label">设备名称</span>
                   <input class="form-control" data-eq-filter="name" placeholder="请输入设备名称">
@@ -343,10 +356,12 @@
   };
 
   var listState = {
+    mode: "system",
+    system: "门禁系统",
     status: "all",
     spacePath: { project: "", corridor: "", room: "", section: "" },
     collapsed: {},
-    filters: { name: "", code: "", from: "", to: "" },
+    filters: { category: "", name: "", code: "", from: "", to: "" },
     detailTab: "info",
     detailId: "",
     historyPeriod: "today",
@@ -792,7 +807,10 @@
     var statusList = STATUS_CHIP[listState.status];
     var status = deviceStatus(device);
     if (statusList && statusList.indexOf(status) < 0) return false;
-    if (!matchSpacePath(device, listState.spacePath)) return false;
+    if (listState.mode === "system" && listState.system && device.system !== listState.system) return false;
+    if (listState.mode === "space" && !matchSpacePath(device, listState.spacePath)) return false;
+    var category = listState.filters.category || "";
+    if (category && device.type !== category) return false;
     var nameQ = listState.filters.name.toLowerCase();
     var codeQ = listState.filters.code.toLowerCase();
     if (nameQ && !(device.name || "").toLowerCase().includes(nameQ)) return false;
@@ -846,9 +864,27 @@
       + '<span class="dm-tree-count">' + count + "</span></div>";
   }
 
+  function listSystemNames() {
+    var names = [];
+    DEVICES.forEach(function (d) {
+      if (d.system && names.indexOf(d.system) < 0) names.push(d.system);
+    });
+    return names;
+  }
+
   function renderEqTree() {
     var host = el("eqTree");
     if (!host) return;
+    if (listState.mode === "system") {
+      host.innerHTML = listSystemNames().map(function (name) {
+        var count = DEVICES.filter(function (d) { return d.system === name; }).length;
+        return '<div class="dm-tree-row' + (listState.system === name ? " is-active" : "") + '" data-ias-system="' + esc(name) + '" role="treeitem" style="padding-left:6px">'
+          + '<button class="dm-tree-toggle is-leaf" type="button" tabindex="-1" aria-hidden="true"></button>'
+          + '<span class="dm-tree-name">' + esc(name) + "</span>"
+          + '<span class="dm-tree-count">' + count + "</span></div>";
+      }).join("") || '<div class="dm-tree-empty">暂无系统</div>';
+      return;
+    }
     var html = "";
     (D.spatialTree || []).forEach(function (project) {
       var projectPath = { project: project.name, corridor: "", room: "", section: "" };
@@ -876,6 +912,7 @@
   }
 
   function scopeLabel() {
+    if (listState.mode === "system") return listState.system || "全部系统";
     var path = listState.spacePath;
     if (!path.project) return "全部空间";
     return [path.project, path.corridor, path.room, path.section].filter(Boolean).join(" / ");
@@ -1072,6 +1109,9 @@
     document.querySelectorAll("[data-eq-status]").forEach(function (chip) {
       chip.classList.toggle("is-active", chip.dataset.eqStatus === listState.status);
     });
+    document.querySelectorAll("[data-ias-mode]").forEach(function (tab) {
+      tab.classList.toggle("is-active", tab.dataset.iasMode === listState.mode);
+    });
     renderQualityKpis();
     renderEqTree();
     renderScopeBar();
@@ -1226,6 +1266,14 @@
       if (map && view === "map") map.invalidateSize();
     });
 
+    document.querySelectorAll("#iasListView [data-ias-mode]").forEach(function (tab) {
+      tab.addEventListener("click", function () {
+        listState.mode = tab.dataset.iasMode;
+        if (listState.mode === "space") listState.spacePath = emptyPath();
+        renderListView();
+      });
+    });
+
     el("eqTree").addEventListener("click", function (event) {
       var toggle = event.target.closest("[data-eq-toggle]");
       if (toggle) {
@@ -1234,8 +1282,14 @@
         renderEqTree();
         return;
       }
+      var systemRow = event.target.closest("[data-ias-system]");
+      if (systemRow) {
+        listState.system = systemRow.dataset.iasSystem;
+        renderListView();
+        return;
+      }
       var spaceRow = event.target.closest("[data-eq-project]");
-      if (spaceRow) {
+      if (spaceRow && listState.mode === "space") {
         var next = {
           project: spaceRow.dataset.eqProject || "",
           corridor: spaceRow.dataset.eqCorridor || "",
@@ -1255,14 +1309,14 @@
     });
 
     document.querySelector("[data-eq-action='search']").addEventListener("click", function () {
-      document.querySelectorAll("[data-eq-filter]").forEach(function (field) {
+      document.querySelectorAll("#eqScopeFilters [data-eq-filter]").forEach(function (field) {
         listState.filters[field.dataset.eqFilter] = field.value.trim();
       });
       renderCards();
     });
     document.querySelector("[data-eq-action='reset']").addEventListener("click", function () {
-      listState.filters = { name: "", code: "", from: "", to: "" };
-      document.querySelectorAll("[data-eq-filter]").forEach(function (field) { field.value = ""; });
+      listState.filters = { category: "", name: "", code: "", from: "", to: "" };
+      document.querySelectorAll("#eqScopeFilters [data-eq-filter]").forEach(function (field) { field.value = ""; });
       renderCards();
     });
 

@@ -24,17 +24,23 @@ test("共享井盖数据文件存在且含关键字段", async () => {
   assert.match(data, /非法开启|倾角异常/);
 });
 
-test("一级菜单智能井盖系统在门禁下方、电力上方且含三个二级入口", async () => {
+test("一级菜单智能井盖系统在门禁下方、电力上方且含二级入口", async () => {
   const menu = await read("app/config/menu.js");
   assert.match(menu, /key:\s*"manhole-cover"/);
   assert.match(menu, /label:\s*"智能井盖系统"/);
   assert.match(menu, /manhole-cover\.monitor/);
   assert.match(menu, /label:\s*"井盖实时监测"/);
   assert.match(menu, /label:\s*"井盖状态监测"/);
+  assert.match(menu, /label:\s*"井盖设备控制"/);
   assert.match(menu, /label:\s*"井盖报警记录"/);
   assert.match(menu, /manhole-monitor\.html/);
   assert.match(menu, /manhole-devices\.html/);
+  assert.match(menu, /manhole-device-control\.html/);
   assert.match(menu, /manhole-alarms\.html/);
+  const devicesIdx = menu.indexOf("manhole-cover.devices");
+  const controlIdx = menu.indexOf("manhole-cover.control");
+  const alarmsIdx = menu.indexOf("manhole-cover.alarms");
+  assert.ok(devicesIdx >= 0 && controlIdx > devicesIdx && alarmsIdx > controlIdx);
   const accessIdx = menu.indexOf('key: "access-control"');
   const mhcIdx = menu.indexOf('key: "manhole-cover"');
   const pwrIdx = menu.indexOf('key: "power-monitor"');
@@ -55,6 +61,13 @@ test("井盖实时监测页复用入侵监测结构且文案井盖化", async ()
   assert.match(page, /视频监控系统/);
   assert.match(page, /embedded=panel/);
   assert.match(page, /开合状态|倾角|信号/);
+  assert.match(page, /data-eq-filter="category"/);
+  assert.match(page, /data-eq-filter="name"/);
+  assert.match(page, /data-eq-filter="code"/);
+  assert.match(page, /data-eq-filter="from"/);
+  assert.match(page, /data-eq-filter="to"/);
+  assert.match(page, /data-ias-mode="system"/);
+  assert.match(page, /data-ias-mode="space"/);
   assert.doesNotMatch(page, /INTRUSION_ALARM_DATA/);
   assert.doesNotMatch(page, /data-menu-key="intrusion-alarm/);
 });
