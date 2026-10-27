@@ -34,6 +34,17 @@ test("sidebar provides a maintenance navigation icon", async () => {
   assert.match(source, /maintenance:\s*['"][\s\S]*?<path/);
 });
 
+test("task detail includes video tab before records", async () => {
+  const source = await read("app/components/maintenance.js");
+  assert.match(source, /data-task-tab="video"[^>]*>视频监控/);
+  assert.match(source, /data-task-panel="video"/);
+  assert.match(source, /dispatch-video-home-grid/);
+  assert.match(source, /data-task-video-fullscreen/);
+  const videoIdx = source.indexOf('data-task-tab="video"');
+  const recordsIdx = source.indexOf('data-task-tab="records"');
+  assert.ok(videoIdx > 0 && recordsIdx > videoIdx);
+});
+
 test("maintenance data exposes isolated fixture collections", async () => {
   const source = await read("app/data/maintenance-data.js");
   assert.match(source, /window\.MAINTENANCE_DATA/);

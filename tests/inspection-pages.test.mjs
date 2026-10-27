@@ -37,6 +37,17 @@ test("sidebar provides an inspection navigation icon", async () => {
   assert.match(source, /inspection:\s*['"][\s\S]*?<path/);
 });
 
+test("task detail includes video tab before records", async () => {
+  const source = await read("app/components/inspection.js");
+  assert.match(source, /data-task-tab="video"[^>]*>视频监控/);
+  assert.match(source, /data-task-panel="video"/);
+  assert.match(source, /dispatch-video-home-grid/);
+  assert.match(source, /data-task-video-fullscreen/);
+  const videoIdx = source.indexOf('data-task-tab="video"');
+  const recordsIdx = source.indexOf('data-task-tab="records"');
+  assert.ok(videoIdx > 0 && recordsIdx > videoIdx);
+});
+
 for (const [page, key, title, bodyId, needsInspectionJs] of pages) {
   test(`${page} page uses the shared inspection shell`, async () => {
     const source = await read(`web/pages/inspection/${page}.html`);

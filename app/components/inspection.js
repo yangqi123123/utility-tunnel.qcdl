@@ -367,16 +367,39 @@
     renderPersonSelected();
   }
 
+  const TASK_VIDEO_POSTER = "../../assets/images/corridor-monitor.jpg";
+  const TASK_VIDEO_CAMERAS = [
+    { id: "CAM-001", name: "综合舱 F0102", status: "在线" },
+    { id: "CAM-002", name: "电力舱 F0103", status: "在线" },
+    { id: "CAM-003", name: "水信舱 F0301", status: "在线" },
+    { id: "CAM-004", name: "出入口 K1+280", status: "在线" },
+  ];
+
+  function taskVideoPanel(tab) {
+    const live = new Date().toTimeString().slice(0, 8);
+    const feeds = TASK_VIDEO_CAMERAS.map(
+      (camera) => `<div class="dispatch-video-feed" data-task-video-feed>
+        <div class="dispatch-video-feed-title"><span>${esc(camera.name)}</span><b>${esc(camera.status)}</b></div>
+        <div class="dispatch-video-feed-screen">
+          <img src="${TASK_VIDEO_POSTER}" alt="${esc(camera.name)}">
+          <span>LIVE · ${live}</span>
+          <button class="dispatch-video-fullscreen" type="button" data-task-video-fullscreen aria-label="全屏预览"><i class="fa-solid fa-expand"></i></button>
+        </div>
+      </div>`
+    ).join("");
+    return `<section class="inspection-task-panel ${tab === "video" ? "" : "hidden"}" data-task-panel="video"><div class="dispatch-video-home-grid">${feeds}</div></section>`;
+  }
+
   function taskDetailBody(item, tab = "basic") {
     const devices = (item.deviceIds || []).map((id) => byId(state.devices, id)).filter(Boolean);
-    const tabs = `<div class="inspection-task-tabs"><button type="button" class="${tab === "basic" ? "active" : ""}" data-task-tab="basic" data-id="${esc(item.id)}">基本信息</button><button type="button" class="${tab === "devices" ? "active" : ""}" data-task-tab="devices" data-id="${esc(item.id)}">设备列表</button><button type="button" class="${tab === "abnormal" ? "active" : ""}" data-task-tab="abnormal" data-id="${esc(item.id)}">设备异常</button><button type="button" class="${tab === "records" ? "active" : ""}" data-task-tab="records" data-id="${esc(item.id)}">处理记录</button></div>`;
+    const tabs = `<div class="inspection-task-tabs"><button type="button" class="${tab === "basic" ? "active" : ""}" data-task-tab="basic" data-id="${esc(item.id)}">基本信息</button><button type="button" class="${tab === "devices" ? "active" : ""}" data-task-tab="devices" data-id="${esc(item.id)}">设备列表</button><button type="button" class="${tab === "abnormal" ? "active" : ""}" data-task-tab="abnormal" data-id="${esc(item.id)}">设备异常</button><button type="button" class="${tab === "video" ? "active" : ""}" data-task-tab="video" data-id="${esc(item.id)}">视频监控</button><button type="button" class="${tab === "records" ? "active" : ""}" data-task-tab="records" data-id="${esc(item.id)}">处理记录</button></div>`;
     const basic = `<section class="inspection-task-panel ${tab === "basic" ? "" : "hidden"}" data-task-panel="basic"><div class="detail-grid">${[["任务编号", item.code], ["任务状态", statusTag(item.status, "warning")], ["任务名称", item.name], ["所属项目", item.project || "-"], ["所属管廊", item.corridor || "-"], ["所属舱室", item.room || "-"], ["所属区段", item.section || "-"], ["所属管线", item.pipeline || "-"], ["关联计划", item.planName], ["巡检等级", levelTag(item.level)], ["巡检人员", item.inspector], ["验收人", item.owner], ["逾期状态", statusTag(item.overdue, item.overdue === "未逾期" ? "normal" : "danger")], ["任务开始时间", item.plannedAt], ["任务截止时间", item.deadline], ["实际开始时间", item.startedAt], ["结果提交时间", item.submittedAt], ["巡检时长", item.duration], ["设备数量", item.deviceCount], ["异常数量", item.abnormalCount], ["创建时间", "2026-09-09 00:10:17"], ["备注", item.note]].map(([label, content]) => `<div class="info-item"><span class="info-label">${label}</span><span class="info-value">${typeof content === "string" && content.startsWith("<span") ? content : esc(content)}</span></div>`).join("")}</div></section>`;
     const devicePanel = `<section class="inspection-task-panel ${tab === "devices" ? "" : "hidden"}" data-task-panel="devices"><div class="inspection-table-wrap"><table class="table inspection-detail-table"><thead><tr><th>设备名称</th><th>设备编码</th><th>所属系统</th><th>设备分类</th><th>所属项目</th><th>所属管廊</th><th>所属舱室</th><th>所属区段</th><th>所属管线</th><th>安装位置</th><th>操作</th></tr></thead><tbody>${devices.map((device) => `<tr><td>${esc(device.name)}</td><td>${esc(device.code)}</td><td>${esc(device.system)}</td><td>${esc(device.category)}</td><td>${esc(device.project)}</td><td>${esc(device.corridor)}</td><td>${esc(device.room)}</td><td>${esc(device.section)}</td><td>${esc(device.pipeline)}</td><td>${esc(device.location)}</td><td><button class="table-action" type="button" data-inspection-device-detail="${esc(device.id)}">详情</button><button class="table-action" type="button" data-inspection-device-record="${esc(device.id)}">作业记录</button></td></tr>`).join("") || `<tr><td colspan="11"><div class="inspection-empty">暂无设备</div></td></tr>`}</tbody></table></div></section>`;
     const abnormalReports = item.abnormalReports || [];
     const abnormalPanel = `<section class="inspection-task-panel ${tab === "abnormal" ? "" : "hidden"}" data-task-panel="abnormal"><div class="inspection-table-wrap"><table class="table inspection-detail-table inspection-abnormal-table"><thead><tr><th>设备编号</th><th>异常设备</th><th>异常分类</th><th>所属项目</th><th>所属管廊</th><th>所属舱室</th><th>所属区段</th><th>所属管线</th><th>安装位置</th><th>异常描述</th><th>关联作业项</th><th>上报人</th><th>上报时间</th></tr></thead><tbody>${abnormalReports.length ? abnormalReports.map((report) => `<tr><td>${esc(report.deviceCode)}</td><td>${esc(report.deviceName)}</td><td>${statusTag(report.category, "danger")}</td><td>${esc(report.project)}</td><td>${esc(report.corridor)}</td><td>${esc(report.room)}</td><td>${esc(report.section)}</td><td>${esc(report.pipeline)}</td><td>${esc(report.location)}</td><td class="wrap" title="${esc(report.description)}">${esc(report.description)}</td><td>${esc(report.workItem)}</td><td>${esc(report.reporter)}</td><td>${esc(report.reportedAt)}</td></tr>`).join("") : `<tr><td colspan="13"><div class="inspection-empty">暂无设备异常</div></td></tr>`}</tbody></table></div></section>`;
     const records = item.history?.length ? item.history : [[item.inspector || "系统", "创建巡检任务", item.plannedAt || "2026-09-07 08:56:30"], [item.inspector || "巡检人", "开始执行设备巡检", item.startedAt !== "-" ? item.startedAt : "2026-09-07 09:15:40"], [item.owner || "验收人", item.status === "已完成" ? "验收通过，巡检任务已完成" : "等待提交巡检结果", item.submittedAt !== "-" ? item.submittedAt : "2026-09-07 09:20:18"]];
     const recordPanel = `<section class="inspection-task-panel ${tab === "records" ? "" : "hidden"}" data-task-panel="records"><div class="inspection-records"><h3>处理记录</h3>${records.map(([person, process, time], index) => `<div class="inspection-record"><span class="inspection-record-dot ${index === records.length - 1 ? "done" : ""}"></span><div><strong>${esc(person)}</strong><p>${esc(process)}</p><time>${esc(time)}</time></div></div>`).join("")}</div></section>`;
-    return tabs + basic + devicePanel + abnormalPanel + recordPanel;
+    return tabs + basic + devicePanel + abnormalPanel + taskVideoPanel(tab) + recordPanel;
   }
 
   const openedTaskDetails = new Map();
@@ -762,6 +785,16 @@
     const fillSave = event.target.closest("[data-task-fill-save]"); if (fillSave) { const device = byId(state.devices, fillSave.dataset.taskFillSave); if (device) device.recordFilled = true; document.querySelector(`.drawer [data-task-fill="${fillSave.dataset.taskFillSave}"]`)?.replaceChildren(document.createTextNode("查看")); fillSave.closest(".inspection-fill-mask")?.remove(); showToast("巡检结果已保存"); }
     const abnormalSave = event.target.closest("[data-task-abnormal-save]"); if (abnormalSave) { const mask = abnormalSave.closest(".inspection-abnormal-mask"); const device = byId(state.devices, abnormalSave.dataset.taskAbnormalSave); const taskItem = byId(state.tasks, state.taskSubmitDraft.taskId); if (!mask || !device || !taskItem) return; const field = (name) => mask.querySelector(`[data-abnormal-field="${name}"]`)?.value.trim() || ""; const category = field("category"); const level = field("level"); const workItem = field("workItem"); const description = field("description"); if (!category || !level || !workItem || !description) { showToast("请完整填写异常分类、等级、关联检查项和异常描述"); return; } const reportedAt = now(); const images = [...(mask.querySelector("[data-abnormal-images]")?.files || [])].map((file) => file.name); taskItem.abnormalReports = [...(taskItem.abnormalReports || []), { id: `ABN-${Date.now()}`, deviceId: device.id, deviceCode: device.code, deviceName: device.name, category, level, project: device.project, corridor: device.corridor, room: device.room, section: device.section, pipeline: device.pipeline, location: device.location, description, workItem, reporter: taskItem.inspector, reportedAt, images }]; taskItem.abnormalCount = taskItem.abnormalReports.length; taskItem.history = [...(taskItem.history || []), [taskItem.inspector || "巡检人", `上报设备异常：${description}`, reportedAt]]; mask.remove(); openTaskSubmit(taskItem); render(); showToast("设备异常已上报"); }
     const submitConfirm = event.target.closest("[data-task-submit-confirm]"); if (submitConfirm) { const item = byId(state.tasks, submitConfirm.dataset.taskSubmitConfirm); if (item) { const note = document.querySelector("[data-task-submit-note]")?.value.trim() || "已完成设备巡检，结果正常"; item.status = "验收中"; item.submittedAt = now(); item.history = [...(item.history || []), [item.inspector || "巡检人", note, item.submittedAt]]; state.taskSubmitDraft = { taskId: "", note: "" }; window.closeAppDrawer(); render(); showToast("已提交巡检结果，进入验收"); } }
+    const videoFullscreen = event.target.closest("[data-task-video-fullscreen]");
+    if (videoFullscreen) {
+      event.preventDefault();
+      const feed = videoFullscreen.closest("[data-task-video-feed]");
+      if (!feed) return;
+      if (document.fullscreenElement === feed) document.exitFullscreen?.();
+      else if (typeof feed.requestFullscreen === "function") feed.requestFullscreen();
+      else feed.classList.toggle("is-fullscreen");
+      return;
+    }
     const taskTab = event.target.closest("[data-task-tab]"); if (taskTab) { const item = openedTaskDetails.get(taskTab.dataset.id) || byId(state.tasks, taskTab.dataset.id); if (item) openTaskDetail(item, taskTab.dataset.taskTab); }
     if (event.target.closest("[data-inspection-save=work]")) saveWork(event.target.closest("[data-inspection-save=work]"));
     if (event.target.closest("[data-inspection-save=project]")) saveProject(event.target.closest("[data-inspection-save=project]"));
