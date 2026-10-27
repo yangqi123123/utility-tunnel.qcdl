@@ -48,6 +48,19 @@ test("task detail includes video tab before records", async () => {
   assert.ok(videoIdx > 0 && recordsIdx > videoIdx);
 });
 
+test("task accept opens drawer with pass/reject and reject returns to 待巡检", async () => {
+  const source = await read("app/components/inspection.js");
+  assert.match(source, />验收</);
+  assert.doesNotMatch(source, />验收通过</);
+  assert.match(source, /title: "任务验收"/);
+  assert.match(source, /task-accept-result/);
+  assert.match(source, /value="通过"/);
+  assert.match(source, /value="驳回"/);
+  assert.match(source, /data-task-confirm-accept/);
+  assert.match(source, /item\.status = "已完成"/);
+  assert.match(source, /item\.status = "待巡检"/);
+});
+
 for (const [page, key, title, bodyId, needsInspectionJs] of pages) {
   test(`${page} page uses the shared inspection shell`, async () => {
     const source = await read(`web/pages/inspection/${page}.html`);

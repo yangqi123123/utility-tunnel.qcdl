@@ -117,7 +117,7 @@
     const taskActions = (item) => {
       if (item.status === "待保养") return item.overdue === "已逾期" ? `<button class="table-action" type="button" data-maintenance-task-detail="${esc(item.id)}">详情</button>` : `<button class="table-action" type="button" data-maintenance-task-start="${esc(item.id)}">开始</button><span class="inspection-more"><button class="table-action" type="button" data-maintenance-task-more="${esc(item.id)}">更多</button></span>`;
       if (item.status === "保养中") return `<button class="table-action" type="button" data-maintenance-task-detail="${esc(item.id)}">详情</button><button class="table-action" type="button" data-maintenance-task-submit="${esc(item.id)}">提交</button>`;
-      if (item.status === "验收中") return `<button class="table-action" type="button" data-maintenance-task-detail="${esc(item.id)}">详情</button><button class="table-action" type="button" data-maintenance-task-accept="${esc(item.id)}">验收通过</button>`;
+      if (item.status === "验收中") return `<button class="table-action" type="button" data-maintenance-task-detail="${esc(item.id)}">详情</button><button class="table-action" type="button" data-maintenance-task-accept="${esc(item.id)}">验收</button>`;
       return `<button class="table-action" type="button" data-maintenance-task-detail="${esc(item.id)}">详情</button>`;
     };
     body.innerHTML = rows.length ? rows.map((item) => `<tr>
@@ -408,6 +408,55 @@
     openDrawer({ title: "保养任务详情", body: taskDetailBody(item, tab), footer: `<button class="btn btn-secondary" type="button" data-drawer-close>关闭</button>` }, "inspection-task-drawer");
   }
   window.openMaintenanceTaskDetail = openTaskDetail;
+
+  function openTaskAccept(item) {
+    openDrawer({
+      title: "任务验收",
+      body: `<form class="inspection-drawer-grid" data-task-form="accept" data-id="${esc(item.id)}">
+        <div class="form-field form-span-2"><span class="form-label form-required">验收结果</span>
+          <div class="inspection-radio-row">
+            <label><input type="radio" name="task-accept-result" value="通过" checked> 通过</label>
+            <label><input type="radio" name="task-accept-result" value="驳回"> 驳回</label>
+          </div>
+        </div>
+        <label class="form-field form-span-2"><span class="form-label">验收意见</span><textarea class="form-control textarea" data-task-accept-note maxlength="200" rows="4" placeholder="请输入验收意见"></textarea></label>
+      </form>`,
+      footer: `<button class="btn btn-secondary" type="button" data-drawer-close>取消</button><button class="btn btn-primary" type="button" data-task-confirm-accept>确认</button>`,
+    });
+  }
+
+  function confirmTaskAccept() {
+    const form = document.querySelector('[data-task-form="accept"]');
+    if (!form) return;
+    const item = byId(state.tasks, form.dataset.id);
+    if (!item || item.status !== "验收中") return;
+    const result = form.querySelector('input[name="task-accept-result"]:checked')?.value || "通过";
+    const note = form.querySelector("[data-task-accept-note]")?.value.trim() || "";
+    const at = now();
+    if (result === "通过") {
+      item.status = "已完成";
+      item.result = "正常";
+      item.note = note || item.note;
+      item.submittedAt = item.submittedAt && item.submittedAt !== "-" ? item.submittedAt : at;
+      item.history = [...(item.history || []), [item.owner || "验收人", note || "验收通过，保养结果符合要求", at]];
+      showToast("验收通过，任务已完成");
+    } else {
+      item.status = "待保养";
+      item.result = "-";
+      item.startedAt = "-";
+      item.submittedAt = "-";
+      item.planExecution = "未执行";
+      item.note = note || item.note;
+      item.history = [...(item.history || []), [item.owner || "验收人", note || "验收驳回，退回待保养", at]];
+      (item.deviceIds || []).forEach((id) => {
+        const device = byId(state.devices, id);
+        if (device) device.recordFilled = false;
+      });
+      showToast("已驳回至待保养");
+    }
+    window.closeAppDrawer();
+    render();
+  }
 
   function openTaskSubmit(item) {
     if (state.taskSubmitDraft.taskId !== item.id) state.taskSubmitDraft = { taskId: item.id, note: "" };
@@ -774,7 +823,8 @@
     const task = event.target.closest("[data-maintenance-task-detail]"); if (task) { const item = byId(state.tasks, task.dataset.maintenanceTaskDetail); if (item) openTaskDetail(item); }
     const start = event.target.closest("[data-maintenance-task-start]"); if (start) { const item = byId(state.tasks, start.dataset.maintenanceTaskStart); if (item) window.openAppConfirm({ title: "提示", message: "确认开始保养?", confirmText: "确定", onConfirm: () => { item.status = "保养中"; item.startedAt = now(); item.planExecution = "执行中"; render(); showToast("保养已开始"); } }); }
     const submit = event.target.closest("[data-maintenance-task-submit]"); if (submit) { const item = byId(state.tasks, submit.dataset.maintenanceTaskSubmit); if (item) openTaskSubmit(item); }
-    const accept = event.target.closest("[data-maintenance-task-accept]"); if (accept) { const item = byId(state.tasks, accept.dataset.maintenanceTaskAccept); if (item) window.openAppConfirm({ title: "验收通过", message: "请输入验收意见（选填）", inputPlaceholder: "请输入验收意见", confirmText: "确认", onConfirm: (remark) => { item.status = "已完成"; item.result = "正常"; item.note = remark || item.note; item.submittedAt = now(); item.history = [...(item.history || []), [item.owner || "验收人", remark || "验收通过，保养结果符合要求", item.submittedAt]]; render(); showToast("任务已完成"); } }); }
+    const accept = event.target.closest("[data-maintenance-task-accept]"); if (accept) { const item = byId(state.tasks, accept.dataset.maintenanceTaskAccept); if (item) openTaskAccept(item); }
+    if (event.target.closest("[data-task-confirm-accept]")) { confirmTaskAccept(); return; }
     const moreTask = event.target.closest("[data-maintenance-task-more]"); if (moreTask) { hideMoreMenus(); const item = byId(state.tasks, moreTask.dataset.maintenanceTaskMore); if (!item) return; const menu = document.createElement("div"); menu.className = "inspection-more-menu"; menu.innerHTML = `<button type="button" data-task-more-action="detail" data-id="${esc(item.id)}">详情</button><button type="button" data-task-more-action="close" data-id="${esc(item.id)}">关闭</button><button type="button" data-task-more-action="delete" data-id="${esc(item.id)}">删除</button>`; document.body.append(menu); const rect = moreTask.getBoundingClientRect(); menu.style.left = `${rect.left}px`; menu.style.top = `${rect.bottom + 4}px`; return; }
     const taskMoreAction = event.target.closest("[data-task-more-action]"); if (taskMoreAction) { hideMoreMenus(); const item = byId(state.tasks, taskMoreAction.dataset.id); if (!item) return; if (taskMoreAction.dataset.taskMoreAction === "detail") openTaskDetail(item); if (taskMoreAction.dataset.taskMoreAction === "delete") window.openAppConfirm({ title: "删除保养任务", message: "确认删除该保养任务吗？", confirmText: "确认删除", onConfirm: () => { state.tasks = state.tasks.filter((entry) => entry.id !== item.id); render(); showToast("任务已删除"); } }); if (taskMoreAction.dataset.taskMoreAction === "close") window.openAppConfirm({ title: "关闭保养任务", message: "请输入关闭原因", inputPlaceholder: "请输入关闭原因", confirmText: "确认", onConfirm: (reason) => { item.status = "已关闭"; item.note = reason || "已手动关闭"; item.history = [...(item.history || []), [item.owner || "负责人", reason || "保养任务已关闭", now()]]; render(); showToast("任务已关闭"); } }); }
     const fill = event.target.closest("[data-task-fill]"); if (fill) { state.taskSubmitDraft.note = document.querySelector("[data-task-submit-note]")?.value.trim() || state.taskSubmitDraft.note; const device = byId(state.devices, fill.dataset.taskFill); if (device) openTaskFill(device, !!device.recordFilled); }
