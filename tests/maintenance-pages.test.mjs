@@ -45,6 +45,18 @@ test("task detail includes video tab before records", async () => {
   assert.ok(videoIdx > 0 && recordsIdx > videoIdx);
 });
 
+test("plan form uses multi-select tags for week/month days and hides work mode", async () => {
+  const source = await read("app/components/maintenance.js");
+  assert.match(source, /data-plan-multi="\$\{key\}"/);
+  assert.match(source, /dayMulti\("weekDays"\)/);
+  assert.match(source, /dayMulti\("monthDays"\)/);
+  assert.match(source, /data-plan-tag-remove/);
+  assert.match(source, /renderPlanDayMultis/);
+  assert.match(source, /weekDays, monthDays/);
+  assert.doesNotMatch(source, /作业模式/);
+  assert.doesNotMatch(source, /data-work-mode/);
+});
+
 test("task accept opens drawer with pass/reject and reject returns to 待保养", async () => {
   const source = await read("app/components/maintenance.js");
   assert.match(source, />验收</);

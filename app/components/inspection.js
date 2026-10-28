@@ -25,6 +25,8 @@
     picker: { target: null, deptId: "", keyword: "", deptKeyword: "", deptCollapsed: new Set(), selectedId: "" },
     devicePicker: { keyword: "", code: "", category: "", selected: new Set() },
     planDeviceIds: [],
+    planDays: { weekDays: ["周一"], monthDays: [1] },
+    openPlanMulti: null,
     workViewer: { deviceId: "", projectId: "" },
     page: 1,
     pageSize: 10,
@@ -271,11 +273,50 @@
     });
   }
 
+  const WEEK_DAY_OPTIONS = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"];
+  const MONTH_DAY_OPTIONS = Array.from({ length: 31 }, (_, index) => String(index + 1));
+  function normalizeWeekDays(item = {}) {
+    if (Array.isArray(item.weekDays) && item.weekDays.length) return item.weekDays.map(String);
+    if (item.weekDay) return [String(item.weekDay)];
+    return ["周一"];
+  }
+  function normalizeMonthDays(item = {}) {
+    if (Array.isArray(item.monthDays) && item.monthDays.length) return item.monthDays.map((day) => String(Number(day)));
+    if (item.monthDay != null && item.monthDay !== "") return [String(Number(item.monthDay))];
+    return ["1"];
+  }
+  function planDayLabel(key, value) {
+    return key === "monthDays" ? `${value}号` : value;
+  }
+  function renderPlanDayMultis() {
+    [
+      ["weekDays", WEEK_DAY_OPTIONS, "请选择执行日"],
+      ["monthDays", MONTH_DAY_OPTIONS, "请选择执行日"],
+    ].forEach(([key, options, placeholder]) => {
+      const component = document.querySelector(`[data-plan-multi="${key}"]`);
+      if (!component) return;
+      const selected = state.planDays[key] || [];
+      const value = component.querySelector(`[data-plan-multi-value="${key}"]`);
+      const dropdown = component.querySelector(`[data-plan-multi-options="${key}"]`);
+      const control = component.querySelector("[data-plan-multi-trigger]");
+      if (value) {
+        value.innerHTML = selected.length
+          ? selected.map((id) => `<span class="inspection-selection-tag">${esc(planDayLabel(key, id))}<span role="button" tabindex="0" data-plan-tag-remove="${key}" data-tag-id="${esc(id)}" aria-label="移除${esc(planDayLabel(key, id))}">×</span></span>`).join("")
+          : `<span class="inspection-tag-placeholder">${placeholder}</span>`;
+      }
+      if (dropdown) {
+        dropdown.innerHTML = options.map((id) => `<button class="inspection-tag-option ${selected.includes(id) ? "selected" : ""}" type="button" data-plan-multi-option="${key}" data-option-id="${esc(id)}"><span>${esc(planDayLabel(key, id))}</span>${selected.includes(id) ? '<i class="fa-solid fa-check"></i>' : ""}</button>`).join("");
+      }
+      component.classList.toggle("open", state.openPlanMulti === key);
+      control?.setAttribute("aria-expanded", String(state.openPlanMulti === key));
+    });
+  }
+
   function planForm(item = {}) {
     const cycle = item.cycle || "每日";
-    const weekDays = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"];
     const cycleFieldDisplay = (name) => (cycle === name ? "" : "display:none;");
-    return `<div class="inspection-drawer-grid inspection-plan-form"><label class="form-field"><span class="form-label form-required">计划名称</span><input class="form-control" data-inspection-field="name" value="${esc(item.name || "")}" maxlength="20" placeholder="请输入"></label><label class="form-field"><span class="form-label form-required">计划等级</span><select class="form-control" data-inspection-field="level"><option ${item.level === "中" || !item.level ? "selected" : ""}>中</option><option ${item.level === "高" ? "selected" : ""}>高</option><option ${item.level === "低" ? "selected" : ""}>低</option></select></label><label class="form-field"><span class="form-label form-required">所属项目</span><select class="form-control" data-inspection-field="project"><option ${item.project === "光谷科学岛综合管廊一期" || !item.project ? "selected" : ""}>光谷科学岛综合管廊一期</option><option>科学岛综合管廊</option></select></label><div class="device-location-cascade" data-plan-location-cascade><label class="form-field"><span class="form-label">所属管廊</span><select class="form-control" data-location-level="corridor" data-inspection-field="corridor" data-location-value="${esc(item.corridor || "")}"><option value="">请选择</option></select></label><label class="form-field"><span class="form-label">所属舱室</span><select class="form-control" data-location-level="room" data-inspection-field="room" data-location-value="${esc(item.room || "")}"><option value="">请选择</option></select></label><label class="form-field"><span class="form-label">所属区段</span><select class="form-control" data-location-level="section" data-inspection-field="section" data-location-value="${esc(item.section || "")}"><option value="">请选择</option></select></label><label class="form-field"><span class="form-label">所属管线</span><select class="form-control" data-location-level="pipeline" data-inspection-field="pipeline" data-location-value="${esc(item.pipeline || "")}"><option value="">请选择</option></select></label></div><label class="form-field"><span class="form-label form-required">巡检人</span><div class="inspection-person-field" data-inspection-person="巡检人"><input class="form-control inspection-person-input" type="text" readonly data-inspection-field="inspector" value="${esc(item.inspector || "")}" placeholder="请选择"><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></div></label><label class="form-field"><span class="form-label form-required">负责人</span><div class="inspection-person-field" data-inspection-person="负责人"><input class="form-control inspection-person-input" type="text" readonly data-inspection-field="owner" value="${esc(item.owner || "")}" placeholder="请选择"><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></div></label><label class="form-field"><span class="form-label form-required">周期类型</span><select class="form-control" data-inspection-field="cycle"><option ${cycle === "每日" ? "selected" : ""}>每日</option><option ${cycle === "每周" ? "selected" : ""}>每周</option><option ${cycle === "每月" ? "selected" : ""}>每月</option></select></label><label class="form-field"><span class="form-label form-required">定时生成时刻</span><input class="form-control" data-inspection-field="generateAt" value="${esc(item.generateAt || "00:10:00")}" type="time"></label><label class="form-field"><span class="form-label form-required">任务开始时刻</span><input class="form-control" data-inspection-field="startAt" value="${esc(item.startAt || "09:00:00")}" type="time"></label><label class="form-field" data-cycle-field="weekly" style="${cycleFieldDisplay("每周")}"><span class="form-label form-required">每周执行日</span><select class="form-control" data-inspection-field="weekDay">${weekDays.map((day) => `<option ${(item.weekDay || "周一") === day ? "selected" : ""}>${day}</option>`).join("")}</select></label><label class="form-field" data-cycle-field="monthly" style="${cycleFieldDisplay("每月")}"><span class="form-label form-required">每月执行日</span><select class="form-control" data-inspection-field="monthDay">${Array.from({ length: 31 }, (_, index) => `<option value="${index + 1}" ${Number(item.monthDay || 1) === index + 1 ? "selected" : ""}>${index + 1}号</option>`).join("")}</select></label><label class="form-field"><span class="form-label form-required">计划完成工时</span><div class="input-affix"><input class="form-control" data-inspection-field="finishHours" value="${esc(item.finishHours || 24)}" type="number" min="1"><span class="affix-icon">小时</span></div></label><div class="form-field"><span class="form-label">状态</span><div class="inspection-radio-row"><label><input type="radio" name="inspection-plan-status" value="正常" ${item.status !== "停用" ? "checked" : ""}> 正常</label><label><input type="radio" name="inspection-plan-status" value="停用" ${item.status === "停用" ? "checked" : ""}> 停用</label></div></div><label class="form-field form-span-2"><span class="form-label">备注</span><textarea class="form-control textarea" data-inspection-field="note" maxlength="300" placeholder="请输入">${esc(item.note || "")}</textarea></label><div class="form-field form-span-2"><div class="inspection-device-box"><div class="inspection-device-box-head"><span>巡检设备</span><button class="btn btn-primary" type="button" data-inspection-device-select>选择设备</button></div><div class="inspection-device-box-body"><div class="inspection-table-wrap"><table class="table inspection-device-table"><thead><tr><th>设备编码</th><th>设备名称</th><th>设备分类</th><th>标准作业</th><th>检查项目</th><th>条目</th><th>操作</th></tr></thead><tbody id="planDeviceBody"></tbody></table></div></div></div></div></div>`;
+    const dayMulti = (key) => `<div class="inspection-tag-select" data-plan-multi="${key}"><button class="inspection-tag-control" type="button" data-plan-multi-trigger="${key}" aria-expanded="false"><span data-plan-multi-value="${key}"></span><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></button><div class="inspection-tag-dropdown" data-plan-multi-options="${key}"></div></div>`;
+    return `<div class="inspection-drawer-grid inspection-plan-form"><label class="form-field"><span class="form-label form-required">计划名称</span><input class="form-control" data-inspection-field="name" value="${esc(item.name || "")}" maxlength="20" placeholder="请输入"></label><label class="form-field"><span class="form-label form-required">计划等级</span><select class="form-control" data-inspection-field="level"><option ${item.level === "中" || !item.level ? "selected" : ""}>中</option><option ${item.level === "高" ? "selected" : ""}>高</option><option ${item.level === "低" ? "selected" : ""}>低</option></select></label><label class="form-field"><span class="form-label form-required">所属项目</span><select class="form-control" data-inspection-field="project"><option ${item.project === "光谷科学岛综合管廊一期" || !item.project ? "selected" : ""}>光谷科学岛综合管廊一期</option><option>科学岛综合管廊</option></select></label><div class="device-location-cascade" data-plan-location-cascade><label class="form-field"><span class="form-label">所属管廊</span><select class="form-control" data-location-level="corridor" data-inspection-field="corridor" data-location-value="${esc(item.corridor || "")}"><option value="">请选择</option></select></label><label class="form-field"><span class="form-label">所属舱室</span><select class="form-control" data-location-level="room" data-inspection-field="room" data-location-value="${esc(item.room || "")}"><option value="">请选择</option></select></label><label class="form-field"><span class="form-label">所属区段</span><select class="form-control" data-location-level="section" data-inspection-field="section" data-location-value="${esc(item.section || "")}"><option value="">请选择</option></select></label><label class="form-field"><span class="form-label">所属管线</span><select class="form-control" data-location-level="pipeline" data-inspection-field="pipeline" data-location-value="${esc(item.pipeline || "")}"><option value="">请选择</option></select></label></div><label class="form-field"><span class="form-label form-required">巡检人</span><div class="inspection-person-field" data-inspection-person="巡检人"><input class="form-control inspection-person-input" type="text" readonly data-inspection-field="inspector" value="${esc(item.inspector || "")}" placeholder="请选择"><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></div></label><label class="form-field"><span class="form-label form-required">负责人</span><div class="inspection-person-field" data-inspection-person="负责人"><input class="form-control inspection-person-input" type="text" readonly data-inspection-field="owner" value="${esc(item.owner || "")}" placeholder="请选择"><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></div></label><label class="form-field"><span class="form-label form-required">周期类型</span><select class="form-control" data-inspection-field="cycle"><option ${cycle === "每日" ? "selected" : ""}>每日</option><option ${cycle === "每周" ? "selected" : ""}>每周</option><option ${cycle === "每月" ? "selected" : ""}>每月</option></select></label><label class="form-field"><span class="form-label form-required">定时生成时刻</span><input class="form-control" data-inspection-field="generateAt" value="${esc(item.generateAt || "00:10:00")}" type="time"></label><label class="form-field"><span class="form-label form-required">任务开始时刻</span><input class="form-control" data-inspection-field="startAt" value="${esc(item.startAt || "09:00:00")}" type="time"></label><div class="form-field" data-cycle-field="weekly" style="${cycleFieldDisplay("每周")}"><span class="form-label form-required">每周执行日</span>${dayMulti("weekDays")}</div><div class="form-field" data-cycle-field="monthly" style="${cycleFieldDisplay("每月")}"><span class="form-label form-required">每月执行日</span>${dayMulti("monthDays")}</div><label class="form-field"><span class="form-label form-required">计划完成工时</span><div class="input-affix"><input class="form-control" data-inspection-field="finishHours" value="${esc(item.finishHours || 24)}" type="number" min="1"><span class="affix-icon">小时</span></div></label><div class="form-field"><span class="form-label">状态</span><div class="inspection-radio-row"><label><input type="radio" name="inspection-plan-status" value="正常" ${item.status !== "停用" ? "checked" : ""}> 正常</label><label><input type="radio" name="inspection-plan-status" value="停用" ${item.status === "停用" ? "checked" : ""}> 停用</label></div></div><label class="form-field form-span-2"><span class="form-label">备注</span><textarea class="form-control textarea" data-inspection-field="note" maxlength="300" placeholder="请输入">${esc(item.note || "")}</textarea></label><div class="form-field form-span-2"><div class="inspection-device-box"><div class="inspection-device-box-head"><span>巡检设备</span><button class="btn btn-primary" type="button" data-inspection-device-select>选择设备</button></div><div class="inspection-device-box-body"><div class="inspection-table-wrap"><table class="table inspection-device-table"><thead><tr><th>设备编码</th><th>设备名称</th><th>设备分类</th><th>标准作业</th><th>检查项目</th><th>条目</th><th>操作</th></tr></thead><tbody id="planDeviceBody"></tbody></table></div></div></div></div></div>`;
   }
 
   function openPlanDrawer(mode, item = {}) {
@@ -283,8 +324,11 @@
     closeDevicePicker();
     closeWorkViewer();
     state.planDeviceIds = [...(item.deviceIds || [])];
+    state.planDays = { weekDays: normalizeWeekDays(item), monthDays: normalizeMonthDays(item) };
+    state.openPlanMulti = null;
     openDrawer({ title: mode === "edit" ? "编辑巡检计划" : "新增巡检计划", body: planForm(item).replaceAll("负责人", "验收人"), footer: `<button class="btn btn-secondary" type="button" data-drawer-close>取消</button><button class="btn btn-primary" type="button" data-inspection-save="plan" data-mode="${mode}" data-id="${esc(item.id || "")}">确定</button>` });
     renderPlanDeviceTable();
+    renderPlanDayMultis();
     bindPlanLocationCascade(document.querySelector("[data-plan-location-cascade]"));
   }
 
@@ -572,13 +616,18 @@
     closeWorkViewer();
     const fields = readDrawerFields();
     if (!fields.name || !fields.project || !fields.inspector || !fields.owner) { showToast("请填写计划名称、所属项目、巡检人和负责人"); return; }
+    const cycle = fields.cycle || "每日";
+    const weekDays = [...(state.planDays.weekDays || [])];
+    const monthDays = [...(state.planDays.monthDays || [])].map(Number);
+    if (cycle === "每周" && !weekDays.length) { showToast("请选择每周执行日"); return; }
+    if (cycle === "每月" && !monthDays.length) { showToast("请选择每月执行日"); return; }
     const deviceIds = [...state.planDeviceIds];
     const item = byId(state.plans, button.dataset.id);
     const locVal = (name) => {
       const el = document.querySelector(`[data-inspection-field="${name}"]`);
       return (el?.dataset.locationValue ?? el?.value ?? "") || "";
     };
-    const next = { ...fields, corridor: locVal("corridor"), room: locVal("room"), section: locVal("section"), pipeline: locVal("pipeline"), level: fields.level || "中", cycle: fields.cycle || "每日", finishHours: Number(fields.finishHours || 24), monthDay: Number(fields.monthDay || 1), status: document.querySelector('input[name="inspection-plan-status"]:checked')?.value || "正常", deviceIds, target: deviceIds.map((id) => byId(state.devices, id)?.name).filter(Boolean).join("、") || "暂无设备" };
+    const next = { ...fields, corridor: locVal("corridor"), room: locVal("room"), section: locVal("section"), pipeline: locVal("pipeline"), level: fields.level || "中", cycle, finishHours: Number(fields.finishHours || 24), weekDays, monthDays, weekDay: weekDays[0] || "周一", monthDay: monthDays[0] || 1, status: document.querySelector('input[name="inspection-plan-status"]:checked')?.value || "正常", deviceIds, target: deviceIds.map((id) => byId(state.devices, id)?.name).filter(Boolean).join("、") || "暂无设备" };
     if (item) Object.assign(item, next); else state.plans.unshift({ id: `PLAN-${Date.now()}`, code: `IP${Date.now()}`, createdAt: now(), lastGenerateAt: "-", nextGenerateAt: "-", ...next });
     window.closeAppDrawer(); render(); showToast(item ? "巡检计划已更新" : "巡检计划已创建");
   }
@@ -672,8 +721,7 @@
       return `<tr class="${active ? "active" : ""}" data-work-project-row="${esc(project.id)}"><td class="work-project-cell"><span class="work-project-name">${esc(project.name)}</span>${active ? `<span class="inspection-work-editing">当前编辑中</span>` : ""}</td><td>${projectEntryCount(project.id)}</td><td>${esc(project.order)}</td><td class="action-cell"><button class="table-action" type="button" data-work-project-edit="${esc(project.id)}">编辑</button><button class="table-action is-danger" type="button" data-work-project-delete="${esc(project.id)}">删除</button></td></tr>`;
     }).join("") || `<tr><td colspan="4"><div class="inspection-empty">暂无检查项目</div></td></tr>`;
     const entryRows = entries.map((entry) => `<tr><td>${esc(entry.name)}</td><td>${esc(entry.inputType)}</td><td>${entry.required === false ? "非必填" : "必填"}</td><td class="wrap">${esc(entry.options?.join(", ") || "-")}</td><td>${esc(entry.unit || "-")}</td><td class="wrap">${esc(entry.remark || "-")}</td><td>${esc(entry.order)}</td><td class="action-cell"><button class="table-action" type="button" data-work-item-edit="${esc(entry.id)}">编辑</button><button class="table-action is-danger" type="button" data-work-item-delete="${esc(entry.id)}">删除</button></td></tr>`).join("") || `<tr><td colspan="8"><div class="inspection-empty">暂无作业条目</div></td></tr>`;
-    const modeOptions = ["顺序作业", "并行作业"].map((mode) => `<option ${work.mode === mode ? "selected" : ""}>${mode}</option>`).join("");
-    body.innerHTML = `<section class="inspection-work-summary"><div class="inspection-work-title"><span class="inspection-work-device">${esc(device.name)}</span><span class="inspection-work-code">${esc(device.code)}</span><span class="inspection-tag">巡检场景</span>${statusTag(work.name, "primary")}</div><div class="inspection-work-mode"><span>作业模式</span><select class="form-control" data-work-mode>${modeOptions}</select></div></section><p class="inspection-work-tip">上方选择检查项目，下方集中维护条目内容，减少横向挤压。</p><section class="inspection-work-block"><div class="inspection-work-block-head"><h4>检查项目</h4><button class="btn btn-primary" type="button" data-work-project-create>新增</button></div><p class="inspection-work-hint">单击行切换下方条目，新增和编辑通过弹窗维护。</p><div class="inspection-table-wrap"><table class="table inspection-work-table inspection-work-table-project"><thead><tr><th>检查项目</th><th>条目</th><th>排序</th><th>操作</th></tr></thead><tbody>${projectRows}</tbody></table></div></section><section class="inspection-work-block"><div class="inspection-work-block-head"><h4>${esc(current ? current.name : "作业条目")}</h4>${current ? `<button class="btn btn-primary" type="button" data-work-item-create="${esc(current.id)}">新增</button>` : ""}</div><p class="inspection-work-hint">当前作业项共 ${entries.length} 个条目，可通过新增和编辑维护条目内容</p><div class="inspection-table-wrap"><table class="table inspection-work-table inspection-work-table-entry"><thead><tr><th>条目名称</th><th>类型</th><th>必填</th><th>填写项</th><th>单位</th><th>备注</th><th>排序</th><th>操作</th></tr></thead><tbody>${entryRows}</tbody></table></div></section>`;
+    body.innerHTML = `<section class="inspection-work-summary"><div class="inspection-work-title"><span class="inspection-work-device">${esc(device.name)}</span><span class="inspection-work-code">${esc(device.code)}</span><span class="inspection-tag">巡检场景</span>${statusTag(work.name, "primary")}</div></section><p class="inspection-work-tip">上方选择检查项目，下方集中维护条目内容，减少横向挤压。</p><section class="inspection-work-block"><div class="inspection-work-block-head"><h4>检查项目</h4><button class="btn btn-primary" type="button" data-work-project-create>新增</button></div><p class="inspection-work-hint">单击行切换下方条目，新增和编辑通过弹窗维护。</p><div class="inspection-table-wrap"><table class="table inspection-work-table inspection-work-table-project"><thead><tr><th>检查项目</th><th>条目</th><th>排序</th><th>操作</th></tr></thead><tbody>${projectRows}</tbody></table></div></section><section class="inspection-work-block"><div class="inspection-work-block-head"><h4>${esc(current ? current.name : "作业条目")}</h4>${current ? `<button class="btn btn-primary" type="button" data-work-item-create="${esc(current.id)}">新增</button>` : ""}</div><p class="inspection-work-hint">当前作业项共 ${entries.length} 个条目，可通过新增和编辑维护条目内容</p><div class="inspection-table-wrap"><table class="table inspection-work-table inspection-work-table-entry"><thead><tr><th>条目名称</th><th>类型</th><th>必填</th><th>填写项</th><th>单位</th><th>备注</th><th>排序</th><th>操作</th></tr></thead><tbody>${entryRows}</tbody></table></div></section>`;
   }
 
   function openWorkViewer(deviceId, projectId = "") {
@@ -737,6 +785,40 @@
   }
 
   document.addEventListener("click", (event) => {
+    const planTagRemove = event.target.closest("[data-plan-tag-remove]");
+    if (planTagRemove) {
+      event.preventDefault();
+      event.stopPropagation();
+      const key = planTagRemove.dataset.planTagRemove;
+      const id = planTagRemove.dataset.tagId;
+      state.planDays[key] = (state.planDays[key] || []).filter((entry) => entry !== id);
+      renderPlanDayMultis();
+      return;
+    }
+    const planMultiOption = event.target.closest("[data-plan-multi-option]");
+    if (planMultiOption) {
+      event.preventDefault();
+      const key = planMultiOption.dataset.planMultiOption;
+      const id = planMultiOption.dataset.optionId;
+      const selected = new Set(state.planDays[key] || []);
+      if (selected.has(id)) selected.delete(id); else selected.add(id);
+      const order = key === "weekDays" ? WEEK_DAY_OPTIONS : MONTH_DAY_OPTIONS;
+      state.planDays[key] = order.filter((entry) => selected.has(entry));
+      renderPlanDayMultis();
+      return;
+    }
+    const planMultiTrigger = event.target.closest("[data-plan-multi-trigger]");
+    if (planMultiTrigger) {
+      event.preventDefault();
+      const key = planMultiTrigger.dataset.planMultiTrigger;
+      state.openPlanMulti = state.openPlanMulti === key ? null : key;
+      renderPlanDayMultis();
+      return;
+    }
+    if (state.openPlanMulti && !event.target.closest("[data-plan-multi]")) {
+      state.openPlanMulti = null;
+      renderPlanDayMultis();
+    }
     const personTrigger = event.target.closest("[data-inspection-person]");
     if (personTrigger) { event.preventDefault(); openPersonPicker(personTrigger); return; }
     if (document.querySelector(".inspection-person-mask")) {
@@ -866,8 +948,7 @@
     if (event.target.matches("[data-person-pick]")) { state.picker.selectedId = event.target.dataset.personPick; renderPersonList(); renderPersonSelected(); return; }
     if (event.target.matches("[data-device-pick]")) { const id = event.target.dataset.devicePick; if (event.target.checked) state.devicePicker.selected.add(id); else state.devicePicker.selected.delete(id); renderDevicePicker(); return; }
     if (event.target.matches("[data-device-select-all]")) { devicePickerList().forEach((device) => { if (event.target.checked) state.devicePicker.selected.add(device.id); else state.devicePicker.selected.delete(device.id); }); renderDevicePicker(); return; }
-    if (event.target.matches("[data-work-mode]")) { const work = workOfDevice(byId(state.devices, state.workViewer.deviceId)); if (work) { work.mode = event.target.value; showToast(`作业模式已更新为${work.mode}`); } return; }
-    if (event.target.matches('[data-inspection-field="cycle"]')) { const cycle = event.target.value; document.querySelectorAll("[data-cycle-field]").forEach((field) => { field.style.display = field.dataset.cycleField === (cycle === "每周" ? "weekly" : cycle === "每月" ? "monthly" : "") ? "" : "none"; }); }
+    if (event.target.matches('[data-inspection-field="cycle"]')) { const cycle = event.target.value; document.querySelectorAll("[data-cycle-field]").forEach((field) => { field.style.display = field.dataset.cycleField === (cycle === "每周" ? "weekly" : cycle === "每月" ? "monthly" : "") ? "" : "none"; }); state.openPlanMulti = null; renderPlanDayMultis(); }
     if (event.target.matches('input[name="inspection-item-input-type"]')) { const box = document.getElementById("inspectionOptionsField"); if (box) box.style.display = ["单选", "多选"].includes(event.target.value) ? "" : "none"; }
     if (event.target.matches("[data-config-select]")) { if (event.target.checked) state.configSelected.add(event.target.dataset.configSelect); else state.configSelected.delete(event.target.dataset.configSelect); const batchButton = document.querySelector('[data-inspection-action="config-batch-delete"]'); if (batchButton) batchButton.disabled = !state.configSelected.size; }
     if (event.target.matches("[data-config-select-all]")) { document.querySelectorAll("[data-config-select]").forEach((box) => { box.checked = event.target.checked; if (event.target.checked) state.configSelected.add(box.dataset.configSelect); else state.configSelected.delete(box.dataset.configSelect); }); const batchButton = document.querySelector('[data-inspection-action="config-batch-delete"]'); if (batchButton) batchButton.disabled = !state.configSelected.size; }

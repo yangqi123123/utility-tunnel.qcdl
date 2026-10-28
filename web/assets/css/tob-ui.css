@@ -1562,7 +1562,7 @@ html:not([data-sidebar="collapsed"]) .nav-block.open:has(> .submenu .submenu-ite
 .role-confirm-head button { width: 24px; height: 24px; margin-left: auto; color: var(--text-secondary); background: transparent; cursor: pointer; font-size: 20px; }
 .role-confirm-dialog p { margin: 16px 0 20px; color: var(--text-primary); }
 .role-confirm-actions { display: flex; justify-content: flex-end; gap: 8px; }
-.app-confirm-mask { position: fixed; inset: 0; z-index: 1300; display: grid; place-items: center; background: rgba(26,28,31,.45); }
+.app-confirm-mask { position: fixed; inset: 0; z-index: 1700; display: grid; place-items: center; background: rgba(26,28,31,.45); }
 .app-confirm-dialog { width: min(400px, calc(100vw - 32px)); padding: 20px; border-radius: 6px; background: #fff; box-shadow: 0 16px 40px rgba(26,28,31,.2); }
 .app-confirm-head { display: flex; align-items: center; gap: 10px; color: var(--text-title); font-size: 16px; }
 .app-confirm-head i { color: var(--yellow); }
