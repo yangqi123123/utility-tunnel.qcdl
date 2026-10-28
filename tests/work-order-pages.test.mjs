@@ -29,7 +29,9 @@ test("work-order data exposes store and fixtures", async () => {
   assert.match(source, /bizType/);
   assert.match(source, /abnormalDevice/);
   assert.match(source, /工单列表每次刷新回到种子初始状态/);
-  assert.match(source, /orders:\s*seedOrders\.map\(cloneSeedOrder\)/);
+  assert.match(source, /seedOrders\.map\(cloneSeedOrder\)/);
+  assert.match(source, /work-order\.pending\.abnormal/);
+  assert.match(source, /workItems/);
 });
 
 test("device-abnormal seed has one order per status", async () => {
@@ -77,5 +79,6 @@ test("device-abnormal page hides create and shows abnormal device column", async
   const source = await read("web/pages/work-order/device-abnormal.html");
   assert.doesNotMatch(source, /data-wo-action="create"/);
   assert.match(source, /异常设备/);
+  assert.match(source, /异常等级/);
   assert.match(source, /data-work-order-page="device-abnormal"/);
 });

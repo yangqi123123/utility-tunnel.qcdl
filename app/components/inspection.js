@@ -34,6 +34,8 @@
     selected: new Set(),
     configSelected: new Set(),
     taskSubmitDraft: { taskId: "", note: "" },
+    abnormalWorkSelected: [],
+    openAbnormalWork: false,
   };
 
   const esc = (value) => String(value ?? "").replace(/[&<>'"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[char]));
@@ -440,7 +442,10 @@
     const basic = `<section class="inspection-task-panel ${tab === "basic" ? "" : "hidden"}" data-task-panel="basic"><div class="detail-grid">${[["任务编号", item.code], ["任务状态", statusTag(item.status, "warning")], ["任务名称", item.name], ["所属项目", item.project || "-"], ["所属管廊", item.corridor || "-"], ["所属舱室", item.room || "-"], ["所属区段", item.section || "-"], ["所属管线", item.pipeline || "-"], ["关联计划", item.planName], ["巡检等级", levelTag(item.level)], ["巡检人员", item.inspector], ["验收人", item.owner], ["逾期状态", statusTag(item.overdue, item.overdue === "未逾期" ? "normal" : "danger")], ["任务开始时间", item.plannedAt], ["任务截止时间", item.deadline], ["实际开始时间", item.startedAt], ["结果提交时间", item.submittedAt], ["巡检时长", item.duration], ["设备数量", item.deviceCount], ["异常数量", item.abnormalCount], ["创建时间", "2026-09-09 00:10:17"], ["备注", item.note]].map(([label, content]) => `<div class="info-item"><span class="info-label">${label}</span><span class="info-value">${typeof content === "string" && content.startsWith("<span") ? content : esc(content)}</span></div>`).join("")}</div></section>`;
     const devicePanel = `<section class="inspection-task-panel ${tab === "devices" ? "" : "hidden"}" data-task-panel="devices"><div class="inspection-table-wrap"><table class="table inspection-detail-table"><thead><tr><th>设备名称</th><th>设备编码</th><th>所属系统</th><th>设备分类</th><th>所属项目</th><th>所属管廊</th><th>所属舱室</th><th>所属区段</th><th>所属管线</th><th>安装位置</th><th>操作</th></tr></thead><tbody>${devices.map((device) => `<tr><td>${esc(device.name)}</td><td>${esc(device.code)}</td><td>${esc(device.system)}</td><td>${esc(device.category)}</td><td>${esc(device.project)}</td><td>${esc(device.corridor)}</td><td>${esc(device.room)}</td><td>${esc(device.section)}</td><td>${esc(device.pipeline)}</td><td>${esc(device.location)}</td><td><button class="table-action" type="button" data-inspection-device-detail="${esc(device.id)}">详情</button><button class="table-action" type="button" data-inspection-device-record="${esc(device.id)}">作业记录</button></td></tr>`).join("") || `<tr><td colspan="11"><div class="inspection-empty">暂无设备</div></td></tr>`}</tbody></table></div></section>`;
     const abnormalReports = item.abnormalReports || [];
-    const abnormalPanel = `<section class="inspection-task-panel ${tab === "abnormal" ? "" : "hidden"}" data-task-panel="abnormal"><div class="inspection-table-wrap"><table class="table inspection-detail-table inspection-abnormal-table"><thead><tr><th>设备编号</th><th>异常设备</th><th>异常分类</th><th>所属项目</th><th>所属管廊</th><th>所属舱室</th><th>所属区段</th><th>所属管线</th><th>安装位置</th><th>异常描述</th><th>关联作业项</th><th>上报人</th><th>上报时间</th></tr></thead><tbody>${abnormalReports.length ? abnormalReports.map((report) => `<tr><td>${esc(report.deviceCode)}</td><td>${esc(report.deviceName)}</td><td>${statusTag(report.category, "danger")}</td><td>${esc(report.project)}</td><td>${esc(report.corridor)}</td><td>${esc(report.room)}</td><td>${esc(report.section)}</td><td>${esc(report.pipeline)}</td><td>${esc(report.location)}</td><td class="wrap" title="${esc(report.description)}">${esc(report.description)}</td><td>${esc(report.workItem)}</td><td>${esc(report.reporter)}</td><td>${esc(report.reportedAt)}</td></tr>`).join("") : `<tr><td colspan="13"><div class="inspection-empty">暂无设备异常</div></td></tr>`}</tbody></table></div></section>`;
+    const workItemText = (report) => Array.isArray(report.workItems) && report.workItems.length
+      ? report.workItems.map((item) => (typeof item === "string" ? item : item.name)).filter(Boolean).join("、")
+      : (report.workItem || "-");
+    const abnormalPanel = `<section class="inspection-task-panel ${tab === "abnormal" ? "" : "hidden"}" data-task-panel="abnormal"><div class="inspection-table-wrap"><table class="table inspection-detail-table inspection-abnormal-table"><thead><tr><th>设备编号</th><th>异常设备</th><th>异常分类</th><th>所属项目</th><th>所属管廊</th><th>所属舱室</th><th>所属区段</th><th>所属管线</th><th>安装位置</th><th>异常描述</th><th>关联作业项</th><th>上报人</th><th>上报时间</th></tr></thead><tbody>${abnormalReports.length ? abnormalReports.map((report) => `<tr><td>${esc(report.deviceCode)}</td><td>${esc(report.deviceName)}</td><td>${statusTag(report.category, "danger")}</td><td>${esc(report.project)}</td><td>${esc(report.corridor)}</td><td>${esc(report.room)}</td><td>${esc(report.section)}</td><td>${esc(report.pipeline)}</td><td>${esc(report.location)}</td><td class="wrap" title="${esc(report.description)}">${esc(report.description)}</td><td class="wrap" title="${esc(workItemText(report))}">${esc(workItemText(report))}</td><td>${esc(report.reporter)}</td><td>${esc(report.reportedAt)}</td></tr>`).join("") : `<tr><td colspan="13"><div class="inspection-empty">暂无设备异常</div></td></tr>`}</tbody></table></div></section>`;
     const records = item.history?.length ? item.history : [[item.inspector || "系统", "创建巡检任务", item.plannedAt || "2026-09-07 08:56:30"], [item.inspector || "巡检人", "开始执行设备巡检", item.startedAt !== "-" ? item.startedAt : "2026-09-07 09:15:40"], [item.owner || "验收人", item.status === "已完成" ? "验收通过，巡检任务已完成" : "等待提交巡检结果", item.submittedAt !== "-" ? item.submittedAt : "2026-09-07 09:20:18"]];
     const recordPanel = `<section class="inspection-task-panel ${tab === "records" ? "" : "hidden"}" data-task-panel="records"><div class="inspection-records"><h3>处理记录</h3>${records.map(([person, process, time], index) => `<div class="inspection-record"><span class="inspection-record-dot ${index === records.length - 1 ? "done" : ""}"></span><div><strong>${esc(person)}</strong><p>${esc(process)}</p><time>${esc(time)}</time></div></div>`).join("")}</div></section>`;
     return tabs + basic + devicePanel + abnormalPanel + taskVideoPanel(tab) + recordPanel;
@@ -508,16 +513,51 @@
     openDrawer({ title: `提交巡检结果 - ${item.name}`, body: `<div class="inspection-submit-summary">任务编码：${esc(item.code)}　巡检人：${esc(item.inspector)}　设备数：${devices.length}　设备异常上报：${item.abnormalCount || 0}</div><div class="inspection-table-wrap"><table class="table inspection-detail-table"><thead><tr><th>设备信息</th><th>分类信息</th><th>标准作业</th><th>操作</th></tr></thead><tbody>${devices.map((device) => `<tr><td><strong>${esc(device.name)}</strong><br><span class="muted">${esc(device.code)}</span></td><td>设备：${esc(device.category)}<br>命中：${esc(device.category)}</td><td>日常巡检</td><td class="inspection-submit-actions"><button class="table-action" type="button" data-task-fill="${esc(device.id)}">${device.recordFilled ? "查看" : "填写"}</button><button class="table-action" type="button" data-task-abnormal="${esc(device.id)}">异常上报</button></td></tr>`).join("")}</tbody></table></div><label class="form-field"><span class="form-label">巡检说明</span><textarea class="form-control textarea" data-task-submit-note maxlength="300" placeholder="请输入">${esc(state.taskSubmitDraft.note)}</textarea></label>`, footer: `<button class="btn btn-secondary" type="button" data-drawer-close>取消</button><button class="btn btn-primary" type="button" data-task-submit-confirm="${esc(item.id)}">确认提交</button>` }, "inspection-task-drawer inspection-submit-drawer");
   }
 
+  function renderAbnormalWorkMulti(entries) {
+    const root = document.querySelector("[data-abnormal-work-items]");
+    if (!root) return;
+    const selected = state.abnormalWorkSelected || [];
+    const value = root.querySelector("[data-abnormal-work-value]");
+    const dropdown = root.querySelector("[data-abnormal-work-options]");
+    const control = root.querySelector("[data-abnormal-work-trigger]");
+    if (value) {
+      value.innerHTML = selected.length
+        ? selected.map((name) => `<span class="inspection-selection-tag">${esc(name)}<span role="button" tabindex="0" data-abnormal-work-remove="${esc(name)}" aria-label="移除${esc(name)}">×</span></span>`).join("")
+        : `<span class="inspection-tag-placeholder">请选择关联检查项条目（可多选）</span>`;
+    }
+    if (dropdown) {
+      dropdown.innerHTML = entries.length
+        ? entries.map((entry) => `<button class="inspection-tag-option ${selected.includes(entry.name) ? "selected" : ""}" type="button" data-abnormal-work-option="${esc(entry.name)}"><span>${esc(entry.name)}</span>${selected.includes(entry.name) ? '<i class="fa-solid fa-check"></i>' : ""}</button>`).join("")
+        : `<div class="inspection-empty" style="padding:8px 10px;">暂无可关联检查项</div>`;
+    }
+    root.classList.toggle("open", !!state.openAbnormalWork);
+    control?.setAttribute("aria-expanded", String(!!state.openAbnormalWork));
+  }
+
+  function pushDeviceAbnormalWorkOrder(payload) {
+    const key = "work-order.pending.abnormal";
+    try {
+      const list = JSON.parse(window.localStorage.getItem(key) || "[]");
+      const next = Array.isArray(list) ? list : [];
+      next.unshift(payload);
+      window.localStorage.setItem(key, JSON.stringify(next.slice(0, 50)));
+    } catch (_) { /* ignore */ }
+  }
+
   function openTaskAbnormal(device) {
     const task = byId(state.tasks, state.taskSubmitDraft.taskId);
     if (!task) return;
     const work = byId(state.standardWorks, device.workId);
     const entries = work ? state.inspectionItems.filter((entry) => entry.workId === work.id) : [];
+    state.abnormalWorkSelected = [];
+    state.openAbnormalWork = false;
     document.querySelectorAll(".inspection-abnormal-mask").forEach((mask) => mask.remove());
     const mask = document.createElement("div");
     mask.className = "inspection-abnormal-mask";
-    mask.innerHTML = `<section class="inspection-abnormal-modal" role="dialog" aria-modal="true" aria-label="设备异常上报"><header><h2>设备异常上报 - ${esc(device.name)}</h2><button type="button" data-task-abnormal-close aria-label="关闭"><i class="fa-solid fa-xmark"></i></button></header><main><div class="inspection-abnormal-device"><div><span>设备名称</span><strong>${esc(device.name)}</strong></div><div><span>设备编码</span><strong>${esc(device.code)}</strong></div><div><span>设备分类</span><strong>${esc(device.category)}</strong></div><div><span>异常上报</span><strong>${(task.abnormalReports || []).filter((report) => report.deviceId === device.id).length}</strong></div></div><div class="inspection-abnormal-form"><label class="form-field"><span class="form-label form-required">异常分类</span><select class="form-control" data-abnormal-field="category"><option value="">请选择异常分类</option><option>设备故障</option><option>运行异常</option><option>外观异常</option><option>环境异常</option></select></label><label class="form-field"><span class="form-label form-required">异常等级</span><select class="form-control" data-abnormal-field="level"><option value="">请选择异常等级</option><option>一般</option><option>较大</option><option>重大</option></select></label><label class="form-field form-span-2"><span class="form-label form-required">关联检查项条目</span><select class="form-control" data-abnormal-field="workItem"><option value="">请选择关联检查项条目</option>${entries.map((entry) => `<option value="${esc(entry.name)}">${esc(entry.name)}</option>`).join("")}</select></label><label class="form-field form-span-2"><span class="form-label form-required">设备异常描述</span><textarea class="form-control textarea" data-abnormal-field="description" maxlength="500" placeholder="请输入设备异常描述"></textarea><span class="field-count" data-abnormal-count>0 / 500</span></label><div class="form-field form-span-2"><span class="form-label">上传图片</span><label class="inspection-abnormal-upload"><input type="file" data-abnormal-images accept="image/*" multiple><i class="fa-solid fa-plus"></i><span>上传图片</span></label><p class="inspection-upload-tip">支持 JPG、PNG 格式，单张不超过 2MB</p><div class="inspection-upload-files" data-abnormal-files></div></div></div></main><footer><button class="btn btn-secondary" type="button" data-task-abnormal-close>取消</button><button class="btn btn-primary" type="button" data-task-abnormal-save="${esc(device.id)}">上报设备异常</button></footer></section>`;
+    mask.dataset.abnormalEntries = JSON.stringify(entries.map((entry) => ({ name: entry.name, remark: entry.remark || "", inputType: entry.inputType || "单选" })));
+    mask.innerHTML = `<section class="inspection-abnormal-modal" role="dialog" aria-modal="true" aria-label="设备异常上报"><header><h2>设备异常上报 - ${esc(device.name)}</h2><button type="button" data-task-abnormal-close aria-label="关闭"><i class="fa-solid fa-xmark"></i></button></header><main><div class="inspection-abnormal-device"><div><span>设备名称</span><strong>${esc(device.name)}</strong></div><div><span>设备编码</span><strong>${esc(device.code)}</strong></div><div><span>设备分类</span><strong>${esc(device.category)}</strong></div><div><span>异常上报</span><strong>${(task.abnormalReports || []).filter((report) => report.deviceId === device.id).length}</strong></div></div><div class="inspection-abnormal-form"><label class="form-field"><span class="form-label form-required">异常分类</span><select class="form-control" data-abnormal-field="category"><option value="">请选择异常分类</option><option>设备故障</option><option>运行异常</option><option>外观异常</option><option>环境异常</option></select></label><label class="form-field"><span class="form-label form-required">异常等级</span><select class="form-control" data-abnormal-field="level"><option value="">请选择异常等级</option><option>一般</option><option>较大</option><option>重大</option></select></label><div class="form-field form-span-2"><span class="form-label">关联检查项条目</span><div class="inspection-tag-select" data-abnormal-work-items><button class="inspection-tag-control" type="button" data-abnormal-work-trigger aria-expanded="false"><span data-abnormal-work-value></span><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></button><div class="inspection-tag-dropdown" data-abnormal-work-options></div></div></div><label class="form-field form-span-2"><span class="form-label form-required">设备异常描述</span><textarea class="form-control textarea" data-abnormal-field="description" maxlength="500" placeholder="请输入设备异常描述"></textarea><span class="field-count" data-abnormal-count>0 / 500</span></label><div class="form-field form-span-2"><span class="form-label">上传图片</span><label class="inspection-abnormal-upload"><input type="file" data-abnormal-images accept="image/*" multiple><i class="fa-solid fa-plus"></i><span>上传图片</span></label><p class="inspection-upload-tip">支持 JPG、PNG 格式，单张不超过 2MB</p><div class="inspection-upload-files" data-abnormal-files></div></div></div></main><footer><button class="btn btn-secondary" type="button" data-task-abnormal-close>取消</button><button class="btn btn-primary" type="button" data-task-abnormal-save="${esc(device.id)}">上报设备异常</button></footer></section>`;
     document.body.append(mask);
+    renderAbnormalWorkMulti(entries);
   }
 
   function openTaskFill(device, viewOnly) {
@@ -915,7 +955,113 @@
     if (event.target.closest("[data-task-abnormal-close]") || event.target.classList?.contains("inspection-abnormal-mask")) { event.target.closest(".inspection-abnormal-mask")?.remove(); return; }
     if (event.target.closest("[data-config-modal-close]") || event.target.classList?.contains("inspection-config-modal-mask")) { event.target.closest(".inspection-config-modal-mask")?.remove(); return; }
     const fillSave = event.target.closest("[data-task-fill-save]"); if (fillSave) { const device = byId(state.devices, fillSave.dataset.taskFillSave); if (device) device.recordFilled = true; document.querySelector(`.drawer [data-task-fill="${fillSave.dataset.taskFillSave}"]`)?.replaceChildren(document.createTextNode("查看")); fillSave.closest(".inspection-fill-mask")?.remove(); showToast("巡检结果已保存"); }
-    const abnormalSave = event.target.closest("[data-task-abnormal-save]"); if (abnormalSave) { const mask = abnormalSave.closest(".inspection-abnormal-mask"); const device = byId(state.devices, abnormalSave.dataset.taskAbnormalSave); const taskItem = byId(state.tasks, state.taskSubmitDraft.taskId); if (!mask || !device || !taskItem) return; const field = (name) => mask.querySelector(`[data-abnormal-field="${name}"]`)?.value.trim() || ""; const category = field("category"); const level = field("level"); const workItem = field("workItem"); const description = field("description"); if (!category || !level || !workItem || !description) { showToast("请完整填写异常分类、等级、关联检查项和异常描述"); return; } const reportedAt = now(); const images = [...(mask.querySelector("[data-abnormal-images]")?.files || [])].map((file) => file.name); taskItem.abnormalReports = [...(taskItem.abnormalReports || []), { id: `ABN-${Date.now()}`, deviceId: device.id, deviceCode: device.code, deviceName: device.name, category, level, project: device.project, corridor: device.corridor, room: device.room, section: device.section, pipeline: device.pipeline, location: device.location, description, workItem, reporter: taskItem.inspector, reportedAt, images }]; taskItem.abnormalCount = taskItem.abnormalReports.length; taskItem.history = [...(taskItem.history || []), [taskItem.inspector || "巡检人", `上报设备异常：${description}`, reportedAt]]; mask.remove(); openTaskSubmit(taskItem); render(); showToast("设备异常已上报"); }
+    const abnormalWorkRemove = event.target.closest("[data-abnormal-work-remove]");
+    if (abnormalWorkRemove) {
+      event.preventDefault();
+      event.stopPropagation();
+      const name = abnormalWorkRemove.dataset.abnormalWorkRemove;
+      state.abnormalWorkSelected = (state.abnormalWorkSelected || []).filter((entry) => entry !== name);
+      let entries = [];
+      try { entries = JSON.parse(abnormalWorkRemove.closest(".inspection-abnormal-mask")?.dataset.abnormalEntries || "[]"); } catch (_) { entries = []; }
+      renderAbnormalWorkMulti(entries);
+      return;
+    }
+    const abnormalWorkOption = event.target.closest("[data-abnormal-work-option]");
+    if (abnormalWorkOption) {
+      event.preventDefault();
+      const name = abnormalWorkOption.dataset.abnormalWorkOption;
+      const selected = new Set(state.abnormalWorkSelected || []);
+      if (selected.has(name)) selected.delete(name); else selected.add(name);
+      let entries = [];
+      try { entries = JSON.parse(abnormalWorkOption.closest(".inspection-abnormal-mask")?.dataset.abnormalEntries || "[]"); } catch (_) { entries = []; }
+      state.abnormalWorkSelected = entries.map((entry) => entry.name).filter((entry) => selected.has(entry));
+      renderAbnormalWorkMulti(entries);
+      return;
+    }
+    const abnormalWorkTrigger = event.target.closest("[data-abnormal-work-trigger]");
+    if (abnormalWorkTrigger) {
+      event.preventDefault();
+      state.openAbnormalWork = !state.openAbnormalWork;
+      let entries = [];
+      try { entries = JSON.parse(abnormalWorkTrigger.closest(".inspection-abnormal-mask")?.dataset.abnormalEntries || "[]"); } catch (_) { entries = []; }
+      renderAbnormalWorkMulti(entries);
+      return;
+    }
+    if (state.openAbnormalWork && !event.target.closest("[data-abnormal-work-items]")) {
+      state.openAbnormalWork = false;
+      const mask = document.querySelector(".inspection-abnormal-mask");
+      let entries = [];
+      try { entries = JSON.parse(mask?.dataset.abnormalEntries || "[]"); } catch (_) { entries = []; }
+      if (mask) renderAbnormalWorkMulti(entries);
+    }
+    const abnormalSave = event.target.closest("[data-task-abnormal-save]");
+    if (abnormalSave) {
+      const mask = abnormalSave.closest(".inspection-abnormal-mask");
+      const device = byId(state.devices, abnormalSave.dataset.taskAbnormalSave);
+      const taskItem = byId(state.tasks, state.taskSubmitDraft.taskId);
+      if (!mask || !device || !taskItem) return;
+      const field = (name) => mask.querySelector(`[data-abnormal-field="${name}"]`)?.value.trim() || "";
+      const category = field("category");
+      const level = field("level");
+      const description = field("description");
+      if (!category || !level || !description) { showToast("请完整填写异常分类、等级和异常描述"); return; }
+      let entryDefs = [];
+      try { entryDefs = JSON.parse(mask.dataset.abnormalEntries || "[]"); } catch (_) { entryDefs = []; }
+      const selectedNames = state.abnormalWorkSelected || [];
+      const workItems = entryDefs.filter((entry) => selectedNames.includes(entry.name));
+      const workItem = workItems.map((entry) => entry.name).join("、");
+      const reportedAt = now();
+      const images = [...(mask.querySelector("[data-abnormal-images]")?.files || [])].map((file) => file.name);
+      const reportId = `ABN-${Date.now()}`;
+      taskItem.abnormalReports = [...(taskItem.abnormalReports || []), {
+        id: reportId, deviceId: device.id, deviceCode: device.code, deviceName: device.name,
+        category, level, project: device.project, corridor: device.corridor, room: device.room,
+        section: device.section, pipeline: device.pipeline, location: device.location,
+        description, workItem, workItems, reporter: taskItem.inspector, reportedAt, images,
+      }];
+      taskItem.abnormalCount = taskItem.abnormalReports.length;
+      taskItem.history = [...(taskItem.history || []), [taskItem.inspector || "巡检人", `上报设备异常：${description}`, reportedAt]];
+      const stamp = reportedAt.replace(/\D/g, "").slice(0, 14);
+      pushDeviceAbnormalWorkOrder({
+        id: `WO-D-${stamp}`,
+        code: `WO${stamp}`,
+        name: `${device.name}异常`,
+        content: description,
+        photos: images,
+        bizType: "设备异常",
+        orderType: "设备异常",
+        categoryId: "CAT-007",
+        categoryName: "巡检异常上报",
+        project: device.project || taskItem.project || "",
+        corridor: device.corridor || "",
+        room: device.room || "",
+        section: device.section || "",
+        pipeline: device.pipeline || "",
+        status: "待指派",
+        handler: "",
+        contact: taskItem.inspector || "",
+        contactPhone: "",
+        submittedAt: reportedAt,
+        startedAt: "",
+        finishedAt: "",
+        abnormalLevel: level,
+        workItems,
+        abnormalDevice: {
+          source: "巡检任务",
+          taskCode: taskItem.code || "",
+          taskName: taskItem.name || "",
+          deviceName: device.name || "",
+          deviceCode: device.code || "",
+        },
+        records: [{ id: `R-${reportId}`, action: "创建", operator: taskItem.inspector || "巡检人", at: reportedAt, note: "巡检异常上报生成工单", photos: [] }],
+      });
+      state.abnormalWorkSelected = [];
+      state.openAbnormalWork = false;
+      mask.remove();
+      openTaskSubmit(taskItem);
+      render();
+      showToast("设备异常已上报");
+    }
     const submitConfirm = event.target.closest("[data-task-submit-confirm]"); if (submitConfirm) { const item = byId(state.tasks, submitConfirm.dataset.taskSubmitConfirm); if (item) { const note = document.querySelector("[data-task-submit-note]")?.value.trim() || "已完成设备巡检，结果正常"; item.status = "验收中"; item.submittedAt = now(); item.history = [...(item.history || []), [item.inspector || "巡检人", note, item.submittedAt]]; state.taskSubmitDraft = { taskId: "", note: "" }; window.closeAppDrawer(); render(); showToast("已提交巡检结果，进入验收"); } }
     const videoFullscreen = event.target.closest("[data-task-video-fullscreen]");
     if (videoFullscreen) {

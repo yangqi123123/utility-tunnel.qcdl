@@ -66,6 +66,14 @@
     return `<span class="wo-status wo-status-${type}">${esc(text)}</span>`;
   };
 
+  const LEVEL_CLASS = { 重大: "danger", 较大: "warning", 一般: "muted" };
+  const abnormalLevelTag = (level) => {
+    const text = String(level || "").trim();
+    if (!text) return "-";
+    const type = LEVEL_CLASS[text] || "muted";
+    return `<span class="inspection-status inspection-status-${type}">${esc(text)}</span>`;
+  };
+
   const formatPhone = (phone) => {
     const digits = String(phone || "").replace(/\D/g, "");
     if (digits.length === 11) return `${digits.slice(0, 3)} ${digits.slice(3, 7)} ${digits.slice(7)}`;
@@ -657,7 +665,7 @@
     const start = (state.pageIndex - 1) * state.pageSize;
     const pageRows = list.slice(start, start + state.pageSize);
     renderOrderPagination(list.length);
-    const colSpan = isDeviceAbnormalPage ? 19 : 18;
+    const colSpan = isDeviceAbnormalPage ? 20 : 18;
     if (!pageRows.length) {
       body.innerHTML = `<tr><td colspan="${colSpan}"><div class="inspection-empty">暂无工单数据</div></td></tr>`;
       return;
@@ -665,7 +673,7 @@
     body.innerHTML = pageRows.map((item) => {
       const abnormalText = formatAbnormalDeviceText(item.abnormalDevice);
       const abnormalCell = isDeviceAbnormalPage
-        ? `<td class="wo-abnormal-device-cell" title="${esc(abnormalText)}">${esc(abnormalText)}</td>`
+        ? `<td class="wo-abnormal-device-cell" title="${esc(abnormalText)}">${esc(abnormalText)}</td><td>${abnormalLevelTag(item.abnormalLevel)}</td>`
         : "";
       return `<tr data-wo-id="${esc(item.id)}">
       <td title="${esc(item.code)}">${esc(item.code)}</td>
@@ -896,7 +904,7 @@
     const basicPairs = [
       ["工单编号", item.code], ["工单名称", item.name], ["工单状态", statusTag(item.status)],
       ["工单类型", item.orderType], ["工单分类", item.categoryName || "-"],
-      ...(showAbnormal ? [["异常设备", abnormalText]] : []),
+      ...(showAbnormal ? [["异常设备", abnormalText], ["异常等级", abnormalLevelTag(item.abnormalLevel)]] : []),
       ["所属项目", item.project || "-"], ["所属管廊", item.corridor || "-"], ["所属舱室", item.room || "-"],
       ["所属区段", item.section || "-"], ["所属管线", item.pipeline || "-"], ["报修位置", locationText(item)],
       ["当前处理人", item.handler || "-"], ["联系人", item.contact || "-"], ["联系电话", formatPhone(item.contactPhone)],
@@ -905,7 +913,7 @@
       ...(showAbnormal ? [["备注", abnormalText]] : []),
     ];
     const basic = `<section class="inspection-task-panel ${tab === "basic" ? "" : "hidden"}" data-wo-detail-panel="basic">
-      <div class="detail-grid">${basicPairs.map(([label, content]) => `<div class="info-item${FULL_ROW_LABELS.has(label) ? " info-item-full" : ""}"><span class="info-label">${label}</span><span class="info-value">${typeof content === "string" && content.startsWith("<span") ? content : esc(content)}</span></div>`).join("")}</div>
+      <div class="detail-grid">${basicPairs.map(([label, content]) => `<div class="info-item${FULL_ROW_LABELS.has(label) ? " info-item-full" : ""}"><span class="info-label">${label}</span><span class="info-value">${typeof content === "string" && (content.startsWith("<span") || content === "-") ? content : esc(content)}</span></div>`).join("")}</div>
       <div class="detail-section"><h3 class="detail-title">现场图片</h3>${photosHtml(item.photos || [])}</div>
     </section>`;
     const timeline = records.length
@@ -1115,16 +1123,62 @@
     });
   }
 
+  function workItemsFillHtml(items) {
+    if (!items.length) {
+      return `<div class="form-field form-span-2 wo-submit-section">
+        <div class="wo-submit-section-head"><h3>关联检查项条目</h3></div>
+        <div class="inspection-empty">暂无关联检查项条目</div>
+      </div>`;
+    }
+    const cards = items.map((entry, index) => {
+      const key = `wo-work-${index}`;
+      const checkedNormal = entry.result !== "异常" ? "checked" : "";
+      const checkedAbnormal = entry.result === "异常" ? "checked" : "";
+      return `<section class="inspection-fill-item" data-wo-work-item="${esc(entry.name)}">
+        <div class="inspection-fill-item-head"><div><strong>${esc(entry.name)}</strong><span class="inspection-fill-type">${esc(entry.inputType || "单选")}</span></div><span class="inspection-fill-index">${index + 1} / ${items.length}</span></div>
+        ${entry.remark ? `<p class="inspection-fill-help">${esc(entry.remark)}</p>` : ""}
+        <div class="inspection-fill-options">
+          <label><input type="radio" name="${esc(key)}" value="正常" ${checkedNormal}> <span>正常</span></label>
+          <label><input type="radio" name="${esc(key)}" value="异常" ${checkedAbnormal}> <span>异常</span></label>
+        </div>
+      </section>`;
+    }).join("");
+    return `<div class="form-field form-span-2 wo-submit-section wo-work-items-block">
+      <div class="wo-submit-section-head"><h3>关联检查项条目</h3><span>检查项 ${items.length}</span></div>
+      <div class="wo-work-items-scroll"><div class="inspection-fill-list">${cards}</div></div>
+    </div>`;
+  }
+
+  function processResultFieldsHtml() {
+    return `<div class="form-field form-span-2 wo-submit-section">
+        <div class="wo-submit-section-head"><h3>处理结果</h3></div>
+        <div class="wo-submit-section-body">
+          <label class="form-field"><span class="form-label form-required">事件原因</span><input class="form-control" data-wo-field="cause" maxlength="100" placeholder="请输入"></label>
+          <label class="form-field"><span class="form-label form-required">处理过程</span><textarea class="form-control textarea" data-wo-field="process" maxlength="500" rows="4" placeholder="请输入处理过程"></textarea></label>
+          <label class="form-field"><span class="form-label">处理结果说明</span><textarea class="form-control textarea" data-wo-field="resultNote" maxlength="200" rows="3" placeholder="选填"></textarea></label>
+          <div class="form-field"><span class="form-label">维修前照片</span><input class="form-control" type="file" accept=".jpg,.jpeg,.png,.gif,.webp,image/*" multiple data-wo-photos-before><div class="form-hint">支持 JPG、JPEG、PNG、GIF、WEBP；最多 5 张，单文件 ≤5MB</div></div>
+          <div class="form-field"><span class="form-label">维修后照片</span><input class="form-control" type="file" accept=".jpg,.jpeg,.png,.gif,.webp,image/*" multiple data-wo-photos-after><div class="form-hint">支持 JPG、JPEG、PNG、GIF、WEBP；最多 5 张，单文件 ≤5MB</div></div>
+        </div>
+      </div>`;
+  }
+
   function openSubmitDrawer(item) {
-    window.openAppDrawer({
-      title: "提交处理结果",
-      body: `<form class="wo-form-grid" data-wo-form="submit" data-id="${esc(item.id)}">
+    const workItems = isDeviceAbnormalPage ? (item.workItems || []) : [];
+    const body = isDeviceAbnormalPage
+      ? `<form class="wo-form-grid wo-submit-form" data-wo-form="submit" data-id="${esc(item.id)}">
+        ${workItemsFillHtml(workItems)}
+        ${processResultFieldsHtml()}
+      </form>`
+      : `<form class="wo-form-grid" data-wo-form="submit" data-id="${esc(item.id)}">
         <label class="form-field form-span-2"><span class="form-label form-required">事件原因</span><input class="form-control" data-wo-field="cause" maxlength="100" placeholder="请输入"></label>
         <label class="form-field form-span-2"><span class="form-label form-required">处理过程</span><textarea class="form-control textarea" data-wo-field="process" maxlength="500" rows="4" placeholder="请输入处理过程"></textarea></label>
         <label class="form-field form-span-2"><span class="form-label">处理结果说明</span><textarea class="form-control textarea" data-wo-field="resultNote" maxlength="200" rows="3" placeholder="选填"></textarea></label>
-        <div class="form-field form-span-2"><span class="form-label">维修前照片</span><input class="form-control" type="file" accept=".jpg,.jpeg,.png,.gif,.webp,image/*" multiple data-wo-photos-before><div class="form-hint">最多 5 张，单文件 ≤5MB</div></div>
-        <div class="form-field form-span-2"><span class="form-label">维修后照片</span><input class="form-control" type="file" accept=".jpg,.jpeg,.png,.gif,.webp,image/*" multiple data-wo-photos-after><div class="form-hint">最多 5 张，单文件 ≤5MB</div></div>
-      </form>`,
+        <div class="form-field form-span-2"><span class="form-label">维修前照片</span><input class="form-control" type="file" accept=".jpg,.jpeg,.png,.gif,.webp,image/*" multiple data-wo-photos-before><div class="form-hint">支持 JPG、JPEG、PNG、GIF、WEBP；最多 5 张，单文件 ≤5MB</div></div>
+        <div class="form-field form-span-2"><span class="form-label">维修后照片</span><input class="form-control" type="file" accept=".jpg,.jpeg,.png,.gif,.webp,image/*" multiple data-wo-photos-after><div class="form-hint">支持 JPG、JPEG、PNG、GIF、WEBP；最多 5 张，单文件 ≤5MB</div></div>
+      </form>`;
+    window.openAppDrawer({
+      title: "提交处理结果",
+      body,
       footer: `<button class="btn btn-secondary" type="button" data-drawer-close>取消</button>
         <button class="btn btn-primary" type="button" data-wo-confirm-submit>提交</button>`,
     });
@@ -1147,7 +1201,17 @@
     if (before === null) return;
     const after = await readPhotosFromInput(afterInput);
     if (after === null) return;
-    const note = [`事件原因：${cause}`, `处理过程：${process}`, resultNote ? `处理结果：${resultNote}` : ""].filter(Boolean).join("；");
+    const filledWorkItems = [...form.querySelectorAll("[data-wo-work-item]")].map((card, index) => {
+      const name = card.dataset.woWorkItem || "";
+      const result = card.querySelector(`input[name="wo-work-${index}"]:checked`)?.value || "正常";
+      const remark = card.querySelector(".inspection-fill-help")?.textContent || "";
+      const inputType = card.querySelector(".inspection-fill-type")?.textContent || "单选";
+      return { name, remark, inputType, result };
+    });
+    const workSummary = filledWorkItems.length
+      ? `关联检查项：${filledWorkItems.map((entry) => `${entry.name}=${entry.result}`).join("、")}`
+      : "";
+    const note = [`事件原因：${cause}`, `处理过程：${process}`, resultNote ? `处理结果：${resultNote}` : "", workSummary].filter(Boolean).join("；");
     updateOrder(form.dataset.id, (item) => {
       item.status = "验收中";
       item.processCause = cause;
@@ -1155,6 +1219,7 @@
       item.processResult = resultNote;
       item.beforePhotos = before;
       item.afterPhotos = after;
+      if (filledWorkItems.length) item.workItems = filledWorkItems;
       pushRecord(item, "提交处理", note, [...before, ...after], item.handler || "处理人");
     });
     window.closeAppDrawer();

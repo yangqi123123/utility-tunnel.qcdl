@@ -36,7 +36,7 @@
 .work-order-page .inspection-table-wrap { min-width: 0; overflow-x: auto; }
 .work-order-page .work-order-table,
 .work-order-page[data-work-order-page="report-repair"] .inspection-table,
-.work-order-page[data-work-order-page="device-abnormal"] .inspection-table { min-width: 2400px; }
+.work-order-page[data-work-order-page="device-abnormal"] .inspection-table { min-width: 2520px; }
 .work-order-page[data-work-order-page="category"] .inspection-table { min-width: 1080px; }
 .work-order-page .work-order-table th,
 .work-order-page .work-order-table td,
@@ -261,6 +261,41 @@
 /* 抽屉表单（抽屉挂在 body 下，不能只挂 .work-order-page） */
 .wo-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .wo-form-grid .form-span-2 { grid-column: 1 / -1; }
+.wo-submit-form { gap: 20px; }
+.wo-submit-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  padding: 14px 16px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: #fafbfc;
+}
+.wo-submit-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--divider);
+}
+.wo-submit-section-head h3 {
+  margin: 0;
+  color: var(--text-title);
+  font-size: 15px;
+  font-weight: 600;
+}
+.wo-submit-section-head span { color: var(--text-secondary); font-size: 12px; }
+.wo-submit-section-body { display: grid; gap: 14px; }
+.wo-work-items-block { padding-bottom: 12px; }
+.wo-work-items-scroll {
+  max-height: min(360px, 42vh);
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.wo-work-items-scroll .inspection-fill-list { gap: 10px; }
+.wo-work-items-scroll .inspection-fill-item { background: #fff; }
 .wo-form-grid .device-location-cascade { display: contents; }
 .wo-photo-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
 .wo-upload-tip { margin-top: 8px; color: var(--text-secondary); font-size: 12px; }

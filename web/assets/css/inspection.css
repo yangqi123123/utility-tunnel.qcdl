@@ -380,10 +380,12 @@ body[data-menu-key="inspection.standard-works"] .inspection-config-modal .inspec
 }
 .inspection-selection-tag [data-plan-tag-remove]:hover { color: #fff; background: var(--primary); }
 .inspection-tag-dropdown {
-  display: none; position: absolute; left: 0; right: 0; top: calc(100% + 6px); z-index: 30;
+  display: none; position: absolute; left: 0; right: 0; top: calc(100% + 6px); z-index: 40;
   max-height: 220px; overflow: auto; padding: 6px; border: 1px solid #d8dee9; border-radius: 2px;
   background: #fff; box-shadow: 0 8px 24px rgba(26, 28, 31, .12);
 }
+.inspection-abnormal-form .inspection-tag-select { z-index: 1; }
+.inspection-abnormal-form .inspection-tag-select.open { z-index: 5; }
 .inspection-tag-select.open .inspection-tag-dropdown { display: block; }
 .inspection-tag-option {
   width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px;

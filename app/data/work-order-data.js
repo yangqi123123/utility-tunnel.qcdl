@@ -3,6 +3,12 @@
   const WORK_ORDER_TYPES = ["设备异常", "环境异常", "安全事故", "消防事件"];
   const CATEGORY_WORK_TYPES = ["报事报修", "设备异常"];
   const ORDER_STATUSES = ["待指派", "待处理", "处理中", "验收中", "已完成", "已撤回"];
+  const PENDING_ABNORMAL_KEY = "work-order.pending.abnormal";
+  const SAMPLE_WORK_ITEMS = [
+    { name: "设备外观完好", inputType: "单选", remark: "检查设备外观是否完好，无破损、锈蚀、明显变形。" },
+    { name: "设备运行状态正常", inputType: "单选", remark: "检查设备运行状态是否正常，无异常声响、异味、报警。" },
+    { name: "现场环境整洁", inputType: "单选", remark: "检查设备周边环境是否整洁，无遮挡、积水、杂物堆放。" },
+  ];
 
   const locationTree = [
     {
@@ -176,6 +182,8 @@
       project: "光谷科学岛综合管廊一期", corridor: "高新大道综合管廊", room: "综合舱", section: "防火分区", pipeline: "科学岛通信光缆",
       status: "待指派", handler: "", contact: "王鹏程", contactPhone: "15271361018",
       submittedAt: "2026-10-11 09:10:00", startedAt: "", finishedAt: "",
+      abnormalLevel: "重大",
+      workItems: SAMPLE_WORK_ITEMS.slice(0, 2).map((item) => ({ ...item })),
       abnormalDevice: {
         source: "巡检任务",
         taskCode: "IT202610081625191385",
@@ -195,6 +203,7 @@
       project: "光谷科学岛综合管廊一期", corridor: "科学岛大道综合管廊", room: "燃气舱", section: "防火分区", pipeline: "科学岛燃气管线",
       status: "待处理", handler: "黄志深", contact: "潘隆坤", contactPhone: "15772599167",
       submittedAt: "2026-10-11 08:20:00", startedAt: "", finishedAt: "",
+      abnormalLevel: "",
       abnormalDevice: {
         source: "报警信息",
         taskCode: "AL202610110820001",
@@ -217,6 +226,8 @@
       project: "光谷科学岛综合管廊一期", corridor: "高新大道综合管廊", room: "综合舱", section: "出入口", pipeline: "科学岛通信光缆",
       status: "处理中", handler: "彭飞龙", contact: "何明红", contactPhone: "15186643109",
       submittedAt: "2026-10-11 07:30:00", startedAt: "2026-10-11 08:00:00", finishedAt: "",
+      abnormalLevel: "较大",
+      workItems: SAMPLE_WORK_ITEMS.map((item) => ({ ...item })),
       abnormalDevice: {
         source: "巡检任务",
         taskCode: "IT202610101030221456",
@@ -240,6 +251,7 @@
       project: "光谷科学岛综合管廊一期", corridor: "高新大道综合管廊", room: "电力舱", section: "通风口", pipeline: "科学岛电力管线",
       status: "验收中", handler: "张晓慧", contact: "邹丽平", contactPhone: "13728019966",
       submittedAt: "2026-10-10 16:00:00", startedAt: "2026-10-10 17:00:00", finishedAt: "",
+      abnormalLevel: "",
       abnormalDevice: {
         source: "报警信息",
         taskCode: "AL202610101600002",
@@ -264,15 +276,17 @@
       project: "科学岛综合管廊", corridor: "环岛路管廊", room: "综合舱", section: "吊装口", pipeline: "科学岛通信光缆",
       status: "已完成", handler: "黄志深", contact: "李国栋", contactPhone: "13600992318",
       submittedAt: "2026-10-09 10:00:00", startedAt: "2026-10-09 11:00:00", finishedAt: "2026-10-09 15:30:00",
+      abnormalLevel: "一般",
+      workItems: SAMPLE_WORK_ITEMS.slice(0, 2).map((item) => ({ ...item })),
       abnormalDevice: {
-        source: "巡检任务",
-        taskCode: "IT202610090930112233",
-        taskName: "环岛路巡检-202610090900",
+        source: "保养任务",
+        taskCode: "MT202610090930112233",
+        taskName: "环岛路保养-202610090900",
         deviceName: "环岛路半球摄像机-02",
         deviceCode: "001_HZSPXT01QJ02_0701_0006",
       },
       records: [
-        { id: "R-D-011", action: "创建", operator: "李国栋", at: "2026-10-09 10:00:00", note: "巡检异常上报生成工单", photos: [] },
+        { id: "R-D-011", action: "创建", operator: "李国栋", at: "2026-10-09 10:00:00", note: "保养异常上报生成工单", photos: [] },
         { id: "R-D-012", action: "指派", operator: "张强", at: "2026-10-09 10:20:00", note: "指派给黄志深", photos: [] },
         { id: "R-D-013", action: "开始处理", operator: "黄志深", at: "2026-10-09 11:00:00", note: "检查供电模块", photos: [] },
         { id: "R-D-014", action: "提交验收", operator: "黄志深", at: "2026-10-09 14:40:00", note: "更换电源模块，监控恢复", photos: [] },
@@ -289,6 +303,7 @@
       project: "光谷科学岛综合管廊一期", corridor: "高新大道综合管廊", room: "综合舱", section: "防火分区", pipeline: "科学岛通信光缆",
       status: "已撤回", handler: "", contact: "王雅琳", contactPhone: "15019462775",
       submittedAt: "2026-10-08 14:00:00", startedAt: "", finishedAt: "",
+      abnormalLevel: "",
       abnormalDevice: {
         source: "报警信息",
         taskCode: "AL202610081400003",
@@ -343,9 +358,24 @@
     ] },
   ];
 
+  function normalizeWorkItems(list) {
+    if (!Array.isArray(list)) return [];
+    return list.map((item) => {
+      if (typeof item === "string") return { name: item, inputType: "单选", remark: "" };
+      return {
+        name: item?.name || "",
+        inputType: item?.inputType || "单选",
+        remark: item?.remark || "",
+        result: item?.result || "",
+      };
+    }).filter((item) => item.name);
+  }
+
   function normalizeOrder(order) {
     const next = { ...order };
     if (!next.bizType) next.bizType = "报事报修";
+    if (next.abnormalLevel == null) next.abnormalLevel = "";
+    next.workItems = normalizeWorkItems(next.workItems);
     if (next.abnormalDevice && typeof next.abnormalDevice === "object") {
       next.abnormalDevice = {
         source: next.abnormalDevice.source || "",
@@ -363,8 +393,24 @@
       ...x,
       photos: [...(x.photos || [])],
       records: (x.records || []).map((r) => ({ ...r })),
+      workItems: (x.workItems || []).map((item) => (typeof item === "string" ? item : { ...item })),
       abnormalDevice: x.abnormalDevice ? { ...x.abnormalDevice } : undefined,
     });
+  }
+
+  function readPendingAbnormals() {
+    try {
+      const list = JSON.parse(localStorage.getItem(PENDING_ABNORMAL_KEY) || "[]");
+      return Array.isArray(list) ? list.map((item) => normalizeOrder({
+        ...item,
+        photos: [...(item.photos || [])],
+        records: (item.records || []).map((r) => ({ ...r })),
+        workItems: (item.workItems || []).map((entry) => (typeof entry === "string" ? entry : { ...entry })),
+        abnormalDevice: item.abnormalDevice ? { ...item.abnormalDevice } : undefined,
+      })) : [];
+    } catch (_) {
+      return [];
+    }
   }
 
   function ensureCategorySeeds(categories) {
@@ -383,15 +429,19 @@
           Array.isArray(parsed.categories) ? parsed.categories : categories
         );
       }
-      // 工单列表每次刷新回到种子初始状态；分类仍持久化
+      // 工单列表每次刷新回到种子初始状态；巡检/保养异常上报 pending 工单前置合并
+      const pending = readPendingAbnormals();
+      const seed = seedOrders.map(cloneSeedOrder);
+      const seedIds = new Set(seed.map((item) => item.id));
       return {
         categories,
-        orders: seedOrders.map(cloneSeedOrder),
+        orders: [...pending.filter((item) => !seedIds.has(item.id)), ...seed],
       };
     } catch (_) {
+      const pending = readPendingAbnormals();
       return {
         categories: seedCategories.map((x) => ({ ...x })),
-        orders: seedOrders.map(cloneSeedOrder),
+        orders: [...pending, ...seedOrders.map(cloneSeedOrder)],
       };
     }
   }
