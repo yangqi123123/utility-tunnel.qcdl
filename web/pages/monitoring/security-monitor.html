@@ -653,7 +653,7 @@
     function patrolTableHtml(tasks, emptyText) {
       if (!tasks.length) return '<div class="security-empty">' + esc(emptyText || "本区段暂无巡更记录") + "</div>";
       return '<div class="table-wrap security-patrol-wrap"><table class="security-table table-actions-sticky"><thead><tr>'
-        + "<th>任务编码</th><th>任务名称</th><th>计划</th><th>等级</th><th>巡检人</th><th>负责人</th>"
+        + "<th>任务编码</th><th>任务名称</th><th>计划</th><th>等级</th><th>巡检人</th><th>验收人</th>"
         + "<th>结果</th><th>超期状态</th><th>设备/检查项</th><th>异常项</th><th>计划执行</th>"
         + "<th>截止时间</th><th>开始时间</th><th>提交时间</th><th>巡检时长</th><th>操作</th>"
         + "</tr></thead><tbody>" + tasks.map(function (t) {
@@ -1135,7 +1135,7 @@
         + (t.exception ? esc(t.exception) : "暂无设备异常") + "</div></section>";
       var recordHtml = '<section class="' + (tab === "records" ? "" : "hidden") + '" data-sec-patrol-panel="records"><div class="inspection-records"><h3>处理记录</h3>'
         + '<div class="inspection-record"><span class="inspection-record-dot"></span><div><strong>' + esc(t.inspector || "系统") + "</strong><p>创建巡更任务</p><time>" + esc(t.plannedAt) + "</time></div></div>"
-        + '<div class="inspection-record"><span class="inspection-record-dot done"></span><div><strong>' + esc(t.owner || "负责人") + "</strong><p>"
+        + '<div class="inspection-record"><span class="inspection-record-dot done"></span><div><strong>' + esc(t.owner || "验收人") + "</strong><p>"
         + (t.result === "正常" ? "巡更完成" : "等待巡更结果") + "</p><time>" + esc(t.submittedAt || "—") + "</time></div></div></div></section>";
       return tabs + basicHtml + deviceHtml + abnormalHtml + recordHtml;
     }
